@@ -37,8 +37,8 @@ tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");</pre>
 ```
 
 <h4>Documentation</h4>
-<p>Javadocs are <a href="http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html" target="_blank">here</a>.</p>
-<p>Wiki is <a href="https://github.com/moagrius/TileView/wiki">here</a>
+<p>Javadocs are <a href="http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html" target="_blank">here</a>.
+Wiki is <a href="https://github.com/moagrius/TileView/wiki">here</a>.</p>
 
 <h4>License</h4>
 <p>Copyright 2013 Mike Dunn</p>
