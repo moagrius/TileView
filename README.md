@@ -3,7 +3,11 @@
 with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
 built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or 
 coordinate system.</p>
- 
+
+<h4>Documentation</h4>
+<p>Javadocs are <a href="http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html" target="_blank">here</a>.
+Wiki is <a href="https://github.com/moagrius/TileView/wiki">here</a>.</p>
+
 <h4>Installation</h4>
 <p>
   The widget is straight java, so you can just use the .java files found here (with the dependencies mentioned below).
@@ -35,10 +39,6 @@ tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");</pre>
 	<version>1.0.0</version>
 </dependency>
 ```
-
-<h4>Documentation</h4>
-<p>Javadocs are <a href="http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html" target="_blank">here</a>.
-Wiki is <a href="https://github.com/moagrius/TileView/wiki">here</a>.</p>
 
 <h4>License</h4>
 <p>Copyright 2013 Mike Dunn</p>
