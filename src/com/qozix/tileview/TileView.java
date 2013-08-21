@@ -42,24 +42,25 @@ import com.qozix.tileview.tiles.TileRenderListener;
  *  
  * <pre>{@code
  * TileView tileView = new TileView(this);
+ * tileView.setSize(3000,5000);
  * tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");
  * }</pre>
  * 
  * A more advanced implementation might look like:
  * <pre>{@code
  * TileView tileView = new TileView(this);
+ * tileView.setSize(3000,5000);
  * tileView.addTileViewEventListener(someMapEventListener);
  * tileView.defineRelativeBounds(42.379676, -71.094919, 42.346550, -71.040280);
- * tileView.addZoomLevel(1.000f, "tiles/boston-1000-%col%_%row%.jpg", 256, 256);
- * tileView.addZoomLevel(0.500f, "tiles/boston-500-%col%_%row%.jpg", 256, 256);
- * tileView.addZoomLevel(0.250f, "tiles/boston-250-%col%_%row%.jpg", 256, 256);
- * tileView.addZoomLevel(0.125f, "tiles/boston-125-%col%_%row%.jpg", 128, 128);
+ * tileView.addDetailLevel(1.000f, "tiles/boston-1000-%col%_%row%.jpg", 256, 256);
+ * tileView.addDetailLevel(0.500f, "tiles/boston-500-%col%_%row%.jpg", 256, 256);
+ * tileView.addDetailLevel(0.250f, "tiles/boston-250-%col%_%row%.jpg", 256, 256);
+ * tileView.addDetailLevel(0.125f, "tiles/boston-125-%col%_%row%.jpg", 128, 128);
  * tileView.addMarker(someView, 42.35848, -71.063736);
  * tileView.addMarker(anotherView, 42.3665, -71.05224);
  * tileView.addMarkerEventListener(someMarkerEventListener);
  * }</pre>
  * 
- * <p>Licensed under <a href="http://creativecommons.org/licenses/by/3.0/legalcode" target="_blank">Creative Commons</a></p>
  */
 public class TileView extends ZoomPanLayout {
 
@@ -364,6 +365,16 @@ public class TileView extends ZoomPanLayout {
 	}
 	
 	/**
+	 * Divides a number by the current scale value, effectively flipping scaled values.  This can be useful when
+	 * determining a relative position or dimension from a real pixel value.
+	 * @param value (double) The number to be inversely scaled.
+	 * @return (double) The inversely scaled product.
+	 */
+	public double unscale( double value ) {
+		return value / getScale();
+	}
+	
+	/**
 	 * Scrolls (instantly) the TileView to the x and y positions provided.
 	 * @param x (double) the relative x position to move to
 	 * @param y (double) the relative y position to move to
@@ -452,14 +463,9 @@ public class TileView extends ZoomPanLayout {
 	/**
 	 * Removes a marker View from the TileView's view tree.
 	 * @param view The marker View to be removed.
-	 * @return (boolean) true if the view was in the view tree and was removed, false if it was not in the view tree
 	 */
-	public boolean removeMarker( View view ) {
-		if( markerManager.indexOfChild( view ) > -1 ) {
-			markerManager.removeView( view );
-			return true;
-		}
-		return false;
+	public void removeMarker( View view ) {
+		markerManager.removeMarker( view );
 	}
 	
 	/**
@@ -477,7 +483,7 @@ public class TileView extends ZoomPanLayout {
 	 * @param listener (MarkerEventListener) listener to be removed From the TileView's list of MarkerEventListeners
 	 */
 	public void removeMarkerEventListener( MarkerEventListener listener ) {
-		markerManager.removeMarkerEventLIstener( listener );
+		markerManager.removeMarkerEventListener( listener );
 	}
 
 	/**

@@ -57,7 +57,7 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 		listeners.add( listener );
 	}
 	
-	public void removeMarkerEventLIstener( MarkerEventListener listener ) {
+	public void removeMarkerEventListener( MarkerEventListener listener ) {
 		listeners.remove( listener );
 	}
 	
