@@ -112,6 +112,9 @@ public class TileCache {
 	}
 	
 	private void addBitmapToMemoryCache( String key, Bitmap bitmap ) {
+		if ( key == null || bitmap == null ) {
+	        return;
+	    }
 		if ( getBitmapFromMemoryCache( key ) == null ) {
 			memoryCache.put( key, bitmap );
 		}
