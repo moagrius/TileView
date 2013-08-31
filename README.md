@@ -17,19 +17,6 @@ Wiki is <a href="https://github.com/moagrius/TileView/wiki">here</a>.</p>
   you can start using the class.
 </p>
 
-<h4>Dependencies</h4>
-<p>
-  If you're targetting APIs less than 12, you'll need the 
-  <a target="_blank" href="http://developer.android.com/tools/extras/support-library.html">Android compatability lib</a>
-  for the LruCache implementation.
-</p>
-
-<p>
-  <a target="_blank" href="https://github.com/JakeWharton/DiskLruCache">Jake Wharton's DiskLruCache</a> is also used.
-  <a target="_blank" href="https://oss.sonatype.org/content/repositories/releases/com/jakewharton/disklrucache/1.3.1/disklrucache-1.3.1.jar">Here's</a> a direct link to that jar.
-  However, that package is bundled with mapviewlib.jar so is only needed if you're using the java files directly in your project.
-</p>
-
 <h4>Implementation</h4>
 <p>A minimal implementation might look like this:</p>
 <pre>TileView tileView = new TileView(this);
