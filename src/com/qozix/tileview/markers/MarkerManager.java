@@ -45,6 +45,7 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 	public View addMarker( View v, LayoutParams params ) {
 		addView( v, params );
 		markerMap.put( v, new Rect() );
+		requestLayout();
 		return v;
 	}
 	

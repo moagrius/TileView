@@ -62,8 +62,8 @@ public class DetailLevel implements Comparable<DetailLevel> {
 		
 		DetailLevelPatternParser parser = detailManager.getDetailLevelPatternParser();
 		
-		for ( int iterationRow = startingRow; iterationRow <= endingRow; iterationRow++ ) {
-			for ( int iterationColumn = startingColumn; iterationColumn <= endingColumn; iterationColumn++ ) {
+		for ( int iterationRow = startingRow; iterationRow < endingRow; iterationRow++ ) {
+			for ( int iterationColumn = startingColumn; iterationColumn < endingColumn; iterationColumn++ ) {
 				String fileName = parser.parse( pattern, iterationRow, iterationColumn );
 				int left = iterationColumn * tileWidth;
 				int top = iterationRow * tileHeight;

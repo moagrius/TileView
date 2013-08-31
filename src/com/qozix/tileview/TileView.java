@@ -280,6 +280,7 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void resetDetailLevels(){
 		detailManager.resetDetailLevels();
+		refresh();
 	}
 	
 	/**
@@ -667,6 +668,13 @@ public class TileView extends ZoomPanLayout {
 	}
 	
 	/**
+	 * Clear bitmap image files, appropriate for Activity.onPause (mirror for .clear)
+	 */
+	public void pause() {
+		clear();
+	}
+	
+	/**
 	 * Clear tile image files and remove all views, appropriate for Activity.onDestroy
 	 * References to TileView should be set to null following invocations of this method.
 	 */
@@ -684,6 +692,15 @@ public class TileView extends ZoomPanLayout {
 		tileManager.requestRender();
 		sampleManager.update();
 		pathManager.setShouldDraw( true );
+	}
+	
+	/**
+	 * Request the TileView reevaluate tile sets, rendered tiles, samples, etc
+	 */
+	public void refresh() {
+		tileManager.updateTileSet();
+		tileManager.requestRender();
+		sampleManager.update();
 	}
 	
 	//------------------------------------------------------------------------------------
