@@ -703,12 +703,13 @@ public class TileView extends ZoomPanLayout {
 	}
 	
 	/**
-	 * Request the TileView reevaluate tile sets, rendered tiles, samples, etc
+	 * Request the TileView reevaluate tile sets, rendered tiles, samples, invalidates, etc
 	 */
 	public void refresh() {
 		tileManager.updateTileSet();
 		tileManager.requestRender();
 		sampleManager.update();
+		redraw();
 	}
 	
 	//------------------------------------------------------------------------------------
