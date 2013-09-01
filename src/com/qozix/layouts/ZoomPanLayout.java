@@ -351,6 +351,7 @@ public class ZoomPanLayout extends ViewGroup {
 		int dx = point.x - startX;
 		int dy = point.y - startY;
 		scroller.startScroll( startX, startY, dx, dy, SLIDE_DURATION );
+		invalidate();  // we're posting invalidate in computeScroll, yet both are required
 	}
 
 	/**
@@ -490,8 +491,8 @@ public class ZoomPanLayout extends ViewGroup {
 		if ( scroller.computeScrollOffset() ) {
 			Point destination = new Point( scroller.getCurrX(), scroller.getCurrY() );
 			scrollToPoint( destination );
-			postInvalidate();  // should not be necessary but is...
 			dispatchScrollActionNotification();
+			postInvalidate();  // should not be necessary but is...
 		}
 	}
 	

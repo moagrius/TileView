@@ -381,9 +381,7 @@ public class TileView extends ZoomPanLayout {
 	 * @param y (double) the relative y position to move to
 	 */
 	public void moveTo( double x, double y ) {
-		Point point = positionManager.translate( x, y );
-		point.x *= getScale();
-		point.y *= getScale();
+		Point point = positionManager.translate( x, y, getScale() );
 		scrollToPoint( point );
 	}
 	
@@ -393,9 +391,7 @@ public class TileView extends ZoomPanLayout {
 	 * @param y (double) the relative y position to move to
 	 */
 	public void moveToAndCenter( double x, double y ) {
-		Point point = positionManager.translate( x, y );
-		point.x *= getScale();
-		point.y *= getScale();
+		Point point = positionManager.translate( x, y, getScale() );
 		scrollToAndCenter( point );
 	}
 	
@@ -405,9 +401,7 @@ public class TileView extends ZoomPanLayout {
 	 * @param y (double) the relative y position to move to
 	 */
 	public void slideTo( double x, double y ) {
-		Point point = positionManager.translate( x, y );
-		point.x *= getScale();
-		point.y *= getScale();
+		Point point = positionManager.translate( x, y, getScale() );
 		slideToPoint( point );
 	}
 	
@@ -417,9 +411,7 @@ public class TileView extends ZoomPanLayout {
 	 * @param y (double) the relative y position to move to
 	 */
 	public void slideToAndCenter( double x, double y ) {
-		Point point = positionManager.translate( x, y );
-		point.x *= getScale();
-		point.y *= getScale();
+		Point point = positionManager.translate( x, y, getScale() );
 		slideToAndCenter( point );
 	}
 	
