@@ -58,3 +58,6 @@ tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");</pre>
 
 <h4>Update 08/30/13</h4>
 <p>See the latest <a target="_blank" href="https://github.com/moagrius/TileView/releases">release</a>.</p>
+
+<h4>Update 09/07/13</h4>
+<p>A <a target="_blank" href="https://github.com/moagrius/TileViewDemo">demo app</a> is now available.</p>
