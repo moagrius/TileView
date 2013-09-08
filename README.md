@@ -17,6 +17,10 @@ Wiki is <a href="https://github.com/moagrius/TileView/wiki">here</a>.</p>
   you can start using the class.
 </p>
 
+<h4>Demo</h4>
+<p>A demo application, built in Eclipse, is available <a target="_blank" href="https://github.com/moagrius/TileViewDemo">here</a>.
+<p>The .apk can be <a href="http://moagrius.github.io/TileView/TileViewDemo.apk">downloaded directly</a>.
+
 <h4>Implementation</h4>
 <p>A minimal implementation might look like this:</p>
 <pre>TileView tileView = new TileView(this);
