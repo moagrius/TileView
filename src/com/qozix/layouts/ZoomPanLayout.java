@@ -778,7 +778,7 @@ public class ZoomPanLayout extends ViewGroup {
 			if ( determineIfQualifiedDoubleTap() ) {
 				saveHistoricalScale();
 				saveDoubleTapHistory();
-				double destination = Math.min( 1, scale * 2 );
+				double destination = Math.min( maxScale, scale * 2 );
 				smoothScaleTo( destination, ZOOM_ANIMATION_DURATION ); 
 				for ( GestureListener listener : gestureListeners ) {
 					listener.onDoubleTap( actualPoint );
