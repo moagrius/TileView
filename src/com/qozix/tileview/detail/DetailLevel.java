@@ -103,7 +103,7 @@ public class DetailLevel implements Comparable<DetailLevel>
      * @param scaleMin
      * @param scaleMax
      */
-    public void setRanger(final double scaleMin, final double scaleMax)
+    public void setRange(final double scaleMin, final double scaleMax)
     {
         this.scaleMin = scaleMin;
         this.scaleMax = scaleMax;
