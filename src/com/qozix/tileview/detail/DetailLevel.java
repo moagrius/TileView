@@ -3,123 +3,174 @@ package com.qozix.tileview.detail;
 import java.util.LinkedList;
 
 import android.graphics.Rect;
-import android.util.Log;
 
 import com.qozix.tileview.tiles.Tile;
 
-public class DetailLevel implements Comparable<DetailLevel> {
+public class DetailLevel implements Comparable<DetailLevel>
+{
 
-	private static final int DEFAULT_TILE_SIZE = 256;
+    private static final int    DEFAULT_TILE_SIZE = 256;
 
-	private double scale;
-	
-	private int tileWidth = DEFAULT_TILE_SIZE;
-	private int tileHeight = DEFAULT_TILE_SIZE;
+    private final double        scale;
 
-	private String pattern;
-	private String downsample;
+    private int                 tileWidth         = DetailLevel.DEFAULT_TILE_SIZE;
+    private int                 tileHeight        = DetailLevel.DEFAULT_TILE_SIZE;
 
-	private DetailManager detailManager;
-	private Rect viewport = new Rect();
+    private final String        pattern;
+    private final String        downsample;
 
-	public DetailLevel( DetailManager zm, float s, String p, String d, int tw, int th ) {
-		detailManager = zm;
-		scale = s;
-		pattern = p;
-		downsample = d;
-		tileWidth = tw;
-		tileHeight = th;
-	}
-	
-	public DetailLevel( DetailManager zm, float s, String p, String d ) {
-		this( zm, s, p, d, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE );
-	}
+    private final DetailManager detailManager;
+    private final Rect          viewport          = new Rect();
 
-	public LinkedList<Tile> getIntersections() {
-		
-		double relativeScale = getRelativeScale();
-		
-		int drawableWidth = (int) ( detailManager.getWidth() * getScale() * relativeScale );
-		int drawableHeight = (int) ( detailManager.getHeight() * getScale() * relativeScale );
-		double offsetWidth = ( tileWidth * relativeScale );
-		double offsetHeight = ( tileHeight * relativeScale );
-		
-		LinkedList<Tile> intersections = new LinkedList<Tile>();
-		
-		viewport.set( detailManager.getComputedViewport() );
-		
-		// TODO test if mins are right
-		viewport.top = Math.max( viewport.top, 0 );
-		viewport.left = Math.max( viewport.left, 0 );
-		viewport.right = Math.min( viewport.right, drawableWidth );
-		viewport.bottom = Math.min( viewport.bottom, drawableHeight );
-		
-		
-		int startingRow = (int) Math.floor( viewport.top / offsetHeight );
-		int endingRow = (int) Math.ceil( viewport.bottom / offsetHeight );
-		int startingColumn = (int) Math.floor( viewport.left / offsetWidth );
-		int endingColumn = (int) Math.ceil( viewport.right / offsetWidth );
-		
-		DetailLevelPatternParser parser = detailManager.getDetailLevelPatternParser();
-		
-		for ( int iterationRow = startingRow; iterationRow < endingRow; iterationRow++ ) {
-			for ( int iterationColumn = startingColumn; iterationColumn < endingColumn; iterationColumn++ ) {
-				String fileName = parser.parse( pattern, iterationRow, iterationColumn );
-				int left = iterationColumn * tileWidth;
-				int top = iterationRow * tileHeight;
-				Tile tile = new Tile( left, top, tileWidth, tileHeight, fileName );
-				intersections.add( tile );
-			}
-		}
-		
-		
-		return intersections;
-		
-	}
+    // range settings for ranged based selection of tiles
+    private double              scaleMin          = Double.MIN_VALUE;
+    private double              scaleMax          = Double.MAX_VALUE;
 
-	public double getScale(){
-		return scale;
-	}
-	
-	public double getRelativeScale(){
-		return detailManager.getScale() / scale;
-	}
-	
-	public int getTileWidth() {
-		return tileWidth;
-	}
+    public DetailLevel(final DetailManager zm, final float s, final String p, final String d, final int tw, final int th)
+    {
+        this.detailManager = zm;
+        this.scale = s;
+        this.pattern = p;
+        this.downsample = d;
+        this.tileWidth = tw;
+        this.tileHeight = th;
+    }
 
-	public int getTileHeight() {
-		return tileHeight;
-	}
+    public DetailLevel(final DetailManager zm, final float s, final String p, final String d, final int tw,
+                    final int th, final double scaleMin, final double scaleMax)
+    {
+        this.detailManager = zm;
+        this.scale = s;
+        this.pattern = p;
+        this.downsample = d;
+        this.tileWidth = tw;
+        this.tileHeight = th;
+        this.scaleMin = scaleMin;
+        this.scaleMax = scaleMax;
+    }
 
-	public String getPattern() {
-		return pattern;
-	}
+    public DetailLevel(final DetailManager zm, final float s, final String p, final String d)
+    {
+        this(zm, s, p, d, DetailLevel.DEFAULT_TILE_SIZE, DetailLevel.DEFAULT_TILE_SIZE);
+    }
 
-	public String getDownsample() {
-		return downsample;
-	}
+    public LinkedList<Tile> getIntersections()
+    {
 
-	@Override
-	public int compareTo( DetailLevel o ) {
-		return (int) Math.signum( getScale() - o.getScale() );
-	}
+        final double relativeScale = this.getRelativeScale();
 
-	@Override
-	public boolean equals( Object o ) {
-		if ( o instanceof DetailLevel ) {
-			DetailLevel zl = (DetailLevel) o;
-			return ( zl.getScale() == getScale() );
-		}
-		return false;
-	}
+        final int drawableWidth = (int) (this.detailManager.getWidth() * this.getScale() * relativeScale);
+        final int drawableHeight = (int) (this.detailManager.getHeight() * this.getScale() * relativeScale);
+        final double offsetWidth = (this.tileWidth * relativeScale);
+        final double offsetHeight = (this.tileHeight * relativeScale);
 
-	@Override
-	public int hashCode() {
-		long bits = ( Double.doubleToLongBits( getScale() ) * 43 );
-		return ( ( (int) bits ) ^ ( (int) ( bits >> 32 ) ) );
-	}
+        final LinkedList<Tile> intersections = new LinkedList<Tile>();
 
-	
+        this.viewport.set(this.detailManager.getComputedViewport());
+
+        // TODO test if mins are right
+        this.viewport.top = Math.max(this.viewport.top, 0);
+        this.viewport.left = Math.max(this.viewport.left, 0);
+        this.viewport.right = Math.min(this.viewport.right, drawableWidth);
+        this.viewport.bottom = Math.min(this.viewport.bottom, drawableHeight);
+
+        final int startingRow = (int) Math.floor(this.viewport.top / offsetHeight);
+        final int endingRow = (int) Math.ceil(this.viewport.bottom / offsetHeight);
+        final int startingColumn = (int) Math.floor(this.viewport.left / offsetWidth);
+        final int endingColumn = (int) Math.ceil(this.viewport.right / offsetWidth);
+
+        final DetailLevelPatternParser parser = this.detailManager.getDetailLevelPatternParser();
+
+        for (int iterationRow = startingRow; iterationRow < endingRow; iterationRow++)
+        {
+            for (int iterationColumn = startingColumn; iterationColumn < endingColumn; iterationColumn++)
+            {
+                final String fileName = parser.parse(this.pattern, iterationRow, iterationColumn);
+                final int left = iterationColumn * this.tileWidth;
+                final int top = iterationRow * this.tileHeight;
+                final Tile tile = new Tile(left, top, this.tileWidth, this.tileHeight, fileName);
+                intersections.add(tile);
+            }
+        }
+
+        return intersections;
+
+    }
+
+    /**
+     * Set the range that this set of tiles is used.
+     * 
+     * @param scaleMin
+     * @param scaleMax
+     */
+    public void setRange(final double scaleMin, final double scaleMax)
+    {
+        this.scaleMin = scaleMin;
+        this.scaleMax = scaleMax;
+    }
+
+    public double getScale()
+    {
+        return this.scale;
+    }
+
+    public double getRelativeScale()
+    {
+        return this.detailManager.getScale() / this.scale;
+    }
+
+    public int getTileWidth()
+    {
+        return this.tileWidth;
+    }
+
+    public int getTileHeight()
+    {
+        return this.tileHeight;
+    }
+
+    public String getPattern()
+    {
+        return this.pattern;
+    }
+
+    public String getDownsample()
+    {
+        return this.downsample;
+    }
+
+    @Override
+    public int compareTo(final DetailLevel o)
+    {
+        return (int) Math.signum(this.getScale() - o.getScale());
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+        if (o instanceof DetailLevel)
+        {
+            final DetailLevel zl = (DetailLevel) o;
+            return (zl.getScale() == this.getScale());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        final long bits = (Double.doubleToLongBits(this.getScale()) * 43);
+        return (((int) bits) ^ ((int) (bits >> 32)));
+    }
+
+    public double getScaleMin()
+    {
+        return this.scaleMin;
+    }
+
+    public double getScaleMax()
+    {
+        return this.scaleMax;
+    }
+
 }
