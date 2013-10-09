@@ -2,6 +2,9 @@ package com.qozix.tileview.detail;
 
 import java.util.HashSet;
 
+import com.qozix.tileview.tiles.selection.ITileSelection;
+import com.qozix.tileview.tiles.selection.TileSelectionNoScale;
+
 import android.graphics.Rect;
 
 public class DetailManager {
@@ -215,6 +218,19 @@ public class DetailManager {
 	
 	public void saveHistoricalScale(){
 		historicalScale = scale;
+	}
+
+	public ITileSelection getTileSelection() {
+	    return this.detailLevels.getTileSelection();
+	}
+
+	/**
+	 * Set the tile selection method, defaults to {@link TileSelectionNoScale}
+	 * 
+	 * @param selection
+	 */
+	public void setTileSelection(ITileSelection selection) {
+	    this.detailLevels.setTileSelection(selection);
 	}
 
 }
