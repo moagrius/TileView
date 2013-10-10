@@ -31,6 +31,8 @@ import com.qozix.tileview.paths.PathManager;
 import com.qozix.tileview.samples.SampleManager;
 import com.qozix.tileview.tiles.TileManager;
 import com.qozix.tileview.tiles.TileRenderListener;
+import com.qozix.tileview.tiles.selector.TileSetSelector;
+import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
 
 /**
  * The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
@@ -1147,4 +1149,16 @@ public class TileView extends ZoomPanLayout {
 		
 	}
 
+	public TileSetSelector getTileSetSelector() {
+	    return this.detailManager.getTileSetSelector();
+	}
+
+	/**
+	 * Set the tile selection method, defaults to {@link TileSetSelectorMinimalUpScale}
+	 * 
+	 * @param selector
+	 */
+	public void setTileSetSelector(TileSetSelector selector) {
+	    this.detailManager.setTileSetSelector(selector);
+	}
 }
