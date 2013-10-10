@@ -1,10 +1,10 @@
-package com.qozix.tileview.tiles.selection;
+package com.qozix.tileview.tiles.selector;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelSet;
 
-public class TileSelectionNoScale implements
-	ITileSelection {
+public class TileSetSelectorMinimalUpScale implements
+	TileSetSelector {
 
     @Override
     public DetailLevel find(double scale, DetailLevelSet levels) {

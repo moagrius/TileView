@@ -1,4 +1,4 @@
-package com.qozix.tileview.tiles.selection;
+package com.qozix.tileview.tiles.selector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,7 @@ import android.util.Log;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelSet;
 
-public class TileSelectionByRange implements ITileSelection {
+public class TileSetSelectorByRange implements TileSetSelector {
 
     private List<Double> switchPoint = new ArrayList<Double>();
 

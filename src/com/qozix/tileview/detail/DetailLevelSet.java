@@ -3,8 +3,8 @@ package com.qozix.tileview.detail;
 import java.util.Collections;
 import java.util.LinkedList;
 
-import com.qozix.tileview.tiles.selection.TileSelectionNoScale;
-import com.qozix.tileview.tiles.selection.ITileSelection;
+import com.qozix.tileview.tiles.selector.TileSetSelector;
+import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
 
 /*
  * This is termed "Set" while it's actually a list.
@@ -19,7 +19,7 @@ public class DetailLevelSet extends LinkedList<DetailLevel> {
 
 	private static final long serialVersionUID = -1742428277010988084L;
 
-	private ITileSelection tileSelector = new TileSelectionNoScale();
+	private TileSetSelector tileSetSelector = new TileSetSelectorMinimalUpScale();
 	
 	public void addDetailLevel( DetailLevel detailLevel ) {
 		// ensure uniqueness
@@ -33,20 +33,20 @@ public class DetailLevelSet extends LinkedList<DetailLevel> {
 	}
 
 	public DetailLevel find( double scale ) {
-	    return this.tileSelector.find(scale, this);
+	    return this.tileSetSelector.find(scale, this);
 	}
 
-	public ITileSelection getTileSelection() {
-	    return this.tileSelector;
+	public TileSetSelector getTileSetSelector() {
+	    return this.tileSetSelector;
 	}
 
 	/**
-	 * Set the tile selection method, defaults to {@link TileSelectionNoScale}
+	 * Set the tile selection method, defaults to {@link TileSetSelectorMinimalUpScale}
 	 * 
-	 * @param selection
+	 * @param selector
 	 */
-	public void setTileSelection(ITileSelection selection) {
-	    this.tileSelector = selection;
+	public void setTileSetSelector(TileSetSelector selector) {
+	    this.tileSetSelector = selector;
 	}
 	
 }
