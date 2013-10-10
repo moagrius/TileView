@@ -204,6 +204,23 @@ public class TileView extends ZoomPanLayout {
 	}
 	
 	/**
+	 * Get the {@link TileSetSelector} implementation currently used to select tile sets.
+	 * @return TileSetSelector implementation currently in use.
+	 */
+	public TileSetSelector getTileSetSelector() {
+	    return detailManager.getTileSetSelector();
+	}
+
+	/**
+	 * Set the tile selection method, defaults to {@link TileSetSelectorMinimalUpScale}
+	 * Implement the {@link TileSetSelector} interface to customize how tile sets are selected.
+	 * @param selector (TileSetSelector) implementation that handles tile set selection as scale is changed.
+	 */
+	public void setTileSetSelector(TileSetSelector selector) {
+	    detailManager.setTileSetSelector(selector);
+	}
+	
+	/**
 	 * Defines whether tile bitmaps should be rendered using an AlphaAnimation
 	 * @param enabled (boolean) true if the TileView should render tiles with fade transitions
 	 */
@@ -1149,16 +1166,4 @@ public class TileView extends ZoomPanLayout {
 		
 	}
 
-	public TileSetSelector getTileSetSelector() {
-	    return this.detailManager.getTileSetSelector();
-	}
-
-	/**
-	 * Set the tile selection method, defaults to {@link TileSetSelectorMinimalUpScale}
-	 * 
-	 * @param selector
-	 */
-	public void setTileSetSelector(TileSetSelector selector) {
-	    this.detailManager.setTileSetSelector(selector);
-	}
 }

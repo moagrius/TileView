@@ -112,6 +112,7 @@ public class ZoomPanLayout extends ViewGroup {
 		}
 		@Override
 		public void onTweenStart() {
+			saveHistoricalScale();
 			isTweening = true;
 			for ( ZoomPanListener listener : zoomPanListeners ) {
 				listener.onZoomStart( scale );

@@ -20,7 +20,7 @@ public class DetailLevelSet extends LinkedList<DetailLevel> {
 	private static final long serialVersionUID = -1742428277010988084L;
 
 	private TileSetSelector tileSetSelector = new TileSetSelectorMinimalUpScale();
-	
+
 	public void addDetailLevel( DetailLevel detailLevel ) {
 		// ensure uniqueness
 		if ( contains( detailLevel ) ) {
@@ -33,21 +33,19 @@ public class DetailLevelSet extends LinkedList<DetailLevel> {
 	}
 
 	public DetailLevel find( double scale ) {
-	    return this.tileSetSelector.find(scale, this);
+		return tileSetSelector.find( scale, this );
 	}
 
 	public TileSetSelector getTileSetSelector() {
-	    return this.tileSetSelector;
+		return tileSetSelector;
 	}
 
 	/**
 	 * Set the tile selection method, defaults to {@link TileSetSelectorMinimalUpScale}
-	 * 
-	 * @param selector
+	 * @param selector (TileSetSelector)
 	 */
-	public void setTileSetSelector(TileSetSelector selector) {
-	    this.tileSetSelector = selector;
+	public void setTileSetSelector( TileSetSelector selector ) {
+		tileSetSelector = selector;
 	}
-	
-}
 
+}

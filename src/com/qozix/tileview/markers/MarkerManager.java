@@ -91,9 +91,6 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
 		super.onLayout( changed, l, t, r, b );
-		if(!changed){
-			return;
-		}
 	    for (int i = getChildCount() - 1; i >= 0; i--) {
 	    	View child = getChildAt(i);
 	        if (child.getVisibility() != GONE) {
