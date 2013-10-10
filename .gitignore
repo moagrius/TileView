@@ -170,3 +170,9 @@ pip-log.txt
 # IDEA
 *.iml
 .idea
+/gen
+/libs
+/res
+/AndroidManifest.xml
+/proguard-project.txt
+/project.properties
