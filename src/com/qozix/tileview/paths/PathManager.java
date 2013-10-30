@@ -3,6 +3,7 @@ package com.qozix.tileview.paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
@@ -104,6 +105,7 @@ public class PathManager extends StaticLayout {
 		invalidate();
 	}
 
+	@SuppressLint("NewApi")
 	@Override
 	public void onDraw( Canvas canvas ) {
 		if ( shouldDraw ) {
@@ -112,7 +114,10 @@ public class PathManager extends StaticLayout {
 			for ( DrawablePath drawablePath : paths ) {
 				drawingPath.set( drawablePath.path );
 				drawingPath.transform( matrix );
-				if ( !canvas.quickReject( drawingPath, Canvas.EdgeType.BW ) ) {
+				// quickReject is not supported on hw accelerated canvas versions below 16 but isHardwareAccelerated works only from version 11
+				if (android.os.Build.VERSION.SDK_INT >= 11 && canvas.isHardwareAccelerated() && android.os.Build.VERSION.SDK_INT < 16) {
+					canvas.drawPath( drawingPath, drawablePath.paint );
+				} else if ( !canvas.quickReject( drawingPath, Canvas.EdgeType.BW ) ) {
 					canvas.drawPath( drawingPath, drawablePath.paint );
 				}
 			}

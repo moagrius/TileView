@@ -31,15 +31,30 @@ import com.qozix.widgets.Scroller;
 
 public class ZoomPanLayout extends ViewGroup {
 
-	private static final int MINIMUM_VELOCITY = 50;
+	private static final int MINIMUM_VELOCITY = 0; // deprecated - use MOVE_TOUCH_TRESHOLD_MM instead
 	private static final int ZOOM_ANIMATION_DURATION = 500;
 	private static final int SLIDE_DURATION = 500;
 	private static final int VELOCITY_UNITS = 1000;
 	private static final int DOUBLE_TAP_TIME_THRESHOLD = 250;
-	private static final int SINGLE_TAP_DISTANCE_THRESHOLD = 50;
+	// private static final int SINGLE_TAP_DISTANCE_THRESHOLD = 50;
 	private static final double MINIMUM_PINCH_SCALE = 0.0;
 	private static final float FRICTION = 0.99f;	
 
+	// distance in mm that is needed for tap / doubletap detection
+	private static final float SINGLE_TAP_DISTANCE_THRESHOLD_MM = 5.0f;
+	
+	// distance in mm that is needed for move / pinch detection to prevent
+	// unwanted drag, fling or zoom
+	private static final float MOVE_TOUCH_TRESHOLD_MM = 3.5f;
+	
+	private int SINGLE_TAP_DISTANCE_THRESHOLD = 0;
+	private int MOVE_TOUCH_TRESHOLD = 0;	
+	
+	private Point firstFingerHistory = new Point();
+	private Point secondFingerHistory = new Point();
+	private boolean firstFingerDistanceQualifies = false;
+	private boolean secondFingerDistanceQualifies = false;	
+	
 	private int baseWidth;
 	private int baseHeight;
 
@@ -135,6 +150,13 @@ public class ZoomPanLayout extends ViewGroup {
 	public ZoomPanLayout( Context context ) {
 
 		super( context );
+		
+		// calc from mm to px
+		// this is to enforce same physical distance across all devices
+		android.util.DisplayMetrics m = getResources().getDisplayMetrics();
+		MOVE_TOUCH_TRESHOLD = Math.round(android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_MM, MOVE_TOUCH_TRESHOLD_MM, m));
+		SINGLE_TAP_DISTANCE_THRESHOLD = Math.round(android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_MM, SINGLE_TAP_DISTANCE_THRESHOLD_MM, m));
+		
 		setWillNotDraw( false );
 		
 		scrollActionHandler = new ScrollActionHandler( this );
@@ -660,6 +682,41 @@ public class ZoomPanLayout extends ViewGroup {
 			&& ( Math.abs( firstFinger.y - singleTapHistory.y ) <= SINGLE_TAP_DISTANCE_THRESHOLD );
 	}
 	
+	// if the 1st finger movement is past MOVE_TOUCH_TRESHOLD then we can apply drag / zoom
+	private boolean determineIfQualifiedFirstFinger(){
+		// only if not qualifies
+		if (!firstFingerDistanceQualifies) {
+			firstFingerDistanceQualifies = ( Math.abs( firstFinger.x - firstFingerHistory.x ) > MOVE_TOUCH_TRESHOLD )
+				|| ( Math.abs( firstFinger.y - firstFingerHistory.y ) > MOVE_TOUCH_TRESHOLD );			
+		}
+		return firstFingerDistanceQualifies;		
+	}
+	
+	// if the 2nd finger movement is past MOVE_TOUCH_TRESHOLD then we can apply zoom
+	private boolean determineIfQualifiedSecondFinger(boolean save){
+		// only if not qualifies
+		if (!secondFingerDistanceQualifies) {
+			secondFingerDistanceQualifies = ( Math.abs( secondFinger.x - secondFingerHistory.x ) > MOVE_TOUCH_TRESHOLD )
+				|| ( Math.abs( secondFinger.y - secondFingerHistory.y ) > MOVE_TOUCH_TRESHOLD );
+			if (secondFingerDistanceQualifies) {
+				if (save) {					
+					saveHistoricalPinchDistance();
+					saveHistoricalScale();
+					savePinchHistory();
+					// also perform needed gestures
+					for ( GestureListener listener : gestureListeners ) {
+						listener.onPinchStart( pinchStartOffset );
+					}
+					for ( ZoomPanListener listener : zoomPanListeners ) {
+						listener.onZoomStart( scale );
+						listener.onZoomPanEvent();
+					}
+				}
+			}
+		}
+		return secondFingerDistanceQualifies;		
+	}	
+	
 	private void processEvent( MotionEvent event ) {
 		
 		// copy for history
@@ -691,12 +748,30 @@ public class ZoomPanLayout extends ViewGroup {
 		// record scroll position and adjust finger point to account for scroll offset
 		scrollPosition.set( getScrollX(), getScrollY() );
 		actualPoint.offset( scrollPosition.x, scrollPosition.y );
+		
+		// reset first and second finger start state if needed
+		int action = event.getAction() & MotionEvent.ACTION_MASK;
+		if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
+			if (firstFingerIsDown) {				
+				firstFingerHistory.set(firstFinger.x, firstFinger.y);	
+				firstFingerDistanceQualifies = false;
+				secondFingerDistanceQualifies = false;
+			}
+			if (secondFingerIsDown) {				
+				secondFingerHistory.set(secondFinger.x, secondFinger.y);
+				secondFingerDistanceQualifies = false;
+			}
+		}		
 
 		// update velocity for flinging
 		// TODO: this can probably be moved to the ACTION_MOVE switch
 		if ( velocity == null ) {
 			velocity = VelocityTracker.obtain();
 		}
+		// TODO: line below is not needed, as preliminary testing show that
+		// fling experience is ok, but in case there will be some sudden
+		// scroll speed jumps, consider uncommenting the line
+		// if (determineIfQualifiedFirstFinger())
 		velocity.addMovement( event );
 	}
 	
@@ -724,24 +799,17 @@ public class ZoomPanLayout extends ViewGroup {
 		// second finger goes down
 		case MotionEvent.ACTION_POINTER_DOWN :
 			setTapInterrupted( true );
-			saveHistoricalPinchDistance();
-			saveHistoricalScale();
-			savePinchHistory();
 			for ( GestureListener listener : gestureListeners ) {
 				listener.onFingerDown( actualPoint );
 			}
-			for ( GestureListener listener : gestureListeners ) {
-				listener.onPinchStart( pinchStartOffset );
-			}
-			for ( ZoomPanListener listener : zoomPanListeners ) {
-				listener.onZoomStart( scale );
-				listener.onZoomPanEvent();
-			}
+			determineIfQualifiedSecondFinger(true);
 			break;
 		// either finger moves
 		case MotionEvent.ACTION_MOVE :
 			// if both fingers are down, that means it's a pinch
 			if ( firstFingerIsDown && secondFingerIsDown ) {
+				if (!determineIfQualifiedSecondFinger(true))
+					break;
 				setScaleFromPinch();
 				maintainScrollDuringPinchOperation();
 				for ( GestureListener listener : gestureListeners ) {
@@ -749,6 +817,10 @@ public class ZoomPanLayout extends ViewGroup {
 				}
 			// otherwise it's a drag
 			} else {
+				if (firstFingerIsDown && !determineIfQualifiedFirstFinger())
+					break;
+				if (secondFingerIsDown && !determineIfQualifiedSecondFinger(false))
+					break;
 				performDrag();
 				for ( GestureListener listener : gestureListeners ) {
 					listener.onDrag( actualPoint );
@@ -757,7 +829,7 @@ public class ZoomPanLayout extends ViewGroup {
 			break;
 		// first finger goes up
 		case MotionEvent.ACTION_UP :
-			if ( performFling() ) {
+			if ( determineIfQualifiedFirstFinger() && performFling() ) {
 				isBeingFlung = true;
 				Point startPoint = new Point( getScrollX(), getScrollY() );
 				Point finalPoint = new Point( scroller.getFinalX(), scroller.getFinalY() );
@@ -798,6 +870,8 @@ public class ZoomPanLayout extends ViewGroup {
 			for ( GestureListener listener : gestureListeners ) {
 				listener.onFingerUp( actualPoint );
 			}
+			if (!determineIfQualifiedSecondFinger(false))
+				break;
 			for ( GestureListener listener : gestureListeners ) {
 				listener.onPinchComplete( pinchStartOffset );
 			}
