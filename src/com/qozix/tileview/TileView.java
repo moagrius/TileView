@@ -347,10 +347,10 @@ public class TileView extends ZoomPanLayout {
 	 * and all positioned are calculated relatively.  If relative bounds are defined, position parameters
 	 * received by TileView methods will be translated to the the appropriate pixel value.
 	 * To remove this process, use undefineRelativeBounds
-	 * @param left (double) the left edge of the rectangle used when calculating position (e.g, longitude of the bottom-right coordinate)
-	 * @param top (double) the top edge of the rectangle used when calculating position (e.g, latitude of the top-left coordinate)
-	 * @param right (double) the right edge of the rectangle used when calculating position (e.g, longitude of the top-left coordinate)
-	 * @param bottom (double) the bottom edge of the rectangle used when calculating position (e.g, latitude of the bottom-right coordinate)
+	 * @param left (double) the left edge of the rectangle used when calculating position
+	 * @param top (double) the top edge of the rectangle used when calculating position
+	 * @param right (double) the right edge of the rectangle used when calculating position
+	 * @param bottom (double) the bottom edge of the rectangle used when calculating position
 	 */
 	public void defineRelativeBounds( double left, double top, double right, double bottom  ) {
 		positionManager.setBounds( left, top, right, bottom );
