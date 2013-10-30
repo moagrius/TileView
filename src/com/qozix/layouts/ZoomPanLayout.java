@@ -462,9 +462,13 @@ public class ZoomPanLayout extends ViewGroup {
 		if ( isTweening ) {
 			return;
 		}
-		doubleTapDestinationScale = destination;
-		tween.setDuration( duration );
-		tween.start();
+		saveHistoricalScale();
+		int x = (int) ( ( getWidth() * 0.5 ) + 0.5 );
+		int y = (int) ( ( getHeight() * 0.5 ) + 0.5 );
+		doubleTapStartOffset.set( x, y );
+		doubleTapStartScroll.set( getScrollX(), getScrollY() );
+		doubleTapStartScroll.offset( x, y );
+		startSmoothScaleTo( destination, duration );
 	}
 
 	//------------------------------------------------------------------------------------
@@ -693,6 +697,15 @@ public class ZoomPanLayout extends ViewGroup {
 		return !isTapInterrupted && ( Math.abs( firstFinger.x - singleTapHistory.x ) <= SINGLE_TAP_DISTANCE_THRESHOLD )
 				&& ( Math.abs( firstFinger.y - singleTapHistory.y ) <= SINGLE_TAP_DISTANCE_THRESHOLD );
 	}
+	
+	private void startSmoothScaleTo( double destination, int duration ){
+		if ( isTweening ) {
+			return;
+		}
+		doubleTapDestinationScale = destination;
+		tween.setDuration( duration );
+		tween.start();
+	}
 
 	private void processEvent( MotionEvent event ) {
 
@@ -835,7 +848,7 @@ public class ZoomPanLayout extends ViewGroup {
 				saveHistoricalScale();
 				saveDoubleTapHistory();
 				double destination = Math.min( maxScale, scale * 2 );
-				smoothScaleTo( destination, ZOOM_ANIMATION_DURATION );
+				startSmoothScaleTo( destination, ZOOM_ANIMATION_DURATION );
 				for ( GestureListener listener : gestureListeners ) {
 					listener.onDoubleTap( actualPoint );
 				}
