@@ -47,17 +47,5 @@ tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");</pre>
 </dependency>
 ```
 
-<h4>Update 08/21/13</h4>
-<ol>
-  <li>Fixed removeMarkerEventListener type</li>
-  <li>Fixed removeMarker bug</li>
-  <li>removeMarker now returns void (previous return boolean if marker was removed)</li>
-  <li>Add TileView.unscale convenience method</li>
-  <li>Updated docs</li>
-</ol>
-
-<h4>Update 08/30/13</h4>
-<p>See the latest <a target="_blank" href="https://github.com/moagrius/TileView/releases">release</a>.</p>
-
-<h4>Update 09/07/13</h4>
-<p>A <a target="_blank" href="https://github.com/moagrius/TileViewDemo">demo app</a> is now available.</p>
+<h4>Releases</h4>
+<p>Check <a target="_blank" href="https://github.com/moagrius/TileView/releases">here</a> for the the latest release.  I *try* to add a new release after any significant commit.</p>

@@ -8,7 +8,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -38,7 +37,7 @@ public class ZoomPanLayout extends ViewGroup {
 	private static final int DOUBLE_TAP_TIME_THRESHOLD = 250;
 	private static final int SINGLE_TAP_DISTANCE_THRESHOLD = 50;
 	private static final double MINIMUM_PINCH_SCALE = 0.0;
-	private static final float FRICTION = 0.99f;	
+	private static final float FRICTION = 0.99f;
 
 	private int baseWidth;
 	private int baseHeight;
@@ -66,23 +65,31 @@ public class ZoomPanLayout extends ViewGroup {
 	private Point secondFinger = new Point();
 	private Point lastFirstFinger = new Point();
 	private Point lastSecondFinger = new Point();
-	
+
 	private Point scrollPosition = new Point();
-	
+
 	private Point singleTapHistory = new Point();
 	private Point doubleTapHistory = new Point();
+
+	private Point firstFingerLastDown = new Point();
+	private Point secondFingerLastDown = new Point();
 	
 	private Point actualPoint = new Point();
 	private Point destinationScroll = new Point();
 
 	private boolean secondFingerIsDown = false;
-	private boolean firstFingerIsDown = false;	
+	private boolean firstFingerIsDown = false;
 
 	private boolean isTapInterrupted = false;
 	private boolean isBeingFlung = false;
-	
+	private boolean isDragging = false;	
+	private boolean isPinching = false;	
+
+	private int dragStartThreshold = 30;
+	private int pinchStartThreshold = 30;	
+
 	private long lastTouchedAt;
-	
+
 	private ScrollActionHandler scrollActionHandler;
 
 	private Scroller scroller;
@@ -102,6 +109,7 @@ public class ZoomPanLayout extends ViewGroup {
 				listener.onZoomPanEvent();
 			}
 		}
+
 		@Override
 		public void onTweenProgress( double progress, double eased ) {
 			double originalChange = doubleTapDestinationScale - historicalScale;
@@ -110,8 +118,10 @@ public class ZoomPanLayout extends ViewGroup {
 			setScale( currentScale );
 			maintainScrollDuringScaleTween();
 		}
+
 		@Override
 		public void onTweenStart() {
+			saveHistoricalScale();
 			isTweening = true;
 			for ( ZoomPanListener listener : zoomPanListeners ) {
 				listener.onZoomStart( scale );
@@ -135,14 +145,14 @@ public class ZoomPanLayout extends ViewGroup {
 
 		super( context );
 		setWillNotDraw( false );
-		
+
 		scrollActionHandler = new ScrollActionHandler( this );
 
 		scroller = new Scroller( context );
 		scroller.setFriction( FRICTION );
 
 		clip = new StaticLayout( context );
-		super.addView( clip, -1, new LayoutParams(-1, -1) );
+		super.addView( clip, -1, new LayoutParams( -1, -1 ) );
 
 		updateClip();
 	}
@@ -175,7 +185,6 @@ public class ZoomPanLayout extends ViewGroup {
 		maxScale = max;
 		setScale( scale );
 	}
-	
 
 	/**
 	 * Sets the size (width and height) of the ZoomPanLayout as it should be rendered at a scale of 1f (100%)
@@ -241,11 +250,11 @@ public class ZoomPanLayout extends ViewGroup {
 			}
 		}
 	}
-	
+
 	/**
 	 * Requests a redraw
 	 */
-	public void redraw(){
+	public void redraw() {
 		updateClip();
 		postInvalidate();
 	}
@@ -257,15 +266,15 @@ public class ZoomPanLayout extends ViewGroup {
 	public double getScale() {
 		return scale;
 	}
-	
+
 	/**
 	 * Returns whether the ZoomPanLayout is currently being flung
 	 * @return (boolean) true if the ZoomPanLayout is currently flinging, false otherwise
 	 */
-	public boolean isFlinging(){
+	public boolean isFlinging() {
 		return isBeingFlung;
 	}
-	
+
 	/**
 	 * Returns the single child of the ZoomPanLayout, a ViewGroup that serves as an intermediary container
 	 * @return (View) The child view of the ZoomPanLayout that manages all contained views
@@ -274,6 +283,38 @@ public class ZoomPanLayout extends ViewGroup {
 		return clip;
 	}
 	
+	/**
+	 * Returns the minimum distance required to start a drag operation, in pixels.
+	 * @return (int) Pixel threshold required to start a drag.
+	 */
+	public int getDragStartThreshold(){
+		return dragStartThreshold;
+	}
+	
+	/**
+	 * Returns the minimum distance required to start a drag operation, in pixels.
+	 * @param threshold (int) Pixel threshold required to start a drag.
+	 */
+	public void setDragStartThreshold( int threshold ){
+		dragStartThreshold = threshold;
+	}
+	
+	/**
+	 * Returns the minimum distance required to start a pinch operation, in pixels.
+	 * @return (int) Pixel threshold required to start a pinch.
+	 */
+	public int getPinchStartThreshold(){
+		return pinchStartThreshold;
+	}
+	
+	/**
+	 * Returns the minimum distance required to start a pinch operation, in pixels.
+	 * @param threshold (int) Pixel threshold required to start a pinch.
+	 */
+	public void setPinchStartThreshold( int threshold ){
+		pinchStartThreshold = threshold;
+	}
+
 	/**
 	 * Adds a GestureListener to the ZoomPanLayout, which will receive gesture events
 	 * @param listener (GestureListener) Listener to add
@@ -309,7 +350,7 @@ public class ZoomPanLayout extends ViewGroup {
 	public boolean removeZoomPanListener( ZoomPanListener listener ) {
 		return zoomPanListeners.remove( listener );
 	}
-	
+
 	/**
 	 * Scrolls the ZoomPanLayout to the x and y values specified by {@param point} Point
 	 * @param point (Point) Point instance containing the destination x and y values
@@ -334,9 +375,9 @@ public class ZoomPanLayout extends ViewGroup {
 	 * @param point (Point) Point instance containing the destination x and y values
 	 */
 	public void scrollToAndCenter( Point point ) { // TODO:
-		int x = (int) -(getWidth() * 0.5);
-		int y = (int) -(getHeight() * 0.5);
-		point.offset( x , y );
+		int x = (int) -( getWidth() * 0.5 );
+		int y = (int) -( getHeight() * 0.5 );
+		point.offset( x, y );
 		scrollToPoint( point );
 	}
 
@@ -351,7 +392,7 @@ public class ZoomPanLayout extends ViewGroup {
 		int dx = point.x - startX;
 		int dy = point.y - startY;
 		scroller.startScroll( startX, startY, dx, dy, SLIDE_DURATION );
-		invalidate();  // we're posting invalidate in computeScroll, yet both are required
+		invalidate(); // we're posting invalidate in computeScroll, yet both are required
 	}
 
 	/**
@@ -359,12 +400,12 @@ public class ZoomPanLayout extends ViewGroup {
 	 * @param point (Point) Point instance containing the destination x and y values
 	 */
 	public void slideToAndCenter( Point point ) { // TODO:
-		int x = (int) -(getWidth() * 0.5);
-		int y = (int) -(getHeight() * 0.5);
-		point.offset( x , y );
+		int x = (int) -( getWidth() * 0.5 );
+		int y = (int) -( getHeight() * 0.5 );
+		point.offset( x, y );
 		slideToPoint( point );
 	}
-	
+
 	/**
 	 * <i>This method is experimental</i>
 	 * Scroll and scale to match passed Rect as closely as possible.
@@ -374,15 +415,15 @@ public class ZoomPanLayout extends ViewGroup {
 	 */
 	public void frameViewport( Rect rect ) {
 		// position it
-		scrollToPoint( new Point( rect.left, rect.top ) );  // TODO: center the axis that's smaller?
+		scrollToPoint( new Point( rect.left, rect.top ) ); // TODO: center the axis that's smaller?
 		// scale it
 		double scaleX = getWidth() / (double) rect.width();
 		double scaleY = getHeight() / (double) rect.height();
 		double minimumScale = Math.min( scaleX, scaleY );
 		smoothScaleTo( minimumScale, SLIDE_DURATION );
-		
+
 	}
-	
+
 	/**
 	 * Adds a View to the intermediary ViewGroup that manages layout for the ZoomPanLayout.
 	 * This View will be laid out at the width and height specified by {@setSize} at 0, 0
@@ -392,27 +433,26 @@ public class ZoomPanLayout extends ViewGroup {
 	 * @param index (int) The position at which to add the child View
 	 */
 	@Override
-	public void addView( View child, int index, LayoutParams params ) {	
+	public void addView( View child, int index, LayoutParams params ) {
 		LayoutParams lp = new LayoutParams( scaledWidth, scaledHeight );
 		clip.addView( child, index, lp );
 	}
-	
+
 	@Override
-	public void removeAllViews() {		
+	public void removeAllViews() {
 		clip.removeAllViews();
 	}
-	
+
 	@Override
-	public void removeViewAt( int index ) {		
+	public void removeViewAt( int index ) {
 		clip.removeViewAt( index );
 	}
 
 	@Override
-	public void removeViews( int start, int count ) {		
+	public void removeViews( int start, int count ) {
 		clip.removeViews( start, count );
 	}
-	
-	
+
 	/**
 	 * Scales the ZoomPanLayout with animated progress
 	 * @param destination (double) The final scale to animate to
@@ -422,17 +462,19 @@ public class ZoomPanLayout extends ViewGroup {
 		if ( isTweening ) {
 			return;
 		}
-		doubleTapDestinationScale = destination;
-		tween.setDuration( duration );
-		tween.start();
+		saveHistoricalScale();
+		int x = (int) ( ( getWidth() * 0.5 ) + 0.5 );
+		int y = (int) ( ( getHeight() * 0.5 ) + 0.5 );
+		doubleTapStartOffset.set( x, y );
+		doubleTapStartScroll.set( getScrollX(), getScrollY() );
+		doubleTapStartScroll.offset( x, y );
+		startSmoothScaleTo( destination, duration );
 	}
-	
-	
-	
+
 	//------------------------------------------------------------------------------------
 	// PRIVATE/PROTECTED
 	//------------------------------------------------------------------------------------
-	
+
 	@Override
 	protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
 		measureChildren( widthMeasureSpec, heightMeasureSpec );
@@ -454,8 +496,6 @@ public class ZoomPanLayout extends ViewGroup {
 		}
 	}
 
-	
-
 	private void calculateMinimumScaleToFit() {
 		if ( scaleToFit ) {
 			double minimumScaleX = getWidth() / (double) baseWidth;
@@ -467,7 +507,6 @@ public class ZoomPanLayout extends ViewGroup {
 			}
 		}
 	}
-
 
 	private void updateClip() {
 		updateViewClip( clip );
@@ -485,37 +524,36 @@ public class ZoomPanLayout extends ViewGroup {
 		v.setLayoutParams( lp );
 	}
 
-
 	@Override
 	public void computeScroll() {
 		if ( scroller.computeScrollOffset() ) {
 			Point destination = new Point( scroller.getCurrX(), scroller.getCurrY() );
 			scrollToPoint( destination );
 			dispatchScrollActionNotification();
-			postInvalidate();  // should not be necessary but is...
+			postInvalidate(); // should not be necessary but is...
 		}
 	}
-	
-	private void dispatchScrollActionNotification(){
-		if ( scrollActionHandler.hasMessages( 0 )) {
+
+	private void dispatchScrollActionNotification() {
+		if ( scrollActionHandler.hasMessages( 0 ) ) {
 			scrollActionHandler.removeMessages( 0 );
 		}
 		scrollActionHandler.sendEmptyMessageDelayed( 0, 100 );
 	}
-	
+
 	private void handleScrollerAction() {
 		Point point = new Point();
 		point.x = getScrollX();
 		point.y = getScrollY();
-		for( GestureListener listener : gestureListeners ) {
+		for ( GestureListener listener : gestureListeners ) {
 			listener.onScrollComplete( point );
 		}
 		if ( isBeingFlung ) {
 			isBeingFlung = false;
-			for( GestureListener listener : gestureListeners ) {
+			for ( GestureListener listener : gestureListeners ) {
 				listener.onFlingComplete( point );
 			}
-		}		
+		}
 	}
 
 	private void constrainPoint( Point point ) {
@@ -527,8 +565,6 @@ public class ZoomPanLayout extends ViewGroup {
 			point.set( mx, my );
 		}
 	}
-
-	
 
 	private void constrainScroll() { // TODO:
 		Point currentScroll = new Point( getScrollX(), getScrollY() );
@@ -547,9 +583,6 @@ public class ZoomPanLayout extends ViewGroup {
 		return scaledHeight - getHeight();
 	}
 
-
-
-
 	private void saveHistoricalScale() {
 		historicalScale = scale;
 	}
@@ -557,7 +590,7 @@ public class ZoomPanLayout extends ViewGroup {
 	private void savePinchHistory() {
 		int x = (int) ( ( firstFinger.x + secondFinger.x ) * 0.5 );
 		int y = (int) ( ( firstFinger.y + secondFinger.y ) * 0.5 );
-		pinchStartOffset.set( x , y );
+		pinchStartOffset.set( x, y );
 		pinchStartScroll.set( getScrollX(), getScrollY() );
 		pinchStartScroll.offset( x, y );
 	}
@@ -628,39 +661,54 @@ public class ZoomPanLayout extends ViewGroup {
 		}
 		return false;
 	}
-	
+
 	// if the taps occurred within threshold, it's a double tap
-	private boolean determineIfQualifiedDoubleTap(){
+	private boolean determineIfQualifiedDoubleTap() {
 		long now = System.currentTimeMillis();
 		long ellapsed = now - lastTouchedAt;
 		lastTouchedAt = now;
-		return ( ellapsed <= DOUBLE_TAP_TIME_THRESHOLD )
-			&& ( Math.abs( firstFinger.x - doubleTapHistory.x ) <= SINGLE_TAP_DISTANCE_THRESHOLD )
-			&& ( Math.abs( firstFinger.y - doubleTapHistory.y ) <= SINGLE_TAP_DISTANCE_THRESHOLD );
+		return ( ellapsed <= DOUBLE_TAP_TIME_THRESHOLD ) && ( Math.abs( firstFinger.x - doubleTapHistory.x ) <= SINGLE_TAP_DISTANCE_THRESHOLD )
+				&& ( Math.abs( firstFinger.y - doubleTapHistory.y ) <= SINGLE_TAP_DISTANCE_THRESHOLD );
 
 	}
-	
-	private void saveTapActionOrigination(){
+
+	private void saveTapActionOrigination() {
 		singleTapHistory.set( firstFinger.x, firstFinger.y );
 	}
-	
-	private void saveDoubleTapOrigination(){
+
+	private void saveDoubleTapOrigination() {
 		doubleTapHistory.set( firstFinger.x, firstFinger.y );
 	}
 	
-	private void setTapInterrupted( boolean v ){
+	private void saveFirstFingerDown() {
+		firstFingerLastDown.set ( firstFinger.x, firstFinger.y );
+	}
+	
+	private void saveSecondFingerDown() {
+		secondFingerLastDown.set ( secondFinger.x, secondFinger.y );
+	}
+
+	private void setTapInterrupted( boolean v ) {
 		isTapInterrupted = v;
 	}
-	
+
 	// if the touch event has traveled past threshold since the finger first when down, it's not a tap
-	private boolean determineIfQualifiedSingleTap(){
-		return !isTapInterrupted
-			&& ( Math.abs( firstFinger.x - singleTapHistory.x ) <= SINGLE_TAP_DISTANCE_THRESHOLD )
-			&& ( Math.abs( firstFinger.y - singleTapHistory.y ) <= SINGLE_TAP_DISTANCE_THRESHOLD );
+	private boolean determineIfQualifiedSingleTap() {
+		return !isTapInterrupted && ( Math.abs( firstFinger.x - singleTapHistory.x ) <= SINGLE_TAP_DISTANCE_THRESHOLD )
+				&& ( Math.abs( firstFinger.y - singleTapHistory.y ) <= SINGLE_TAP_DISTANCE_THRESHOLD );
 	}
 	
+	private void startSmoothScaleTo( double destination, int duration ){
+		if ( isTweening ) {
+			return;
+		}
+		doubleTapDestinationScale = destination;
+		tween.setDuration( duration );
+		tween.start();
+	}
+
 	private void processEvent( MotionEvent event ) {
-		
+
 		// copy for history
 		lastFirstFinger.set( firstFinger.x, firstFinger.y );
 		lastSecondFinger.set( secondFinger.x, secondFinger.y );
@@ -675,12 +723,12 @@ public class ZoomPanLayout extends ViewGroup {
 			int x = (int) event.getX( i );
 			int y = (int) event.getY( i );
 			switch ( id ) {
-			case 0 :
+			case 0:
 				firstFingerIsDown = true;
 				firstFinger.set( x, y );
 				actualPoint.set( x, y );
 				break;
-			case 1 :
+			case 1:
 				secondFingerIsDown = true;
 				secondFinger.set( x, y );
 				actualPoint.set( x, y );
@@ -698,7 +746,6 @@ public class ZoomPanLayout extends ViewGroup {
 		}
 		velocity.addMovement( event );
 	}
-	
 
 	@Override
 	public boolean onTouchEvent( MotionEvent event ) {
@@ -709,53 +756,74 @@ public class ZoomPanLayout extends ViewGroup {
 		// react based on nature of touch event
 		switch ( action ) {
 		// first finger goes down
-		case MotionEvent.ACTION_DOWN :
+		case MotionEvent.ACTION_DOWN:
 			if ( !scroller.isFinished() ) {
 				scroller.abortAnimation();
 			}
 			isBeingFlung = false;
+			isDragging = false;
 			setTapInterrupted( false );
+			saveFirstFingerDown();
 			saveTapActionOrigination();
 			for ( GestureListener listener : gestureListeners ) {
 				listener.onFingerDown( actualPoint );
 			}
 			break;
 		// second finger goes down
-		case MotionEvent.ACTION_POINTER_DOWN :
+		case MotionEvent.ACTION_POINTER_DOWN:
+			isPinching = false;
+			saveSecondFingerDown();
 			setTapInterrupted( true );
-			saveHistoricalPinchDistance();
-			saveHistoricalScale();
-			savePinchHistory();
 			for ( GestureListener listener : gestureListeners ) {
 				listener.onFingerDown( actualPoint );
 			}
-			for ( GestureListener listener : gestureListeners ) {
-				listener.onPinchStart( pinchStartOffset );
-			}
-			for ( ZoomPanListener listener : zoomPanListeners ) {
-				listener.onZoomStart( scale );
-				listener.onZoomPanEvent();
-			}
 			break;
 		// either finger moves
-		case MotionEvent.ACTION_MOVE :
+		case MotionEvent.ACTION_MOVE:
 			// if both fingers are down, that means it's a pinch
 			if ( firstFingerIsDown && secondFingerIsDown ) {
-				setScaleFromPinch();
-				maintainScrollDuringPinchOperation();
-				for ( GestureListener listener : gestureListeners ) {
-					listener.onPinch( pinchStartOffset );
+				if ( !isPinching ) {
+					double firstFingerDistance = getDistance( firstFinger, firstFingerLastDown );
+					double secondFingerDistance = getDistance( secondFinger, secondFingerLastDown );
+					double distance = ( firstFingerDistance + secondFingerDistance ) * 0.5;
+	                isPinching = distance >= pinchStartThreshold;
+	                // are we starting a pinch action?
+					if ( isPinching ) {
+						saveHistoricalPinchDistance();
+						saveHistoricalScale();
+						savePinchHistory();
+						for ( GestureListener listener : gestureListeners ) {
+							listener.onPinchStart( pinchStartOffset );
+						}
+						for ( ZoomPanListener listener : zoomPanListeners ) {
+							listener.onZoomStart( scale );
+							listener.onZoomPanEvent();
+						}
+					}
 				}
-			// otherwise it's a drag
+				if ( isPinching ) {
+					setScaleFromPinch();
+					maintainScrollDuringPinchOperation();
+					for ( GestureListener listener : gestureListeners ) {
+						listener.onPinch( pinchStartOffset );
+					}
+				}				
+				// otherwise it's a drag
 			} else {
-				performDrag();
-				for ( GestureListener listener : gestureListeners ) {
-					listener.onDrag( actualPoint );
+				if ( !isDragging ) {
+	                double distance = getDistance( firstFinger, firstFingerLastDown );
+					isDragging = distance >= dragStartThreshold;
+				}
+				if ( isDragging ) {
+					performDrag();
+					for ( GestureListener listener : gestureListeners ) {
+						listener.onDrag( actualPoint );
+					}
 				}
 			}
 			break;
 		// first finger goes up
-		case MotionEvent.ACTION_UP :
+		case MotionEvent.ACTION_UP:
 			if ( performFling() ) {
 				isBeingFlung = true;
 				Point startPoint = new Point( getScrollX(), getScrollY() );
@@ -767,19 +835,20 @@ public class ZoomPanLayout extends ViewGroup {
 			if ( velocity != null ) {
 				velocity.recycle();
 				velocity = null;
-			}			
+			}
 			// could be a single tap...
-			if ( determineIfQualifiedSingleTap() ){
+			if ( determineIfQualifiedSingleTap() ) {
 				for ( GestureListener listener : gestureListeners ) {
 					listener.onTap( actualPoint );
 				}
 			}
 			// or a double tap
 			if ( determineIfQualifiedDoubleTap() ) {
+				scroller.forceFinished( true );
 				saveHistoricalScale();
 				saveDoubleTapHistory();
 				double destination = Math.min( maxScale, scale * 2 );
-				smoothScaleTo( destination, ZOOM_ANIMATION_DURATION ); 
+				startSmoothScaleTo( destination, ZOOM_ANIMATION_DURATION );
 				for ( GestureListener listener : gestureListeners ) {
 					listener.onDoubleTap( actualPoint );
 				}
@@ -790,9 +859,12 @@ public class ZoomPanLayout extends ViewGroup {
 			}
 			// save coordinates to measure against the next double tap
 			saveDoubleTapOrigination();
+			isDragging = false;
+			isPinching = false;
 			break;
 		// second finger goes up
-		case MotionEvent.ACTION_POINTER_UP :
+		case MotionEvent.ACTION_POINTER_UP:
+			isPinching = false;
 			setTapInterrupted( true );
 			for ( GestureListener listener : gestureListeners ) {
 				listener.onFingerUp( actualPoint );
@@ -809,15 +881,24 @@ public class ZoomPanLayout extends ViewGroup {
 		}
 
 		return true;
-		
+
 	}
 	
+	// sugar to calculate distance between 2 Points, because android.graphics.Point is horrible
+	private static double getDistance( Point p1, Point p2 ) {
+		int x = p1.x - p2.x;
+        int y = p1.y - p2.y;
+        return Math.sqrt( x * x + y * y );
+	}
+
 	private static class ScrollActionHandler extends Handler {
 		private final WeakReference<ZoomPanLayout> reference;
+
 		public ScrollActionHandler( ZoomPanLayout zoomPanLayout ) {
 			super();
 			reference = new WeakReference<ZoomPanLayout>( zoomPanLayout );
 		}
+
 		@Override
 		public void handleMessage( Message msg ) {
 			ZoomPanLayout zoomPanLayout = reference.get();

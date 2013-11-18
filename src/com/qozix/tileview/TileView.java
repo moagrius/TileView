@@ -31,6 +31,8 @@ import com.qozix.tileview.paths.PathManager;
 import com.qozix.tileview.samples.SampleManager;
 import com.qozix.tileview.tiles.TileManager;
 import com.qozix.tileview.tiles.TileRenderListener;
+import com.qozix.tileview.tiles.selector.TileSetSelector;
+import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
 
 /**
  * The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
@@ -202,6 +204,23 @@ public class TileView extends ZoomPanLayout {
 	}
 	
 	/**
+	 * Get the {@link TileSetSelector} implementation currently used to select tile sets.
+	 * @return TileSetSelector implementation currently in use.
+	 */
+	public TileSetSelector getTileSetSelector() {
+	    return detailManager.getTileSetSelector();
+	}
+
+	/**
+	 * Set the tile selection method, defaults to {@link TileSetSelectorMinimalUpScale}
+	 * Implement the {@link TileSetSelector} interface to customize how tile sets are selected.
+	 * @param selector (TileSetSelector) implementation that handles tile set selection as scale is changed.
+	 */
+	public void setTileSetSelector(TileSetSelector selector) {
+	    detailManager.setTileSetSelector(selector);
+	}
+	
+	/**
 	 * Defines whether tile bitmaps should be rendered using an AlphaAnimation
 	 * @param enabled (boolean) true if the TileView should render tiles with fade transitions
 	 */
@@ -328,10 +347,10 @@ public class TileView extends ZoomPanLayout {
 	 * and all positioned are calculated relatively.  If relative bounds are defined, position parameters
 	 * received by TileView methods will be translated to the the appropriate pixel value.
 	 * To remove this process, use undefineRelativeBounds
-	 * @param left (double) the left edge of the rectangle used when calculating position (e.g, longitude of the bottom-right coordinate)
-	 * @param top (double) the top edge of the rectangle used when calculating position (e.g, latitude of the top-left coordinate)
-	 * @param right (double) the right edge of the rectangle used when calculating position (e.g, longitude of the top-left coordinate)
-	 * @param bottom (double) the bottom edge of the rectangle used when calculating position (e.g, latitude of the bottom-right coordinate)
+	 * @param left (double) the left edge of the rectangle used when calculating position
+	 * @param top (double) the top edge of the rectangle used when calculating position
+	 * @param right (double) the right edge of the rectangle used when calculating position
+	 * @param bottom (double) the bottom edge of the rectangle used when calculating position
 	 */
 	public void defineRelativeBounds( double left, double top, double right, double bottom  ) {
 		positionManager.setBounds( left, top, right, bottom );
