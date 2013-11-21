@@ -3,7 +3,6 @@ package com.qozix.tileview.paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
@@ -14,19 +13,6 @@ import android.graphics.Point;
 import com.qozix.layouts.StaticLayout;
 import com.qozix.tileview.detail.DetailManager;
 
-/**
- * Canvas.drawPath takes a lot of resources. Using Canvas.drawLines is more
- * performant, but looks terrible for anything beyond a 1px plain line. Creating
- * and managing a bitmap either scales the thickness of the path, or if you
- * manage that, ends up taking as much juice as Canvas.drawPath. After many
- * iterations, the default implementation just offers path drawing via
- * Canvas.drawPath. If you are using very large paths, or need more
- * customization, consider a custom implementation (most likely a custom View
- * subclass added as child view of the TileView, with an overriden onDraw method
- * that manages paths in whatever fashion is most appropriate to your need, or
- * possibly a SurfaceView, or even OpenGL. ref
- * (http://stackoverflow.com/a/15208783/429430)
- */
 public class PathManager extends StaticLayout {
 
     private static final int DEFAULT_STROKE_COLOR = 0x883399FF;
@@ -119,7 +105,6 @@ public class PathManager extends StaticLayout {
         invalidate();
     }
 
-    @SuppressLint("NewApi")
     @Override
     public void onDraw(Canvas canvas) {
         if (shouldDraw) {
@@ -128,7 +113,6 @@ public class PathManager extends StaticLayout {
             for (DrawablePath drawablePath : paths) {
                 drawingPath.set(drawablePath.path);
                 drawingPath.transform(matrix);
-
                 // defer drawing to the path object
                 drawablePath.draw(canvas, drawingPath);
             }
