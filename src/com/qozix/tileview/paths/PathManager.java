@@ -13,7 +13,6 @@ import android.graphics.Point;
 
 import com.qozix.layouts.StaticLayout;
 import com.qozix.tileview.detail.DetailManager;
-import com.qozix.tileview.paths.drawables.SolidDrawablePath;
 
 /**
  * Canvas.drawPath takes a lot of resources. Using Canvas.drawLines is more
@@ -89,7 +88,7 @@ public class PathManager extends StaticLayout {
     }
 
     public DrawablePath addPath(Path path, Paint paint) {
-        DrawablePath drawablePath = new SolidDrawablePath();
+        DrawablePath drawablePath = new DrawablePath();
         drawablePath.setPath(path);
         drawablePath.setPaint(paint);
         return addPath(drawablePath);
