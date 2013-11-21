@@ -89,8 +89,8 @@ public class PathManager extends StaticLayout {
 
     public DrawablePath addPath(Path path, Paint paint) {
         DrawablePath drawablePath = new DrawablePath();
-        drawablePath.setPath(path);
-        drawablePath.setPaint(paint);
+        drawablePath.path = path;
+        drawablePath.paint = paint;
         return addPath(drawablePath);
     }
 
@@ -126,7 +126,7 @@ public class PathManager extends StaticLayout {
             float scale = (float) detailManager.getScale();
             matrix.setScale(scale, scale);
             for (DrawablePath drawablePath : paths) {
-                drawingPath.set(drawablePath.getPath());
+                drawingPath.set(drawablePath.path);
                 drawingPath.transform(matrix);
 
                 // defer drawing to the path object
