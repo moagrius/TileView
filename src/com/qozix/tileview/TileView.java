@@ -1166,4 +1166,12 @@ public class TileView extends ZoomPanLayout {
 		
 	}
 
+    public PositionManager getPositionManager() {
+        return positionManager;
+    }
+
+    public PathManager getPathManager() {
+        return pathManager;
+    }
+	
 }

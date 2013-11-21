@@ -171,7 +171,6 @@ pip-log.txt
 *.iml
 .idea
 /gen
-/libs
 /res
 /AndroidManifest.xml
 /proguard-project.txt
