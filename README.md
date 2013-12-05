@@ -4,7 +4,7 @@ with additional functionality for 2D dragging, flinging, pinch or double-tap to 
 built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or 
 coordinate system.</p>
 
-<a target="_blank" href="http://www.youtube.com/watch?v=N9fzrZDqAZY">
+<a style="display:block; float:left;" target="_blank" href="http://www.youtube.com/watch?v=N9fzrZDqAZY">
   <img src="http://img.youtube.com/vi/N9fzrZDqAZY/0.jpg" />
 </a>
 
