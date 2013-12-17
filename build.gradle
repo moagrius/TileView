@@ -12,24 +12,16 @@ buildscript
 
     dependencies
     {
-        classpath 'com.android.tools.build:gradle:0.5.+'
-        classpath 'com.squareup.gradle:gradle-android-test-plugin:0.9.+'
+        classpath 'com.android.tools.build:gradle:0.6.+'
     }
 
 }
 
-// default settings
-ext.compileSdkVersion = 18
-ext.buildToolsVersion = "18.0.1"
-ext.minSdkVersion = 8
-ext.targetSdkVersion = 18
-
 // Project properties
 project.group = 'com.qozix'
-project.version = '1.0.0'
+project.version = '1.0.7'
 
-apply plugin: 'android-library'
-apply plugin: 'signing'
+apply plugin: 'java'
 
 repositories
 {
@@ -39,29 +31,15 @@ repositories
 
 dependencies
 {
-    compile 'com.android.support:support-v4:13.0.+'
+	compile 'android:android:4.4_r1'
+    compile 'com.android.support:support-v4:19.0.+'
     compile 'com.jakewharton:disklrucache:1.3.1'
 }
 
-android
-{
-    buildToolsVersion "$androidBuildToolsVersion"
-    compileSdkVersion androidCompileSdkVersion
-    
-    defaultConfig
-    {
-        minSdkVersion androidMinSdkVersion
-        targetSdkVersion androidTargetSdkVersion
-    }
-
-    sourceSets
-    {
-        main
-        {
-            manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['src']
-            res.srcDirs = ['res']
-            assets.srcDirs = ['assets']
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
         }
     }
 }
@@ -73,14 +51,7 @@ configurations
     { extendsFrom configurations.default }
 }
 
-signing
-{
-    required
-    {
-        has("release") && gradle.taskGraph.hasTask("uploadArchives")
-    }
-    sign configurations.archives
-}
+
 
 def localRepoPath = "file://" +  new File(System.getProperty("user.home"), ".m2/repository").absolutePath
 
@@ -96,10 +67,10 @@ uploadArchives
 
         repository(url: localRepoPath) 
         
-        pom.artifactId = 'tileview'
+        pom.artifactId = 'TileView'
         pom.project 
         {
-            packaging 'aar'
+            packaging 'jar'
 
             licenses 
             {
