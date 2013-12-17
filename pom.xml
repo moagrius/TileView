@@ -5,13 +5,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.moagrius</groupId>
 	<artifactId>TileView</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.7</version>
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
 			<groupId>android</groupId>
 			<artifactId>android</artifactId>
-			<version>4.3_r1</version>
+			<version>4.4_r1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>com.android.support</groupId>
 			<artifactId>support-v4</artifactId>
-			<version>18.0.0</version>
+			<version>19.0.0</version>
 		</dependency>
 		
 	</dependencies>
@@ -34,11 +34,11 @@
 			<plugin>
 				<groupId>com.jayway.maven.plugins.android.generation2</groupId>
 				<artifactId>android-maven-plugin</artifactId>
-				<version>3.6.1</version>
+				<version>3.8.1</version>
 				<extensions>true</extensions>
 				<configuration>
 					<sdk>
-						<platform>18</platform>
+						<platform>19</platform>
 					</sdk>
 					<lint>
 					    <failOnError>false</failOnError>
@@ -85,8 +85,6 @@
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
-					<fork>true</fork>
-					<compilerVersion>1.6</compilerVersion>
 				</configuration>
 			</plugin>
 
