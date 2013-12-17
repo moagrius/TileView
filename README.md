@@ -45,10 +45,15 @@ tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");</pre>
 <h4>Maven users</h4>
 ```xml
 <dependency>
-	<groupId>com.github.moagrius</groupId>
+	<groupId>com.qozix</groupId>
 	<artifactId>TileView</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.7</version>
 </dependency>
+```
+
+<h4>Gradle users</h4>
+```xml
+   compile 'com.qozix:TileView:1.0.7'
 ```
 
 <h4>Releases</h4>

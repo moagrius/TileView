@@ -35,6 +35,13 @@ local.properties
 target/
 
 #################
+## Gradle
+#################
+build
+.gradle
+
+
+#################
 ## Visual Studio
 #################
 
