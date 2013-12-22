@@ -3,15 +3,30 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
 	<groupId>com.qozix</groupId>
 	<artifactId>TileView</artifactId>
 	<version>1.0.7</version>
 	<packaging>jar</packaging>
+	
+	<url>http://qozix.com</url>
+    <description>The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images, with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers), built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or coordinate system.</description>
+    <developers>
+        <developer>
+            <id>moagrius-dev</id>
+            <name>Mike Dunn</name>
+        </developer>
+    </developers>
+	
 	<dependencies>
 		<dependency>
 			<groupId>android</groupId>
 			<artifactId>android</artifactId>
-			<version>4.4_r1</version>
+			<version>4.4.2_r2</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -87,7 +102,53 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+						  <goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+				<version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
+	
+	<scm>
+		<connection>scm:git:git@github.com:moagrius/TileView.git</connection>
+		<developerConnection>scm:git:git@github.com:moagrius/TileView.git</developerConnection>
+		<tag>master</tag>
+		<url>https://github.com/moagrius/TileView</url>
+	</scm>
+
+	<issueManagement>
+		<system>github</system>
+		<url>https://github.com/moagrius/TileView</url>
+	</issueManagement>
+
+    <licenses>
+        <license>
+            <name>The MIT License (MIT)</name>
+            <url>https://github.com/moagrius/TileView/blob/master/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 </project>
