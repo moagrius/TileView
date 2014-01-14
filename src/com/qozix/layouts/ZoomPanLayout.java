@@ -423,6 +423,30 @@ public class ZoomPanLayout extends ViewGroup {
 		smoothScaleTo( minimumScale, SLIDE_DURATION );
 
 	}
+	
+	/**
+	 * Set the scale of the ZoomPanLayout while maintaining the current center point
+	 * @param scale (double) The new value of the ZoomPanLayout scale
+	 */
+	public void setScaleFromCenter( double s ) {
+
+		int centerOffsetX = (int) ( getWidth() * 0.5f );
+		int centerOffsetY = (int) ( getHeight() * 0.5f );
+
+		Point offset = new Point( centerOffsetX, centerOffsetY );
+		Point scroll = new Point( getScrollX(), getScrollY() );
+		scroll.offset( offset.x, offset.y );
+
+		double deltaScale = s / getScale();
+
+		int x = (int) ( scroll.x * deltaScale ) - offset.x;
+		int y = (int) ( scroll.y * deltaScale ) - offset.y;
+		Point destination = new Point( x, y );
+
+		setScale( s );
+		scrollToPoint( destination );
+
+	}
 
 	/**
 	 * Adds a View to the intermediary ViewGroup that manages layout for the ZoomPanLayout.

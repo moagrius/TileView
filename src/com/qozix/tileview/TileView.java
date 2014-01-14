@@ -402,6 +402,7 @@ public class TileView extends ZoomPanLayout {
 	public void moveTo( double x, double y ) {
 		Point point = positionManager.translate( x, y, getScale() );
 		scrollToPoint( point );
+		requestRender();
 	}
 	
 	/**
@@ -412,6 +413,7 @@ public class TileView extends ZoomPanLayout {
 	public void moveToAndCenter( double x, double y ) {
 		Point point = positionManager.translate( x, y, getScale() );
 		scrollToAndCenter( point );
+		requestRender();
 	}
 	
 	/**
