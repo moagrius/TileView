@@ -871,7 +871,12 @@ public class ZoomPanLayout extends ViewGroup {
 				scroller.forceFinished( true );
 				saveHistoricalScale();
 				saveDoubleTapHistory();
-				double destination = Math.min( maxScale, scale * 2 );
+				double destination;
+				if ( scale >= maxScale ) {
+					destination = minScale;
+				} else {
+					destination = Math.min( maxScale, scale * 2 );
+				}
 				startSmoothScaleTo( destination, ZOOM_ANIMATION_DURATION );
 				for ( GestureListener listener : gestureListeners ) {
 					listener.onDoubleTap( actualPoint );
