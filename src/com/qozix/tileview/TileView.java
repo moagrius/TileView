@@ -402,6 +402,7 @@ public class TileView extends ZoomPanLayout {
 	public void moveTo( double x, double y ) {
 		Point point = positionManager.translate( x, y, getScale() );
 		scrollToPoint( point );
+		requestRender();
 	}
 	
 	/**
@@ -412,6 +413,7 @@ public class TileView extends ZoomPanLayout {
 	public void moveToAndCenter( double x, double y ) {
 		Point point = positionManager.translate( x, y, getScale() );
 		scrollToAndCenter( point );
+		requestRender();
 	}
 	
 	/**
@@ -708,6 +710,7 @@ public class TileView extends ZoomPanLayout {
 	 * Appropriate for Activity.onResume
 	 */
 	public void resume(){
+		updateViewport();
 		tileManager.requestRender();
 		sampleManager.update();
 		pathManager.setShouldDraw( true );
@@ -717,6 +720,7 @@ public class TileView extends ZoomPanLayout {
 	 * Request the TileView reevaluate tile sets, rendered tiles, samples, invalidates, etc
 	 */
 	public void refresh() {
+		updateViewport();
 		tileManager.updateTileSet();
 		tileManager.requestRender();
 		sampleManager.update();
@@ -732,10 +736,8 @@ public class TileView extends ZoomPanLayout {
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
 		super.onLayout( changed, l, t, r, b );
-		if ( changed ) {
-			updateViewport();
-			requestRender();
-		}
+		updateViewport();
+		requestRender();
 	}	
 	
 	// let the zoom manager know what tiles to show based on our position and dimensions
