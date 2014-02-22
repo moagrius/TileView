@@ -12,6 +12,8 @@ import android.graphics.RectF;
 import android.graphics.Region;
 import android.view.View;
 
+import com.qozix.layouts.AnchorLayout;
+import com.qozix.layouts.TranslationLayout;
 import com.qozix.layouts.ZoomPanLayout;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailLevelPatternParser;
@@ -436,6 +438,47 @@ public class TileView extends ZoomPanLayout {
 		slideToAndCenter( point );
 	}
 	
+	/**
+	 * Scales and moves TileView so that each of the passed points is visible.
+	 * @param points (List<double[]>) List of 2-element double arrays to be translated to Points (pixel values).  The first double should represent the relative x value, the second is y
+	 */
+	public void framePoints( List<double[]> points ) {
+
+		    double topMost = -Integer.MAX_VALUE;
+		    double bottomMost = Integer.MAX_VALUE;
+		    double leftMost = Integer.MAX_VALUE;
+		    double rightMost = -Integer.MAX_VALUE;
+
+		    for( double[] coordinate : points ) {
+	            double x = coordinate[0];
+	            double y = coordinate[1];
+	            if(positionManager.contains( x, y )){
+	            	topMost = Math.max( topMost, x );
+		            bottomMost = Math.min( bottomMost, x );
+		            leftMost = Math.min( leftMost, y );
+		            rightMost = Math.max( rightMost, y );	
+	            }	            	        
+		    }
+
+		    Point topRight = translate( topMost, rightMost );
+		    Point bottomLeft = translate( bottomMost, leftMost );
+
+		    int width = bottomLeft.x - topRight.x;
+		    int height = bottomLeft.y - topRight.y;
+
+		    double scaleX = Math.abs( getWidth() / (double) width );
+		    double scaleY = Math.abs( getHeight() / (double) height );
+
+		    double destinationScale = Math.min( scaleX, scaleY );
+
+		    double middleX = ( rightMost + leftMost ) * 0.5f;
+		    double middleY = ( topMost + bottomMost ) * 0.5f;
+
+		    moveToAndCenter( middleY, middleX );        
+		    setScaleFromCenter( destinationScale );     
+		
+	}
+	
 	
 	//------------------------------------------------------------------------------------
 	// Marker, Callout and HotSpot API
@@ -484,10 +527,60 @@ public class TileView extends ZoomPanLayout {
 
 	/**
 	 * Removes a marker View from the TileView's view tree.
-	 * @param view The marker View to be removed.
+	 * @param view (View) The marker View to be removed.
 	 */
 	public void removeMarker( View view ) {
 		markerManager.removeMarker( view );
+	}
+	
+	/**
+	 * Moves an existing marker to another position.
+	 * @param view The marker View to be repositioned.
+	 * @param x (double) relative x position the View instance should be positioned at
+	 * @param y (double) relative y position the View instance should be positioned at
+	 */
+	public void moveMarker( View view, double x, double y ){
+		if( markerManager.indexOfChild( view ) > -1 ){
+			Point point = positionManager.translate( x, y );
+			LayoutParams params = view.getLayoutParams();
+			if( params instanceof AnchorLayout.LayoutParams ) {
+				AnchorLayout.LayoutParams anchorLayoutParams = (AnchorLayout.LayoutParams) params;
+				anchorLayoutParams.x = point.x;
+				anchorLayoutParams.y = point.y;
+				view.setLayoutParams( anchorLayoutParams );
+				markerManager.requestLayout();
+			}	
+		}			
+	}
+	
+	/**
+	 * Scroll the TileView so that the View passed is centered in the viewport
+	 * @param view (View) the View marker that the TileView should center on.
+	 * @params animate (boolean) should the movement use a transition effectg
+	 */
+	public void moveToMarker( View view, boolean animate ) {
+		if( markerManager.indexOfChild( view ) > -1 ){
+			LayoutParams params = view.getLayoutParams();
+			if( params instanceof AnchorLayout.LayoutParams ) {
+				AnchorLayout.LayoutParams anchorLayoutParams = (AnchorLayout.LayoutParams) params;
+				int scaledX = (int) ( anchorLayoutParams.x * getScale() );
+				int scaledY = (int) ( anchorLayoutParams.y * getScale() );
+				Point point = new Point( scaledX, scaledY );
+				if( animate ) {
+					slideToAndCenter( point );
+				} else {
+					scrollToAndCenter( point );
+				}
+			}	
+		}
+	}
+	
+	/**
+	 * Scroll the TileView so that the View passed is centered in the viewport
+	 * @param view (View) the View marker that the TileView should center on.
+	 */
+	public void moveToMarker( View view ) {
+		moveToMarker( view, false );
 	}
 	
 	/**
