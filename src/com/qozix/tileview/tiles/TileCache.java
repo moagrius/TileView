@@ -65,7 +65,7 @@ public class TileCache {
 					
 				}
 			}
-		});
+		}).start();
 	}
 
 	public void addBitmap( String key, Bitmap bitmap ) {
@@ -94,7 +94,7 @@ public class TileCache {
 					
 				}
 			}
-		});		
+		}).start();		
 	}
 	
 	public void clear() {
@@ -108,7 +108,7 @@ public class TileCache {
 					
 				}
 			}
-		});		
+		}).start();		
 	}
 	
 	private void addBitmapToMemoryCache( String key, Bitmap bitmap ) {
