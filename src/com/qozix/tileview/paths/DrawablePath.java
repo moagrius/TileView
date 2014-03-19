@@ -25,12 +25,7 @@ public class DrawablePath {
 	 */
 	@SuppressLint("NewApi")
 	public void draw( Canvas canvas, Path drawingPath ) {
-		// quickReject is not supported on hw accelerated canvas versions below 16 but isHardwareAccelerated works only from version 11
-		if ( android.os.Build.VERSION.SDK_INT >= 11 && canvas.isHardwareAccelerated() && android.os.Build.VERSION.SDK_INT < 16 ) {
-			canvas.drawPath( drawingPath, paint );
-		} else if ( !canvas.quickReject( drawingPath, Canvas.EdgeType.BW ) ) {
-			canvas.drawPath( drawingPath, paint );
-		}
+		canvas.drawPath( drawingPath, paint );
 	}
 
 }
