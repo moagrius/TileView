@@ -8,7 +8,7 @@
 	</parent>
 	<groupId>com.qozix</groupId>
 	<artifactId>TileView</artifactId>
-	<version>1.0.11</version>
+	<version>1.0.12-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	
 	<url>http://qozix.com</url>
