@@ -282,6 +282,14 @@ public class ZoomPanLayout extends ViewGroup {
 	public View getClip() {
 		return clip;
 	}
+
+	/**
+	 * Returns the Scroller instance used to manage dragging and flinging.
+	 * @return (Scroller) The Scroller instance use to manage dragging and flinging.
+	 */
+	public Scroller getScroller(){
+		return scroller;
+	}
 	
 	/**
 	 * Returns the minimum distance required to start a drag operation, in pixels.
