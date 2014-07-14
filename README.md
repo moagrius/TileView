@@ -65,4 +65,4 @@ tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");</pre>
 ```
 
 <h4>Releases</h4>
-<p>Check <a target="_blank" href="https://github.com/moagrius/TileView/releases">here</a> for the the latest release.  I *try* to add a new release after any significant commit.</p>
+<p>Check <a target="_blank" href="https://github.com/moagrius/TileView/releases">here</a> for the the latest release.</p>
