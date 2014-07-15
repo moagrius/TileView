@@ -95,11 +95,10 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 			return;
 		}
 		// throttle requests
-		if ( handler.hasMessages( RENDER_FLAG ) ) {
-			handler.removeMessages( RENDER_FLAG );
+		if ( !handler.hasMessages( RENDER_FLAG ) ) {
+			// give it enough buffer that (generally) successive calls will be captured
+			handler.sendEmptyMessageDelayed( RENDER_FLAG, RENDER_BUFFER );
 		}
-		// give it enough buffer that (generally) successive calls will be captured
-		handler.sendEmptyMessageDelayed( RENDER_FLAG, RENDER_BUFFER );
 	}
 
 	public void cancelRender() {
