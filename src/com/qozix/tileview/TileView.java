@@ -540,18 +540,22 @@ public class TileView extends ZoomPanLayout {
 	 * @param y (double) relative y position the View instance should be positioned at
 	 */
 	public void moveMarker( View view, double x, double y ){
-		if( markerManager.indexOfChild( view ) > -1 ){
-			Point point = positionManager.translate( x, y );
-			LayoutParams params = view.getLayoutParams();
-			if( params instanceof AnchorLayout.LayoutParams ) {
-				AnchorLayout.LayoutParams anchorLayoutParams = (AnchorLayout.LayoutParams) params;
-				anchorLayoutParams.x = point.x;
-				anchorLayoutParams.y = point.y;
-				view.setLayoutParams( anchorLayoutParams );
-				markerManager.requestLayout();
-			}	
-		}			
+    Point point = positionManager.translate( x, y );
+    markerManager.moveMarker( view, point.x, point.y );
 	}
+
+  /**
+   * Moves an existing marker to another position.
+   * @param view The marker View to be repositioned.
+   * @param x (double) relative x position the View instance should be positioned at
+   * @param y (double) relative y position the View instance should be positioned at
+   * @param aX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
+   * @param aY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+   */
+  public void moveMarker( View view, double x, double y, float anchorX, float anchorY ){
+    Point point = positionManager.translate( x, y );
+    markerManager.moveMarker( view, point.x, point.y, anchorX, anchorY );
+  }
 	
 	/**
 	 * Scroll the TileView so that the View passed is centered in the viewport

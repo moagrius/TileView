@@ -1,10 +1,5 @@
 package com.qozix.tileview.markers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map.Entry;
-
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -13,6 +8,11 @@ import android.view.View;
 import com.qozix.layouts.TranslationLayout;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailManager;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 /*
  * TODO: need to consolidate positioning logic - works as is, but does too many unnecessary and possibly messy calculations
@@ -48,6 +48,23 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 		requestLayout();
 		return v;
 	}
+
+  public void moveMarker( View v, int x, int y ){
+    LayoutParams lp = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y );
+    moveMarker( v, lp );
+  }
+
+  public void moveMarker( View v, int x, int y, float aX, float aY ) {
+    LayoutParams lp = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y, aX, aY );
+    moveMarker( v, lp );
+  }
+
+  public void moveMarker( View v, LayoutParams params ) {
+    if(markerMap.containsKey(v)){
+      v.setLayoutParams(params);
+      requestLayout();
+    }
+  }
 	
 	public void removeMarker( View v ) {
 		removeView( v );
