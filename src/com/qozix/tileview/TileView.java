@@ -39,17 +39,17 @@ import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
 /**
  * The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
  * with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
- * built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or 
+ * built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
  * coordinate system.
- * 
+ *
  * <p>A minimal implementation:</p>
- *  
+ *
  * <pre>{@code
  * TileView tileView = new TileView(this);
  * tileView.setSize(3000,5000);
  * tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");
  * }</pre>
- * 
+ *
  * A more advanced implementation might look like:
  * <pre>{@code
  * TileView tileView = new TileView(this);
@@ -64,57 +64,57 @@ import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
  * tileView.addMarker(anotherView, 42.3665, -71.05224);
  * tileView.addMarkerEventListener(someMarkerEventListener);
  * }</pre>
- * 
+ *
  */
 public class TileView extends ZoomPanLayout {
 
 	private HashSet<TileViewEventListener> tileViewEventListeners = new HashSet<TileViewEventListener>();
-	
+
 	private DetailManager detailManager = new DetailManager();
 	private PositionManager positionManager = new PositionManager();
-	
+
 	private HotSpotManager hotSpotManager = new HotSpotManager( detailManager );
-	
+
 	private SampleManager sampleManager;
 	private TileManager tileManager;
 	private PathManager pathManager;
 	private MarkerManager markerManager;
 	private CalloutManager calloutManager;
-	
-	
+
+
 	/**
 	 * Constructor to use when creating a TileView from code.  Inflating from XML is not currently supported.
 	 * @param context (Context) The Context the TileView is running in, through which it can access the current theme, resources, etc.
 	 */
 	public TileView( Context context ) {
-		
+
 		super( context );
-		
+
 		sampleManager = new SampleManager( context, detailManager );
 		addView( sampleManager );
-		
+
 		tileManager = new TileManager( context, detailManager );
-		addView( tileManager );		
-		
+		addView( tileManager );
+
 		pathManager = new PathManager( context, detailManager );
 		addView( pathManager );
-		
+
 		markerManager = new MarkerManager( context, detailManager );
-		addView( markerManager );		
-		
+		addView( markerManager );
+
 		calloutManager = new CalloutManager( context, detailManager );
 		addView( calloutManager );
-		
+
 		detailManager.addDetailLevelEventListener( detailLevelEventListener );
 		tileManager.setTileRenderListener( renderListener );
-		
+
 		addZoomPanListener( zoomPanListener );
 		addGestureListener( gestureListener );
-		
+
 		requestRender();
-		
+
 	}
-   
+
 	//------------------------------------------------------------------------------------
 	// PUBLIC API
 	//------------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ public class TileView extends ZoomPanLayout {
 	//------------------------------------------------------------------------------------
 	// Event Management API
 	//------------------------------------------------------------------------------------
-	
+
 	/**
 	 * Register an event listener callback object for this TileView.
 	 * Note this is method adds a listener to an array of listeners, and does not set
@@ -132,7 +132,7 @@ public class TileView extends ZoomPanLayout {
 	public void addTileViewEventListener( TileViewEventListener listener ) {
 		tileViewEventListeners.add( listener );
 	}
-	
+
 	/**
 	 * Removes a TileViewEventListener object from those listening to this TileView.
 	 * @param listener (TileViewEventListener) an implementation of the TileViewEventListener interface
@@ -140,11 +140,11 @@ public class TileView extends ZoomPanLayout {
 	public void removeTileViewEventListener( TileViewEventListener listener ) {
 		tileViewEventListeners.remove( listener );
 	}
-	
+
 	//------------------------------------------------------------------------------------
 	// Rendering API
 	//------------------------------------------------------------------------------------
-	
+
 	/**
 	 * Request that the current tile set is re-examined and re-drawn.
 	 * The request is added to a queue and is not guaranteed to be processed at any particular
@@ -153,7 +153,7 @@ public class TileView extends ZoomPanLayout {
 	public void requestRender(){
 		tileManager.requestRender();
 	}
-	
+
 	/**
 	 * Notify the TileView that it may stop rendering tiles.  The rendering thread will be
 	 * sent an interrupt request, but no guarantee is provided when the request will be responded to.
@@ -161,7 +161,7 @@ public class TileView extends ZoomPanLayout {
 	public void cancelRender() {
 		tileManager.cancelRender();
 	}
-	
+
 	/**
 	 * Enables or disables tile image caching (in-memory and on-disk)
 	 * @param shouldCache (boolean) true to enable caching, false to disable it (default)
@@ -169,7 +169,7 @@ public class TileView extends ZoomPanLayout {
 	public void setCacheEnabled( boolean shouldCache ) {
 		tileManager.setCacheEnabled( shouldCache );
 	}
-	
+
 	/**
 	 * Sets a custom class to perform the decode operation when tile bitmaps are requested.
 	 * By default, a BitmapDecoder implementation is provided that renders bitmaps from the context's Assets,
@@ -182,7 +182,7 @@ public class TileView extends ZoomPanLayout {
 		setTileDecoder( decoder );
 		setDownsampleDecoder( decoder );
 	}
-	
+
 	/**
 	 * Sets a custom class to perform the decode operation when tile bitmaps are requested for tile images only.
 	 * By default, a BitmapDecoder implementation is provided that renders bitmaps from the context's Assets,
@@ -193,7 +193,7 @@ public class TileView extends ZoomPanLayout {
 	public void setTileDecoder( BitmapDecoder decoder ) {
 		tileManager.setDecoder( decoder );
 	}
-	
+
 	/**
 	 * Sets a custom class to perform the decode operation when tile bitmaps are requested for downsample images only.
 	 * By default, a BitmapDecoder implementation is provided that renders bitmaps from the context's Assets,
@@ -204,7 +204,7 @@ public class TileView extends ZoomPanLayout {
 	public void setDownsampleDecoder( BitmapDecoder decoder ) {
 		sampleManager.setDecoder( decoder );
 	}
-	
+
 	/**
 	 * Get the {@link TileSetSelector} implementation currently used to select tile sets.
 	 * @return TileSetSelector implementation currently in use.
@@ -221,7 +221,7 @@ public class TileView extends ZoomPanLayout {
 	public void setTileSetSelector(TileSetSelector selector) {
 	    detailManager.setTileSetSelector(selector);
 	}
-	
+
 	/**
 	 * Defines whether tile bitmaps should be rendered using an AlphaAnimation
 	 * @param enabled (boolean) true if the TileView should render tiles with fade transitions
@@ -229,7 +229,7 @@ public class TileView extends ZoomPanLayout {
 	public void setTransitionsEnabled( boolean enabled ) {
 		tileManager.setTransitionsEnabled( enabled );
 	}
-	
+
 	/**
 	 * Define the duration (in milliseconds) for each tile transition.
 	 * @param duration (int) the duration of the transition in milliseconds.
@@ -237,11 +237,11 @@ public class TileView extends ZoomPanLayout {
 	public void setTransitionDuration( int duration ) {
 		tileManager.setTransitionDuration( duration );
 	}
-	
+
 	//------------------------------------------------------------------------------------
 	// Detail Level Management API
 	//------------------------------------------------------------------------------------
-	
+
 	/**
 	 * Defines the total size, in pixels, of the tile set at 100% scale.
 	 * The TileView wills pan within it's layout dimensions, with the content (scrollable)
@@ -258,7 +258,7 @@ public class TileView extends ZoomPanLayout {
 		// notify manager for relative positioning
 		positionManager.setSize( w, h );
 	}
-	
+
 	/**
 	 * Register a tile set to be used for a particular detail level.
 	 * Each tile set to be used must be registered using this method,
@@ -269,7 +269,7 @@ public class TileView extends ZoomPanLayout {
 	public void addDetailLevel( float detailScale, String pattern ) {
 		detailManager.addDetailLevel( detailScale, pattern, null );
 	}
-	
+
 	/**
 	 * Register a tile set to be used for a particular detail level.
 	 * Each tile set to be used must be registered using this method,
@@ -281,7 +281,7 @@ public class TileView extends ZoomPanLayout {
 	public void addDetailLevel( float detailScale, String pattern, String downsample ){
 		detailManager.addDetailLevel( detailScale, pattern, downsample );
 	}
-	
+
 	/**
 	 * Register a tile set to be used for a particular detail level.
 	 * Each tile set to be used must be registered using this method,
@@ -295,7 +295,7 @@ public class TileView extends ZoomPanLayout {
 	public void addDetailLevel( float detailScale, String pattern, String downsample, int tileWidth, int tileHeight ){
 		detailManager.addDetailLevel( detailScale, pattern, downsample, tileWidth, tileHeight );
 	}
-	
+
 	/**
 	 * Clear all previously registered zoom levels.  This method is experimental.
 	 */
@@ -303,7 +303,7 @@ public class TileView extends ZoomPanLayout {
 		detailManager.resetDetailLevels();
 		refresh();
 	}
-	
+
 	/**
 	 * While the detail level is locked (after this method is invoked, and before unlockDetailLevel is invoked),
 	 * the DetailLevel will not change, and the current DetailLevel will be scaled beyond the normal
@@ -313,14 +313,14 @@ public class TileView extends ZoomPanLayout {
 	public void lockDetailLevel(){
 		detailManager.lockDetailLevel();
 	}
-	
+
 	/**
 	 * Unlocks a DetailLevel locked with lockDetailLevel
 	 */
 	public void unlockDetailLevel(){
 		detailManager.unlockDetailLevel();
 	}
-	
+
 	/**
 	 * pads the viewport by the number of pixels passed.  e.g., setViewportPadding( 100 ) instructs the
 	 * TileView to interpret it's actual viewport offset by 100 pixels in each direction (top, left,
@@ -330,7 +330,7 @@ public class TileView extends ZoomPanLayout {
 	public void setViewportPadding( int padding ) {
 		detailManager.setPadding( padding );
 	}
-	
+
 	/**
 	 * Define a custom parser to manage String file names representing image tiles
 	 * @param parser (DetailLevelPatternParser) parser that returns String objects from passed pattern, column and row.
@@ -338,11 +338,11 @@ public class TileView extends ZoomPanLayout {
 	public void setTileSetPatternParser( DetailLevelPatternParser parser ) {
 		detailManager.setDetailLevelPatternParser( parser );
 	}
-	
+
 	//------------------------------------------------------------------------------------
 	// Positioning API
 	//------------------------------------------------------------------------------------
-	
+
 	/**
 	 * Register a set of offset points to use when calculating position within the TileView.
 	 * Any type of coordinate system can be used (any type of lat/lng, percentile-based, etc),
@@ -357,7 +357,7 @@ public class TileView extends ZoomPanLayout {
 	public void defineRelativeBounds( double left, double top, double right, double bottom  ) {
 		positionManager.setBounds( left, top, right, bottom );
 	}
-	
+
 	/**
 	 * Unregisters arbitrary bounds and coordinate system.  After invoking this method, TileView methods that
 	 * receive position method parameters will use pixel values, relative to the TileView's registered size (at 1.0d scale)
@@ -365,7 +365,7 @@ public class TileView extends ZoomPanLayout {
 	public void undefineRelativeBounds() {
 		positionManager.unsetBounds();
 	}
-	
+
 	/**
 	 * Translate a relative x and y position into a Point object with x and y values populated as pixel values, relative to the size of the TileView.
 	 * @param x (int) relative x position to be translated to absolute pixel value
@@ -375,7 +375,7 @@ public class TileView extends ZoomPanLayout {
 	public Point translate( double x, double y ) {
 		return positionManager.translate( x, y );
 	}
-	
+
 	/**
 	 * Translate a List of relative x and y positions (double array... { x, y }
 	 * into Point objects with x and y values populated as pixel values, relative to the size of the TileView.
@@ -385,7 +385,7 @@ public class TileView extends ZoomPanLayout {
 	public List<Point> translate( List<double[]> positions ) {
 		return positionManager.translate( positions );
 	}
-	
+
 	/**
 	 * Divides a number by the current scale value, effectively flipping scaled values.  This can be useful when
 	 * determining a relative position or dimension from a real pixel value.
@@ -395,7 +395,7 @@ public class TileView extends ZoomPanLayout {
 	public double unscale( double value ) {
 		return value / getScale();
 	}
-	
+
 	/**
 	 * Scrolls (instantly) the TileView to the x and y positions provided.
 	 * @param x (double) the relative x position to move to
@@ -406,7 +406,7 @@ public class TileView extends ZoomPanLayout {
 		scrollToPoint( point );
 		requestRender();
 	}
-	
+
 	/**
 	 * Scrolls (instantly) the TileView to the x and y positions provided, then centers the viewport to the position.
 	 * @param x (double) the relative x position to move to
@@ -417,7 +417,7 @@ public class TileView extends ZoomPanLayout {
 		scrollToAndCenter( point );
 		requestRender();
 	}
-	
+
 	/**
 	 * Scrolls (with animation) the TIelView to the relative x and y positions provided.
 	 * @param x (double) the relative x position to move to
@@ -427,7 +427,7 @@ public class TileView extends ZoomPanLayout {
 		Point point = positionManager.translate( x, y, getScale() );
 		slideToPoint( point );
 	}
-	
+
 	/**
 	 * Scrolls (with animation) the TileView to the x and y positions provided, then centers the viewport to the position.
 	 * @param x (double) the relative x position to move to
@@ -437,7 +437,7 @@ public class TileView extends ZoomPanLayout {
 		Point point = positionManager.translate( x, y, getScale() );
 		slideToAndCenter( point );
 	}
-	
+
 	/**
 	 * Scales and moves TileView so that each of the passed points is visible.
 	 * @param points (List<double[]>) List of 2-element double arrays to be translated to Points (pixel values).  The first double should represent the relative x value, the second is y
@@ -456,8 +456,8 @@ public class TileView extends ZoomPanLayout {
 	            	topMost = Math.max( topMost, x );
 		            bottomMost = Math.min( bottomMost, x );
 		            leftMost = Math.min( leftMost, y );
-		            rightMost = Math.max( rightMost, y );	
-	            }	            	        
+		            rightMost = Math.max( rightMost, y );
+	            }
 		    }
 
 		    Point topRight = translate( topMost, rightMost );
@@ -474,29 +474,29 @@ public class TileView extends ZoomPanLayout {
 		    double middleX = ( rightMost + leftMost ) * 0.5f;
 		    double middleY = ( topMost + bottomMost ) * 0.5f;
 
-		    moveToAndCenter( middleY, middleX );        
-		    setScaleFromCenter( destinationScale );     
-		
+		    moveToAndCenter( middleY, middleX );
+		    setScaleFromCenter( destinationScale );
+
 	}
-	
-	
+
+
 	//------------------------------------------------------------------------------------
 	// Marker, Callout and HotSpot API
 	//------------------------------------------------------------------------------------
-	
+
 	/**
 	 * Markers added to this TileView will have anchor logic applied on the values provided here.
 	 * E.g., setMarkerAnchorPoints(-0.5f, -1.0f) will have markers centered horizontally, positioned
 	 * vertically to a value equal to - 1 * height.
 	 * Note that individual markers can be assigned specific anchors - this method applies a default
 	 * value to all markers added without specifying anchor values.
-	 * @param anchorX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value 
+	 * @param anchorX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
 	 * @param anchorY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
 	 */
 	public void setMarkerAnchorPoints( float anchorX, float anchorY ) {
 		markerManager.setAnchors( anchorX, anchorY );
 	}
-	
+
 	/**
 	 * Add a marker to the the TileView.  The marker can be any View.
 	 * No LayoutParams are required; the View will be laid out using WRAP_CONTENT for both width and height, and positioned based on the parameters
@@ -509,14 +509,14 @@ public class TileView extends ZoomPanLayout {
 		Point point = positionManager.translate( x, y );
 		return markerManager.addMarker( view, point.x, point.y );
 	}
-	
+
 	/**
 	 * Add a marker to the the TileView.  The marker can be any View.
 	 * No LayoutParams are required; the View will be laid out using WRAP_CONTENT for both width and height, and positioned based on the parameters
 	 * @param view (View) View instance to be added to the TileView
 	 * @param x (double) relative x position the View instance should be positioned at
 	 * @param y (double) relative y position the View instance should be positioned at
-	 * @param aX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value 
+	 * @param aX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
 	 * @param aY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
 	 * @return (View) the View instance added to the TileView
 	 */
@@ -532,27 +532,31 @@ public class TileView extends ZoomPanLayout {
 	public void removeMarker( View view ) {
 		markerManager.removeMarker( view );
 	}
-	
+
 	/**
 	 * Moves an existing marker to another position.
 	 * @param view The marker View to be repositioned.
 	 * @param x (double) relative x position the View instance should be positioned at
 	 * @param y (double) relative y position the View instance should be positioned at
 	 */
-	public void moveMarker( View view, double x, double y ){
-		if( markerManager.indexOfChild( view ) > -1 ){
-			Point point = positionManager.translate( x, y );
-			LayoutParams params = view.getLayoutParams();
-			if( params instanceof AnchorLayout.LayoutParams ) {
-				AnchorLayout.LayoutParams anchorLayoutParams = (AnchorLayout.LayoutParams) params;
-				anchorLayoutParams.x = point.x;
-				anchorLayoutParams.y = point.y;
-				view.setLayoutParams( anchorLayoutParams );
-				markerManager.requestLayout();
-			}	
-		}			
+	public void moveMarker( View view, double x, double y ) {
+		Point point = positionManager.translate( x, y );
+		markerManager.moveMarker( view, point.x, point.y );
 	}
-	
+
+	/**
+	 * Moves an existing marker to another position.
+	 * @param view The marker View to be repositioned.
+	 * @param x (double) relative x position the View instance should be positioned at
+	 * @param y (double) relative y position the View instance should be positioned at
+	 * @param aX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
+	 * @param aY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+	 */
+	public void moveMarker( View view, double x, double y, float anchorX, float anchorY ) {
+		Point point = positionManager.translate( x, y );
+		markerManager.moveMarker( view, point.x, point.y, anchorX, anchorY );
+	}
+
 	/**
 	 * Scroll the TileView so that the View passed is centered in the viewport
 	 * @param view (View) the View marker that the TileView should center on.
@@ -571,10 +575,10 @@ public class TileView extends ZoomPanLayout {
 				} else {
 					scrollToAndCenter( point );
 				}
-			}	
+			}
 		}
 	}
-	
+
 	/**
 	 * Scroll the TileView so that the View passed is centered in the viewport
 	 * @param view (View) the View marker that the TileView should center on.
@@ -582,7 +586,7 @@ public class TileView extends ZoomPanLayout {
 	public void moveToMarker( View view ) {
 		moveToMarker( view, false );
 	}
-	
+
 	/**
 	 * Register a MarkerEventListener.  Unlike standard touch events attached to marker View's (e.g., View.OnClickListener),
 	 * MarkerEventListeners do not consume the touch event, so will not interfere with scrolling.  While the event is
@@ -592,7 +596,7 @@ public class TileView extends ZoomPanLayout {
 	public void addMarkerEventListener( MarkerEventListener listener ) {
 		markerManager.addMarkerEventListener( listener );
 	}
-	
+
 	/**
 	 * Removes a MarkerEventListener from the TileView's registry.
 	 * @param listener (MarkerEventListener) listener to be removed From the TileView's list of MarkerEventListeners
@@ -615,7 +619,7 @@ public class TileView extends ZoomPanLayout {
 		Point point = positionManager.translate( x, y );
 		return calloutManager.addMarker( view, point.x, point.y );
 	}
-	
+
 	/**
 	 * Add a callout to the the TileView.  The callout can be any View.
 	 * No LayoutParams are required; the View will be laid out using WRAP_CONTENT for both width and height, and positioned based on the parameters
@@ -624,7 +628,7 @@ public class TileView extends ZoomPanLayout {
 	 * @param view (View) View instance to be added to the TileView's
 	 * @param x (double) relative x position the View instance should be positioned at
 	 * @param y (double) relative y position the View instance should be positioned at
-	 * @param aX (float) the x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value 
+	 * @param aX (float) the x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value
 	 * @param aY (float) the y-axis position of a callout view will be offset by a number equal to the height of the callout view multiplied by this value
 	 * @return (View) the View instance added to the TileView's
 	 */
@@ -645,7 +649,7 @@ public class TileView extends ZoomPanLayout {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Register a HotSpot that should fire an listener when a touch event occurs that intersects that rectangle.
 	 * The HotSpot moves and scales with the TileView.
@@ -656,7 +660,7 @@ public class TileView extends ZoomPanLayout {
 		hotSpotManager.addHotSpot( hotSpot );
 		return hotSpot;
 	}
-	
+
 	/**
 	 * Register a HotSpot that should fire an listener when a touch event occurs that intersects that rectangle.
 	 * The HotSpot moves and scales with the TileView.
@@ -676,7 +680,7 @@ public class TileView extends ZoomPanLayout {
 		hotSpot.setPath( path, clip );
 		return addHotSpot( hotSpot );
 	}
-	
+
 	/**
 	 * Register a HotSpot that should fire an listener when a touch event occurs that intersects that rectangle.
 	 * The HotSpot moves and scales with the TileView.
@@ -689,7 +693,7 @@ public class TileView extends ZoomPanLayout {
 		hotSpot.setHotSpotEventListener( listener );
 		return hotSpot;
 	}
-	
+
 	/**
 	 * Remove a HotSpot registered with addHotSpot
 	 * @param hotSpot (HotSpot) the hotspot to remove
@@ -698,7 +702,7 @@ public class TileView extends ZoomPanLayout {
 	public void removeHotSpot( HotSpot hotSpot ) {
 		hotSpotManager.removeHotSpot( hotSpot );
 	}
-	
+
 	/**
 	 * Register a HotSpotEventListener with the TileView.  This listener will fire if any hotspot's region intersects a Tap event.
 	 * @param listener (HotSpotEventListener) the listener to be added.
@@ -706,7 +710,7 @@ public class TileView extends ZoomPanLayout {
 	public void addHotSpotEventListener( HotSpotEventListener listener ) {
 		hotSpotManager.addHotSpotEventListener( listener );
 	}
-	
+
 	/**
 	 * Remove a HotSpotEventListener from the TileView's registry.
 	 * @param listener (HotSpotEventListener) the listener to be removed
@@ -714,11 +718,11 @@ public class TileView extends ZoomPanLayout {
 	public void removeHotSpotEventListener( HotSpotEventListener listener ) {
 		hotSpotManager.removeHotSpotEventListener( listener );
 	}
-	
+
 	//------------------------------------------------------------------------------------
 	// Path Drawing API
 	//------------------------------------------------------------------------------------
-	
+
 	/**
 	 * Register a Path and Paint that will be drawn on a layer above the tiles, but below markers.
 	 * This Path's will be scaled with the TileView, but will always be as wide as the stroke set for the Paint.
@@ -728,7 +732,7 @@ public class TileView extends ZoomPanLayout {
 	public DrawablePath drawPath( DrawablePath drawablePath ) {
 		return pathManager.addPath( drawablePath );
 	}
-	
+
 	/**
 	 * Register a Path and Paint that will be drawn on a layer above the tiles, but below markers.
 	 * This Path's will be scaled with the TileView, but will always be as wide as the stroke set for the Paint.
@@ -739,7 +743,7 @@ public class TileView extends ZoomPanLayout {
 		List<Point> points = positionManager.translate( positions );
 		return pathManager.addPath( points );
 	}
-	
+
 	/**
 	 * Register a Path and Paint that will be drawn on a layer above the tiles, but below markers.
 	 * This Path's will be scaled with the TileView, but will always be as wide as the stroke set for the Paint.
@@ -751,7 +755,7 @@ public class TileView extends ZoomPanLayout {
 		List<Point> points = positionManager.translate( positions );
 		return pathManager.addPath( points, paint );
 	}
-	
+
 	/**
 	 * Removes a DrawablePath from the TileView's registry.  This path will no longer be drawn by the TileView.
 	 * @param drawablePath (DrawablePath) the DrawablePath instance to be removed.
@@ -759,7 +763,7 @@ public class TileView extends ZoomPanLayout {
 	public void removePath( DrawablePath drawablePath ) {
 		pathManager.removePath( drawablePath );
 	}
-	
+
 	/**
 	 * Returns the Paint instance used by default.  This can be modified for future Path paint operations.
 	 * @return Paint the Paint instance used by default.
@@ -767,11 +771,11 @@ public class TileView extends ZoomPanLayout {
 	public Paint getPathPaint(){
 		return pathManager.getPaint();
 	}
-	
+
 	//------------------------------------------------------------------------------------
 	// Memory Management API
 	//------------------------------------------------------------------------------------
-	
+
 	/**
 	 * Clear bitmap image files, appropriate for Activity.onPause
 	 */
@@ -780,14 +784,14 @@ public class TileView extends ZoomPanLayout {
 		sampleManager.clear();
 		pathManager.setShouldDraw( false );
 	}
-	
+
 	/**
 	 * Clear bitmap image files, appropriate for Activity.onPause (mirror for .clear)
 	 */
 	public void pause() {
 		clear();
 	}
-	
+
 	/**
 	 * Clear tile image files and remove all views, appropriate for Activity.onDestroy
 	 * References to TileView should be set to null following invocations of this method.
@@ -797,7 +801,7 @@ public class TileView extends ZoomPanLayout {
 		sampleManager.clear();
 		pathManager.clear();
 	}
-	
+
 	/**
 	 * Restore visible state (generally after a call to .clear()
 	 * Appropriate for Activity.onResume
@@ -808,7 +812,7 @@ public class TileView extends ZoomPanLayout {
 		sampleManager.update();
 		pathManager.setShouldDraw( true );
 	}
-	
+
 	/**
 	 * Request the TileView reevaluate tile sets, rendered tiles, samples, invalidates, etc
 	 */
@@ -819,11 +823,11 @@ public class TileView extends ZoomPanLayout {
 		sampleManager.update();
 		redraw();
 	}
-	
+
 	//------------------------------------------------------------------------------------
 	// PRIVATE API
 	//------------------------------------------------------------------------------------
-	
+
 
 	// make sure we keep the viewport UTD, and if layout changes we'll need to recompute what tiles to show
 	@Override
@@ -831,8 +835,8 @@ public class TileView extends ZoomPanLayout {
 		super.onLayout( changed, l, t, r, b );
 		updateViewport();
 		requestRender();
-	}	
-	
+	}
+
 	// let the zoom manager know what tiles to show based on our position and dimensions
 	private void updateViewport(){
 		int left = getScrollX();
@@ -840,14 +844,14 @@ public class TileView extends ZoomPanLayout {
 		int right = left + getWidth();
 		int bottom = top + getHeight();
 		detailManager.updateViewport( left, top, right, bottom );
-	}   
-	
+	}
+
 	// tell the tile renderer to not start any more tasks, but it can continue with any that are already running
 	private void suppressRender() {
 		tileManager.suppressRender();
 	}
 
-	
+
 	//------------------------------------------------------------------------------------
 	// Private Listeners
 	//------------------------------------------------------------------------------------
@@ -855,17 +859,17 @@ public class TileView extends ZoomPanLayout {
 	private ZoomPanListener zoomPanListener = new ZoomPanListener() {
 		@Override
 		public void onZoomPanEvent(){
-			
-		}						
+
+		}
 		@Override
 		public void onScrollChanged( int x, int y ) {
 			updateViewport();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
 				listener.onScrollChanged( x, y );
 			}
-		}			
+		}
 		@Override
-		public void onScaleChanged( double scale ) { 
+		public void onScaleChanged( double scale ) {
 			detailManager.setScale( scale );
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
 				listener.onScaleChanged( scale );
@@ -889,7 +893,7 @@ public class TileView extends ZoomPanLayout {
 			}
 		}
 	};
-	
+
 	private DetailLevelEventListener detailLevelEventListener = new DetailLevelEventListener(){
 		@Override
 		public void onDetailLevelChanged() {
@@ -906,17 +910,17 @@ public class TileView extends ZoomPanLayout {
 		 */
 		@Override
 		public void onDetailScaleChanged( double scale ) {
-			
+
 		}
 	};
-	
+
 	private GestureListener gestureListener = new GestureListener(){
 
 		@Override
 		public void onDoubleTap( Point point ) {
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
 				listener.onDoubleTap( point.x, point.y );
-			}		
+			}
 		}
 		@Override
 		public void onDrag( Point point ) {
@@ -992,11 +996,11 @@ public class TileView extends ZoomPanLayout {
 			}
 		}
 	};
-	
+
 	private TileRenderListener renderListener = new TileRenderListener(){
 		@Override
 		public void onRenderCancelled() {
-			
+
 		}
 		@Override
 		public void onRenderComplete() {
@@ -1009,13 +1013,13 @@ public class TileView extends ZoomPanLayout {
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
 				listener.onRenderStart();
 			}
-		}		
+		}
 	};
-	
+
 	//------------------------------------------------------------------------------------
 	// Public static interfaces and classes
 	//------------------------------------------------------------------------------------
-	
+
 	/**
 	 * Interface for implementations to receive TileView events.  This interface consolidates several disparate
 	 * listeners (Gestures, ZoomPan Events, TileView events) into a single unit for ease of use.
@@ -1119,7 +1123,7 @@ public class TileView extends ZoomPanLayout {
 		 */
 		public void onRenderComplete();
 	}
-	
+
 	/**
 	 * Convenience class that implements {@TileViewEventListener}
 	 */
@@ -1131,7 +1135,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the y position of the event
 		 */
 		public void onFingerDown( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires when a ACTION_UP event is raised from the TileView
@@ -1139,7 +1143,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the y position of the event
 		 */
 		public void onFingerUp( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires while the TileView is being dragged
@@ -1147,7 +1151,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the y position of the event
 		 */
 		public void onDrag( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires when a user double-taps the TileView
@@ -1155,7 +1159,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the y position of the event
 		 */
 		public void onDoubleTap( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires when a user taps the TileView
@@ -1163,7 +1167,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the y position of the event
 		 */
 		public void onTap( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires while a user is pinching the TileView
@@ -1171,7 +1175,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the y position of the event
 		 */
 		public void onPinch( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires when a user starts a pinch action
@@ -1179,7 +1183,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the y position of the event
 		 */
 		public void onPinchStart( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires when a user completes a pinch action
@@ -1187,7 +1191,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the y position of the event
 		 */
 		public void onPinchComplete( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires when a user initiates a fling action
@@ -1197,7 +1201,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param dy (int) the y position of the end of the fling
 		 */
 		public void onFling( int sx, int sy, int dx, int dy ) {
-			
+
 		}
 		/**
 		 * Fires when a fling action has completed
@@ -1205,14 +1209,14 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the final y scroll position of the TileView after the fling
 		 */
 		public void onFlingComplete( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires when the TileView's scale has updated
 		 * @param scale (double) the new scale of the TileView (0-1)
 		 */
 		public void onScaleChanged( double scale ) {
-			
+
 		}
 		/**
 		 * Fires when the TileView's scroll position has updated
@@ -1220,7 +1224,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param y (int) the new y scroll position of the TileView
 		 */
 		public void onScrollChanged( int x, int y ) {
-			
+
 		}
 		/**
 		 * Fires when a zoom action starts (typically through a pinch of double-tap action,
@@ -1228,7 +1232,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param scale (double) the new scale of the TileView (0-1)
 		 */
 		public void onZoomStart( double scale ) {
-			
+
 		}
 		/**
 		 * Fires when a zoom action ends (typically through a pinch of double-tap action,
@@ -1236,7 +1240,7 @@ public class TileView extends ZoomPanLayout {
 		 * @param scale (double) the new scale of the TileView (0-1)
 		 */
 		public void onZoomComplete( double scale ) {
-			
+
 		}
 		/**
 		 * Fires when the TileView should start using a new DetailLevel
@@ -1244,21 +1248,21 @@ public class TileView extends ZoomPanLayout {
 		 * @param currentZoom (int) the zoom level the TileView has changed to
 		 */
 		public void onDetailLevelChanged() {
-			
+
 		}
 		/**
 		 * Fires when the rendering thread has started to update the visible tiles.
 		 */
 		public void onRenderStart() {
-			
+
 		}
 		/**
 		 * Fires when the rendering thread has completed updating the visible tiles, but before cleanup
 		 */
 		public void onRenderComplete() {
-			
+
 		}
-		
+
 	}
 
     public PositionManager getPositionManager() {
@@ -1268,5 +1272,5 @@ public class TileView extends ZoomPanLayout {
     public PathManager getPathManager() {
         return pathManager;
     }
-	
+
 }

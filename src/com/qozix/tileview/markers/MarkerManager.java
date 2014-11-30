@@ -1,10 +1,5 @@
 package com.qozix.tileview.markers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map.Entry;
-
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -13,6 +8,11 @@ import android.view.View;
 import com.qozix.layouts.TranslationLayout;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailManager;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 /*
  * TODO: need to consolidate positioning logic - works as is, but does too many unnecessary and possibly messy calculations
@@ -25,13 +25,13 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 	private DetailManager detailManager;
 	private HashMap<View, Rect> markerMap = new HashMap<View, Rect>();
 	private ArrayList<MarkerEventListener> listeners = new ArrayList<MarkerEventListener>();
-	
+
 	public MarkerManager( Context context, DetailManager zm ) {
 		super( context );
 		detailManager = zm;
 		detailManager.addDetailLevelEventListener( this );
-	}	
-	
+	}
+
 	public View addMarker( View v, int x, int y ){
 		LayoutParams lp = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y );
 		return addMarker( v, lp );
@@ -41,27 +41,44 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 		LayoutParams lp = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y, aX, aY );
 		return addMarker( v, lp );
 	}
-	
+
 	public View addMarker( View v, LayoutParams params ) {
 		addView( v, params );
 		markerMap.put( v, new Rect() );
 		requestLayout();
 		return v;
 	}
-	
+
+	public void moveMarker( View v, int x, int y ) {
+		LayoutParams lp = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y );
+		moveMarker( v, lp );
+	}
+
+	public void moveMarker( View v, int x, int y, float aX, float aY ) {
+		LayoutParams lp = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y, aX, aY );
+		moveMarker( v, lp );
+	}
+
+	public void moveMarker( View v, LayoutParams params ) {
+		if (markerMap.containsKey( v )) {
+			v.setLayoutParams( params );
+			requestLayout();
+		}
+	}
+
 	public void removeMarker( View v ) {
 		removeView( v );
 		markerMap.remove( v );
 	}
-	
+
 	public void addMarkerEventListener( MarkerEventListener listener ) {
 		listeners.add( listener );
 	}
-	
+
 	public void removeMarkerEventListener( MarkerEventListener listener ) {
 		listeners.remove( listener );
 	}
-	
+
 	private View getViewFromTap( int x, int y ) {
 		Iterator<Entry<View, Rect>> iterator = markerMap.entrySet().iterator();
 		while (iterator.hasNext()) {
@@ -74,7 +91,7 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 		}
 		return null;
 	}
-	
+
 	public void processHit ( Point point ) {
 		// fast-fail if no listeners
 		if( listeners.isEmpty() ){
@@ -87,7 +104,7 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 			}
 		}
 	}
-	
+
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
 		super.onLayout( changed, l, t, r, b );
@@ -111,11 +128,11 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 	            Rect rect = markerMap.get( child );
 	            if( rect != null ) {
 	            	rect.set( x, y, x + w, y + h );
-	            }	            
+	            }
 	        }
 	    }
 	}
-	
+
 	@Override
 	public void onDetailLevelChanged() {
 
