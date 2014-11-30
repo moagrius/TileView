@@ -182,3 +182,6 @@ pip-log.txt
 /AndroidManifest.xml
 /proguard-project.txt
 /project.properties
+
+# Project Specific
+/build.xml

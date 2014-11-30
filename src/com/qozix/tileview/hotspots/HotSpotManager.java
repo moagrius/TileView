@@ -1,12 +1,11 @@
 package com.qozix.tileview.hotspots;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
+import android.graphics.Point;
 
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailManager;
 
-import android.graphics.Point;
+import java.util.ArrayList;
 
 public class HotSpotManager implements DetailLevelEventListener {
 
@@ -54,10 +53,6 @@ public class HotSpotManager implements DetailLevelEventListener {
 	}
 	
 	public void processHit( Point point ){
-		// fast-fail if no listeners
-		if(listeners.isEmpty()){
-			return;
-		}
 		// is there a match?
 		HotSpot hotSpot = getMatch( point );
 		if( hotSpot != null){
