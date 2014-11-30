@@ -1,5 +1,13 @@
 package com.qozix.tileview.tiles;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import android.support.v4.util.LruCache;
+
+import com.jakewharton.DiskLruCache;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -9,14 +17,6 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Bitmap.CompressFormat;
-import android.support.v4.util.LruCache;
-
-import com.jakewharton.DiskLruCache;
 
 public class TileCache {
 	
@@ -150,7 +150,7 @@ public class TileCache {
 					output.close();
 				}
 			}
-		} catch ( IOException e ) {
+		} catch ( Exception e ) {
 			try {
 				if ( editor != null ) {
 					editor.abort();
@@ -178,7 +178,7 @@ public class TileCache {
 				BufferedInputStream buffered = new BufferedInputStream( input, IO_BUFFER_SIZE );
 				bitmap = BitmapFactory.decodeStream( buffered, null, BITMAPFACTORY_OPTIONS );
 			}
-		} catch ( IOException e ) {
+		} catch ( Exception e ) {
 			
 		} finally {
 			if ( snapshot != null ) {
