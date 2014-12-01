@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.view.View;
 
+import com.qozix.os.AsyncTask;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailManager;
@@ -21,6 +22,7 @@ public class SampleManager extends View implements DetailLevelEventListener {
 	
 	private Bitmap bitmap;
 	private String lastFileName;
+	private String currentFileName;
 	
 	public SampleManager( Context context, DetailManager dm ) {
 		
@@ -42,14 +44,24 @@ public class SampleManager extends View implements DetailLevelEventListener {
 		lastFileName = null;
 	}
 
+	private class BitmapDecodeTask implements Runnable {
+	    @Override
+	    public void run() {
+	        bitmap = decoder.decode(currentFileName, getContext());
+	        postInvalidate();
+	    }
+	}
+
+	private BitmapDecodeTask decodeTask = new BitmapDecodeTask();
+
 	public void update() {
 		DetailLevel detailLevel = detailManager.getCurrentDetailLevel();
 		if( detailLevel != null ) {
 			String fileName = detailLevel.getDownsample();
 			if( fileName != null ) {
 				if( !fileName.equals( lastFileName ) ) {
-					bitmap = decoder.decode( fileName, getContext() );
-					invalidate();
+					currentFileName = fileName;
+					AsyncTask.execute(decodeTask);
 				}
 			}
 			lastFileName = fileName;
