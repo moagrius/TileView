@@ -19,7 +19,7 @@ buildscript
 
 // Project properties
 project.group = 'com.qozix'
-project.version = '1.0.11'
+project.version = '1.0.13'
 
 apply plugin: 'java'
 

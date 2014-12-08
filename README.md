@@ -55,13 +55,13 @@ tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");</pre>
 <dependency>
 	<groupId>com.qozix</groupId>
 	<artifactId>TileView</artifactId>
-	<version>1.0.11</version>
+	<version>1.0.13</version>
 </dependency>
 ```
 
 <h4>Gradle users</h4>
 ```xml
-   compile 'com.qozix:TileView:1.0.11'
+   compile 'com.qozix:TileView:1.0.13'
 ```
 
 <h4>Releases</h4>
