@@ -12,7 +12,6 @@ buildscript {
 
 repositories {
     mavenCentral()
-    maven { url 'http://download.crashlytics.com/maven' }
 }
 
 apply plugin: 'android-library'
@@ -22,7 +21,7 @@ android {
     buildToolsVersion '19.1.0'
 
     defaultConfig {
-        minSdkVersion 4
+        minSdkVersion 8
         targetSdkVersion 15
     }
 
