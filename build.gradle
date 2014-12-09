@@ -6,8 +6,13 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.13.+'
+        classpath 'com.android.tools.build:gradle:1.0.0'
     }
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'http://download.crashlytics.com/maven' }
 }
 
 apply plugin: 'android-library'
@@ -17,7 +22,6 @@ android {
     buildToolsVersion '19.1.0'
 
     defaultConfig {
-        applicationId GROUP
         minSdkVersion 4
         targetSdkVersion 15
     }
