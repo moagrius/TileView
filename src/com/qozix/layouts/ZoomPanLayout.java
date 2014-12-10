@@ -503,6 +503,18 @@ public class ZoomPanLayout extends ViewGroup {
 		startSmoothScaleTo( destination, duration );
 	}
 
+	@Override
+	public void setClipChildren(boolean clipChildren) {
+		super.setClipChildren(clipChildren);
+		clip.setClipChildren(clipChildren);
+	}
+
+	@Override
+	public void setClipToPadding(boolean clipToPadding) {
+		super.setClipToPadding(clipToPadding);
+		clip.setClipToPadding(clipToPadding);
+	}
+
 	//------------------------------------------------------------------------------------
 	// PRIVATE/PROTECTED
 	//------------------------------------------------------------------------------------
