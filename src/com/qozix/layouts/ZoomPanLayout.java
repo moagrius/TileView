@@ -503,7 +503,18 @@ public class ZoomPanLayout extends ViewGroup {
 		startSmoothScaleTo( destination, duration );
 	}
 
-	//------------------------------------------------------------------------------------
+    @Override
+    public boolean canScrollHorizontally(int direction) {
+        int currX = getScrollX();
+        if (direction > 0) {
+            return currX < getLimitX();
+        } else if (direction < 0) {
+            return currX > 0;
+        }
+        return false;
+    }
+
+    //------------------------------------------------------------------------------------
 	// PRIVATE/PROTECTED
 	//------------------------------------------------------------------------------------
 
