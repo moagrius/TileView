@@ -8,6 +8,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
+import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -142,8 +143,21 @@ public class ZoomPanLayout extends ViewGroup {
 	 * @param context (Context) The Context the ZoomPanLayout is running in, through which it can access the current theme, resources, etc.
 	 */
 	public ZoomPanLayout( Context context ) {
-
 		super( context );
+		sharedCtor(context);
+	}
+
+	public ZoomPanLayout( Context context, AttributeSet attrs ) {
+		super( context, attrs );
+		sharedCtor( context );
+	}
+
+	public ZoomPanLayout( Context context, AttributeSet attrs, int defStyleAttr ) {
+		super( context, attrs, defStyleAttr );
+		sharedCtor( context );
+	}
+
+	private void sharedCtor( Context context ) {
 		setWillNotDraw( false );
 
 		scrollActionHandler = new ScrollActionHandler( this );

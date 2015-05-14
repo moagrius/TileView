@@ -10,6 +10,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
+import android.util.AttributeSet;
 import android.view.View;
 
 import com.qozix.layouts.AnchorLayout;
@@ -87,8 +88,21 @@ public class TileView extends ZoomPanLayout {
 	 * @param context (Context) The Context the TileView is running in, through which it can access the current theme, resources, etc.
 	 */
 	public TileView( Context context ) {
-
 		super( context );
+		sharedCtor( context );
+	}
+
+	public TileView( Context context, AttributeSet attrs ) {
+		super( context, attrs );
+		sharedCtor( context );
+	}
+
+	public TileView( Context context, AttributeSet attrs, int defStyleAttr) {
+		super( context, attrs, defStyleAttr );
+		sharedCtor( context );
+	}
+
+	private void sharedCtor( Context context ) {
 
 		sampleManager = new SampleManager( context, detailManager );
 		addView( sampleManager );
