@@ -17,8 +17,8 @@ repositories {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdkVersion 15
+    buildToolsVersion '19.1.0'
 
     defaultConfig {
         minSdkVersion 8
@@ -34,7 +34,7 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:' + rootProject.ext.androidSupportVersion
+    compile 'com.android.support:support-v4:22.1.1'
     compile 'com.jakewharton:disklrucache:1.3.1'
 }
 
