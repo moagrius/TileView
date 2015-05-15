@@ -88,21 +88,15 @@ public class TileView extends ZoomPanLayout {
 	 * @param context (Context) The Context the TileView is running in, through which it can access the current theme, resources, etc.
 	 */
 	public TileView( Context context ) {
-		super( context );
-		sharedCtor( context );
+		this(context, null);
 	}
 
 	public TileView( Context context, AttributeSet attrs ) {
-		super( context, attrs );
-		sharedCtor( context );
+		this(context, attrs, 0);
 	}
 
-	public TileView( Context context, AttributeSet attrs, int defStyleAttr) {
-		super( context, attrs, defStyleAttr );
-		sharedCtor( context );
-	}
-
-	private void sharedCtor( Context context ) {
+	public TileView( Context context, AttributeSet attrs, int defStyleAttr ) {
+		super(context, attrs, defStyleAttr);
 
 		sampleManager = new SampleManager( context, detailManager );
 		addView( sampleManager );

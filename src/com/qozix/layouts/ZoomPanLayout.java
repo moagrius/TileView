@@ -6,6 +6,7 @@ import java.util.HashSet;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
@@ -143,21 +144,16 @@ public class ZoomPanLayout extends ViewGroup {
 	 * @param context (Context) The Context the ZoomPanLayout is running in, through which it can access the current theme, resources, etc.
 	 */
 	public ZoomPanLayout( Context context ) {
-		super( context );
-		sharedCtor(context);
+		this(context, null);
 	}
 
 	public ZoomPanLayout( Context context, AttributeSet attrs ) {
-		super( context, attrs );
-		sharedCtor( context );
+		this(context, attrs, 0);
 	}
 
 	public ZoomPanLayout( Context context, AttributeSet attrs, int defStyleAttr ) {
-		super( context, attrs, defStyleAttr );
-		sharedCtor( context );
-	}
+		super(context, attrs, defStyleAttr);
 
-	private void sharedCtor( Context context ) {
 		setWillNotDraw( false );
 
 		scrollActionHandler = new ScrollActionHandler( this );
