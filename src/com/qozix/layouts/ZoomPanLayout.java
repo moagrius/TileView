@@ -438,6 +438,11 @@ public class ZoomPanLayout extends ViewGroup {
 	 */
 	public void setScaleFromCenter( double s ) {
 
+		s = Math.max( s, minScale );
+		s = Math.min( s, maxScale );
+		if ( s == scale )
+			return;
+
 		int centerOffsetX = (int) ( getWidth() * 0.5f );
 		int centerOffsetY = (int) ( getHeight() * 0.5f );
 
