@@ -1,8 +1,5 @@
 package com.qozix.tileview;
 
-import java.util.HashSet;
-import java.util.List;
-
 import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -14,7 +11,6 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.qozix.layouts.AnchorLayout;
-import com.qozix.layouts.TranslationLayout;
 import com.qozix.layouts.ZoomPanLayout;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailLevelPatternParser;
@@ -36,6 +32,9 @@ import com.qozix.tileview.tiles.TileManager;
 import com.qozix.tileview.tiles.TileRenderListener;
 import com.qozix.tileview.tiles.selector.TileSetSelector;
 import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
+
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
@@ -69,7 +68,7 @@ import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
  */
 public class TileView extends ZoomPanLayout {
 
-	private HashSet<TileViewEventListener> tileViewEventListeners = new HashSet<TileViewEventListener>();
+	private HashSet<TileViewEventListener> tileViewEventListeners = new HashSet<>();
 
 	private DetailManager detailManager = new DetailManager();
 	private PositionManager positionManager = new PositionManager();
@@ -254,8 +253,8 @@ public class TileView extends ZoomPanLayout {
 	 * Defines the total size, in pixels, of the tile set at 100% scale.
 	 * The TileView wills pan within it's layout dimensions, with the content (scrollable)
 	 * size defined by this method.
-	 * @param width (int) total width of the tiled set
-	 * @param height (int) total height of the tiled set
+	 * @param w (int) total width of the tiled set
+	 * @param h (int) total height of the tiled set
 	 */
 	@Override
 	public void setSize( int w, int h ) {
@@ -284,10 +283,10 @@ public class TileView extends ZoomPanLayout {
 	 * and at least one tile set must be registered for the TileView to render any tiles.
 	 * @param detailScale (float) scale at which the TileView should use the tiles in this set.
 	 * @param pattern (String) string path to the location of the tile image files, to be parsed by a DetailLevelPatternParser
-	 * @param downsample (String) string path to the location of an optional non-tiled single image file that will fill the tile view, on a z-layer below tiles
+	 * @param downSample (String) string path to the location of an optional non-tiled single image file that will fill the tile view, on a z-layer below tiles
 	 */
-	public void addDetailLevel( float detailScale, String pattern, String downsample ){
-		detailManager.addDetailLevel( detailScale, pattern, downsample );
+	public void addDetailLevel( float detailScale, String pattern, String downSample ){
+		detailManager.addDetailLevel( detailScale, pattern, downSample );
 	}
 
 	/**
@@ -296,12 +295,12 @@ public class TileView extends ZoomPanLayout {
 	 * and at least one tile set must be registered for the TileView to render any tiles.
 	 * @param detailScale (float) scale at which the TileView should use the tiles in this set.
 	 * @param pattern (String) string path to the location of the tile image files, to be parsed by a DetailLevelPatternParser
-	 * @param downsample (String) string path to the location of an optional non-tiled single image file that will fill the tile view, on a z-layer below tiles
+	 * @param downSample (String) string path to the location of an optional non-tiled single image file that will fill the tile view, on a z-layer below tiles
 	 * @param tileWidth (int) size of each tiled column
 	 * @param tileHeight (int) size of each tiled row
 	 */
-	public void addDetailLevel( float detailScale, String pattern, String downsample, int tileWidth, int tileHeight ){
-		detailManager.addDetailLevel( detailScale, pattern, downsample, tileWidth, tileHeight );
+	public void addDetailLevel( float detailScale, String pattern, String downSample, int tileWidth, int tileHeight ){
+		detailManager.addDetailLevel( detailScale, pattern, downSample, tileWidth, tileHeight );
 	}
 
 	/**
@@ -524,8 +523,8 @@ public class TileView extends ZoomPanLayout {
 	 * @param view (View) View instance to be added to the TileView
 	 * @param x (double) relative x position the View instance should be positioned at
 	 * @param y (double) relative y position the View instance should be positioned at
-	 * @param aX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-	 * @param aY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+	 * @param anchorX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
+	 * @param anchorY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
 	 * @return (View) the View instance added to the TileView
 	 */
 	public View addMarker( View view, double x, double y, float anchorX, float anchorY ) {
@@ -557,8 +556,8 @@ public class TileView extends ZoomPanLayout {
 	 * @param view The marker View to be repositioned.
 	 * @param x (double) relative x position the View instance should be positioned at
 	 * @param y (double) relative y position the View instance should be positioned at
-	 * @param aX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-	 * @param aY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+	 * @param anchorX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
+	 * @param anchorY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
 	 */
 	public void moveMarker( View view, double x, double y, float anchorX, float anchorY ) {
 		Point point = positionManager.translate( x, y );
@@ -568,7 +567,7 @@ public class TileView extends ZoomPanLayout {
 	/**
 	 * Scroll the TileView so that the View passed is centered in the viewport
 	 * @param view (View) the View marker that the TileView should center on.
-	 * @params animate (boolean) should the movement use a transition effectg
+	 * @params animate (boolean) should the movement use a transition effects
 	 */
 	public void moveToMarker( View view, boolean animate ) {
 		if( markerManager.indexOfChild( view ) > -1 ){
@@ -636,8 +635,8 @@ public class TileView extends ZoomPanLayout {
 	 * @param view (View) View instance to be added to the TileView's
 	 * @param x (double) relative x position the View instance should be positioned at
 	 * @param y (double) relative y position the View instance should be positioned at
-	 * @param aX (float) the x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value
-	 * @param aY (float) the y-axis position of a callout view will be offset by a number equal to the height of the callout view multiplied by this value
+	 * @param anchorX (float) the x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value
+	 * @param anchorY (float) the y-axis position of a callout view will be offset by a number equal to the height of the callout view multiplied by this value
 	 * @return (View) the View instance added to the TileView's
 	 */
 	public View addCallout( View view, double x, double y, float anchorX, float anchorY ) {
@@ -1252,8 +1251,6 @@ public class TileView extends ZoomPanLayout {
 		}
 		/**
 		 * Fires when the TileView should start using a new DetailLevel
-		 * @param oldZoom (int) the zoom level the TileView was using before the change
-		 * @param currentZoom (int) the zoom level the TileView has changed to
 		 */
 		public void onDetailLevelChanged() {
 
