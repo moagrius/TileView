@@ -25,7 +25,8 @@ public class TileDownloadRunner implements Runnable {
         if(tileManager !=null){
             if(!tileManager.getRenderIsCancelled()&&tile!=null){
                 tileManager.decodeIndividualTile(tile);
-                if ( !tileManager.getRenderIsCancelled() ) {
+                tileManager = mReference.get();
+                if ( !tileManager.getRenderIsCancelled() && !TileRenderPoolExecutor.getInstance().isCancelled()) {
                     tileManager.renderIndividualTile( tile );
                 }
                 if(mLast){

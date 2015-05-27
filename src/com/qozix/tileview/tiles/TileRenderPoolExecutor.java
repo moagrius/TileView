@@ -23,6 +23,7 @@ public class TileRenderPoolExecutor {
     private final BlockingQueue<Runnable> mDownloadWorkQueue;
 
     private static TileRenderPoolExecutor sInstance = null;
+    private boolean mCancelled;
 
     static {
         KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
@@ -40,6 +41,7 @@ public class TileRenderPoolExecutor {
 
     public void queue(TileManager tileManager, LinkedList<Tile> toRender){
         tileManager.onRenderTaskPreExecute();
+        mCancelled = false;
         for(int i=0;i<toRender.size();i++){
             mDownloadThreadPool.execute(new TileDownloadRunner(tileManager, toRender.get(i), i==toRender.size()-1));
 
@@ -55,6 +57,11 @@ public class TileRenderPoolExecutor {
     public void clearQueue(){
         synchronized (this) {
             mDownloadWorkQueue.clear();
+            mCancelled = true;
         }
+    }
+
+    public boolean isCancelled(){
+        return mCancelled;
     }
 }
