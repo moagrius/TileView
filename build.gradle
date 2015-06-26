@@ -39,14 +39,14 @@ dependencies {
 }
 
 task clearJar(type: Delete) {
-    delete 'build/outputs/tileviewlib-1.0.13.jar'
+    delete 'build/outputs/tileviewlib-1.0.14.jar'
 }
 
 task makeJar(type: Copy) {
     from('build/intermediates/bundles/release/')
     into('build/outputs/')
     include('classes.jar')
-    rename ('classes.jar', 'tileviewlib-1.0.13.jar')
+    rename ('classes.jar', 'tileviewlib-1.0.14.jar')
 }
 
 apply from: 'mvn-push.gradle'
