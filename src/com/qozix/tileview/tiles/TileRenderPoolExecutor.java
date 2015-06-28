@@ -6,9 +6,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by bruno on 26/05/15.
- */
 public class TileRenderPoolExecutor {
     private static final String TAG = TileRenderPoolExecutor.class.getSimpleName();
 
@@ -19,49 +16,49 @@ public class TileRenderPoolExecutor {
     private static final int CORE_POOL_SIZE = Runtime.getRuntime().availableProcessors();
     private static final int MAXIMUM_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
-    private final ThreadPoolExecutor mDownloadThreadPool;
-    private final BlockingQueue<Runnable> mDownloadWorkQueue;
+    private final ThreadPoolExecutor downloadThreadPool;
+    private final BlockingQueue<Runnable> downloadWorkQueue;
 
-    private static TileRenderPoolExecutor sInstance = null;
-    private boolean mCancelled;
+    private static TileRenderPoolExecutor instance = null;
+    private boolean cancelled;
 
     static {
         KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
-        sInstance = new TileRenderPoolExecutor();
+        instance = new TileRenderPoolExecutor();
     }
 
     private TileRenderPoolExecutor(){
-        mDownloadWorkQueue = new LinkedBlockingQueue<>();
-        mDownloadThreadPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mDownloadWorkQueue);
+        downloadWorkQueue = new LinkedBlockingQueue<>();
+        downloadThreadPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, downloadWorkQueue);
     }
 
     public static TileRenderPoolExecutor getInstance(){
-        return sInstance;
+        return instance;
     }
 
     public void queue(TileManager tileManager, LinkedList<Tile> toRender){
         tileManager.onRenderTaskPreExecute();
-        mCancelled = false;
+        cancelled = false;
         for(int i=0;i<toRender.size();i++){
-            mDownloadThreadPool.execute(new TileDownloadRunner(tileManager, toRender.get(i), i==toRender.size()-1));
+            downloadThreadPool.execute(new TileDownloadRunner(tileManager, toRender.get(i), i == toRender.size() - 1));
 
         }
     }
 
     public boolean isQueueEmpty(){
         synchronized (this) {
-            return mDownloadWorkQueue.size() == 0;
+            return downloadWorkQueue.size() == 0;
         }
     }
 
     public void clearQueue(){
         synchronized (this) {
-            mDownloadWorkQueue.clear();
-            mCancelled = true;
+            downloadWorkQueue.clear();
+            cancelled = true;
         }
     }
 
     public boolean isCancelled(){
-        return mCancelled;
+        return cancelled;
     }
 }

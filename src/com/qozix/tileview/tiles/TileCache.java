@@ -6,6 +6,7 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.support.v4.util.LruCache;
 
+
 import com.jakewharton.disklrucache.DiskLruCache;
 
 import java.io.BufferedInputStream;
@@ -69,7 +70,7 @@ public class TileCache {
 	}
 
 	public void addBitmap( String key, Bitmap bitmap ) {
-		addBitmapToMemoryCache(key, bitmap);
+		addBitmapToMemoryCache( key, bitmap );
 		synchronized (this){
 			addBitmapToDiskCache(key, bitmap);
 		}
@@ -80,7 +81,7 @@ public class TileCache {
 		if ( bitmap == null ) {
 			synchronized (this){
 				bitmap = getBitmapFromDiskCache( key );
-				}
+			}
 		}
 		return bitmap;
 	}
