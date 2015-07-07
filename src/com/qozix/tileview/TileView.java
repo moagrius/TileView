@@ -218,7 +218,7 @@ public class TileView extends ZoomPanLayout {
 	 * @return TileSetSelector implementation currently in use.
 	 */
 	public TileSetSelector getTileSetSelector() {
-	    return detailManager.getTileSetSelector();
+		return detailManager.getTileSetSelector();
 	}
 
 	/**
@@ -227,7 +227,7 @@ public class TileView extends ZoomPanLayout {
 	 * @param selector (TileSetSelector) implementation that handles tile set selection as scale is changed.
 	 */
 	public void setTileSetSelector(TileSetSelector selector) {
-	    detailManager.setTileSetSelector(selector);
+		detailManager.setTileSetSelector(selector);
 	}
 
 	/**
@@ -452,38 +452,38 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void framePoints( List<double[]> points ) {
 
-		    double topMost = -Integer.MAX_VALUE;
-		    double bottomMost = Integer.MAX_VALUE;
-		    double leftMost = Integer.MAX_VALUE;
-		    double rightMost = -Integer.MAX_VALUE;
+		double topMost = -Integer.MAX_VALUE;
+		double bottomMost = Integer.MAX_VALUE;
+		double leftMost = Integer.MAX_VALUE;
+		double rightMost = -Integer.MAX_VALUE;
 
-		    for( double[] coordinate : points ) {
-	            double x = coordinate[0];
-	            double y = coordinate[1];
-	            if(positionManager.contains( x, y )){
-	            	topMost = Math.max( topMost, x );
-		            bottomMost = Math.min( bottomMost, x );
-		            leftMost = Math.min( leftMost, y );
-		            rightMost = Math.max( rightMost, y );
-	            }
-		    }
+		for( double[] coordinate : points ) {
+			double x = coordinate[0];
+			double y = coordinate[1];
+			if(positionManager.contains( x, y )){
+				topMost = Math.max( topMost, x );
+				bottomMost = Math.min( bottomMost, x );
+				leftMost = Math.min( leftMost, y );
+				rightMost = Math.max( rightMost, y );
+			}
+		}
 
-		    Point topRight = translate( topMost, rightMost );
-		    Point bottomLeft = translate( bottomMost, leftMost );
+		Point topRight = translate( topMost, rightMost );
+		Point bottomLeft = translate( bottomMost, leftMost );
 
-		    int width = bottomLeft.x - topRight.x;
-		    int height = bottomLeft.y - topRight.y;
+		int width = bottomLeft.x - topRight.x;
+		int height = bottomLeft.y - topRight.y;
 
-		    double scaleX = Math.abs( getWidth() / (double) width );
-		    double scaleY = Math.abs( getHeight() / (double) height );
+		double scaleX = Math.abs( getWidth() / (double) width );
+		double scaleY = Math.abs( getHeight() / (double) height );
 
-		    double destinationScale = Math.min( scaleX, scaleY );
+		double destinationScale = Math.min( scaleX, scaleY );
 
-		    double middleX = ( rightMost + leftMost ) * 0.5f;
-		    double middleY = ( topMost + bottomMost ) * 0.5f;
+		double middleX = ( rightMost + leftMost ) * 0.5f;
+		double middleY = ( topMost + bottomMost ) * 0.5f;
 
-		    moveToAndCenter( middleY, middleX );
-		    setScaleFromCenter( destinationScale );
+		moveToAndCenter( middleY, middleX );
+		setScaleFromCenter( destinationScale );
 
 	}
 
@@ -1252,8 +1252,6 @@ public class TileView extends ZoomPanLayout {
 		}
 		/**
 		 * Fires when the TileView should start using a new DetailLevel
-		 * @param oldZoom (int) the zoom level the TileView was using before the change
-		 * @param currentZoom (int) the zoom level the TileView has changed to
 		 */
 		public void onDetailLevelChanged() {
 
@@ -1273,12 +1271,12 @@ public class TileView extends ZoomPanLayout {
 
 	}
 
-    public PositionManager getPositionManager() {
-        return positionManager;
-    }
+	public PositionManager getPositionManager() {
+		return positionManager;
+	}
 
-    public PathManager getPathManager() {
-        return pathManager;
-    }
+	public PathManager getPathManager() {
+		return pathManager;
+	}
 
 }

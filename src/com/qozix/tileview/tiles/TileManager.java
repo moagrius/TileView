@@ -1,28 +1,28 @@
 package com.qozix.tileview.tiles;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.widget.ImageView;
 
 import com.qozix.layouts.FixedLayout;
 import com.qozix.layouts.ScalingLayout;
-import com.qozix.os.AsyncTask;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailManager;
 import com.qozix.tileview.graphics.BitmapDecoder;
 import com.qozix.tileview.graphics.BitmapDecoderAssets;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+
 public class TileManager extends ScalingLayout implements DetailLevelEventListener {
 
 	private static final int RENDER_FLAG = 1;
 	private static final int RENDER_BUFFER = 250;
-	
+
 	private static final int TRANSITION_DURATION = 200;
 
 	private LinkedList<Tile> scheduledToRender = new LinkedList<Tile>();
@@ -34,41 +34,44 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 	private TileCache cache;
 	private DetailLevel detailLevelToRender;
 	private DetailLevel lastRenderedDetailLevel;
-	private TileRenderTask lastRunRenderTask;
+	private TileRenderPoolExecutor renderPoolExecutor = TileRenderPoolExecutor.getInstance();
 	private ScalingLayout currentTileGroup;
 	private DetailManager detailManager;
 
 	private boolean renderIsCancelled = false;
 	private boolean renderIsSuppressed = false;
 	private boolean isRendering = false;
-	
+
 	private boolean transitionsEnabled = true;
 	private int transitionDuration = TRANSITION_DURATION;
-	
+
 	private TileRenderHandler handler;
 	private TileRenderListener renderListener;
 	private TileTransitionListener transitionListener;
 
+	private final Handler uiThreadHandler;
+
 	public TileManager( Context context, DetailManager zm ) {
 		super( context );
 		detailManager = zm;
-		detailManager.addDetailLevelEventListener( this );		
+		detailManager.addDetailLevelEventListener( this );
 		handler = new TileRenderHandler( this );
 		transitionListener = new TileTransitionListener( this );
+		uiThreadHandler = new Handler(Looper.getMainLooper());
 	}
-	
+
 	public void setTransitionsEnabled( boolean enabled ) {
 		transitionsEnabled = enabled;
 	}
-	
+
 	public void setTransitionDuration( int duration ) {
 		transitionDuration = duration;
 	}
-	
+
 	public void setDecoder( BitmapDecoder d ){
 		decoder = d;
 	}
-	
+
 	public void setCacheEnabled( boolean shouldCache ) {
 		if ( shouldCache ){
 			if ( cache == null ){
@@ -81,7 +84,7 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 			cache = null;
 		}
 	}
-	
+
 	public void setTileRenderListener( TileRenderListener listener ){
 		renderListener = listener;
 	}
@@ -105,22 +108,14 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 		// hard cancel - further render tasks won't start, and we'll attempt to interrupt the currently executing task
 		renderIsCancelled = true;
 		// if the currently executing task isn't null...
-		if ( lastRunRenderTask != null ) {
-			// ... and it's in a cancellable state
-			if ( lastRunRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
-				// ... then squash it
-				lastRunRenderTask.cancel( true );
-			}
-		}
-		// give it to gc
-		lastRunRenderTask = null;
+		renderPoolExecutor.clearQueue();
 	}
 
 	public void suppressRender() {
 		// this will prevent new tasks from starting, but won't actually cancel the currently executing task
 		renderIsSuppressed = true;
 	}
-	
+
 	public void updateTileSet() {
 		// grab reference to this detail level, so we can get it's tile set for comparison to viewport
 		detailLevelToRender = detailManager.getCurrentDetailLevel();
@@ -145,11 +140,11 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 	public boolean getIsRendering() {
 		return isRendering;
 	}
-	
+
 	public void clear() {
 		// suppress and cancel renders
 		suppressRender();
-		cancelRender();		
+		cancelRender();
 		// destroy all tiles
 		for ( Tile m : scheduledToRender ) {
 			m.destroy();
@@ -198,7 +193,7 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 		return tileGroup;
 	}
 
-	
+
 
 	// access omitted deliberately - need package level access for the TileRenderHandler
 	void renderTiles() {
@@ -228,14 +223,8 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 		// if we made it here, then replace the old list with the new list
 		scheduledToRender = intersections;
 		// cancel task if it's already running
-		if ( lastRunRenderTask != null ) {
-			if ( lastRunRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
-				lastRunRenderTask.cancel( true );
-			}
-		}
-		// start a new one
-		lastRunRenderTask = new TileRenderTask( this );
-		lastRunRenderTask.execute();
+		renderPoolExecutor.clearQueue();
+		renderPoolExecutor.queue(this, getRenderList());
 	}
 
 	private FixedLayout.LayoutParams getLayoutFromTile( Tile m ) {
@@ -268,7 +257,7 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 	/*
 	 *  render tasks (invoked in asynctask's thread)
 	 */
-	
+
 	void onRenderTaskPreExecute(){
 		// set a flag that we're working
 		isRendering = true;
@@ -277,74 +266,87 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 			renderListener.onRenderStart();
 		}
 	}
-	
+
 	void onRenderTaskCancelled() {
 		if ( renderListener != null ) {
 			renderListener.onRenderCancelled();
 		}
 		isRendering = false;
 	}
-	
+
 	void onRenderTaskPostExecute() {
-		// set flag that we're done
-		isRendering = false;
-		// everything's been rendered, so get rid of the old tiles
-		cleanup();
-		// recurse - request another round of render - if the same intersections are discovered, recursion will end anyways
-		requestRender();
-		// notify anybody interested
-		if ( renderListener != null ) {
-			renderListener.onRenderComplete();
-		}
+		uiThreadHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				// set flag that we're done
+				isRendering = false;
+				// everything's been rendered, so get rid of the old tiles
+				cleanup();
+				// recurse - request another round of render - if the same intersections are discovered, recursion will end anyways
+				requestRender();
+				// notify anybody interested
+				if (renderListener != null) {
+					renderListener.onRenderComplete();
+				}
+
+			}
+		});
 	}
-	
+
 	LinkedList<Tile> getRenderList(){
 		return new LinkedList<Tile>( scheduledToRender );
 	}
-	
+
 	// package level access so it can be invoked by the render task
 	void decodeIndividualTile( Tile m ) {
 		m.decode( getContext(), cache, decoder );
 	}
 
 	// package level access so it can be invoked by the render task
-	void renderIndividualTile( Tile tile ) {
+	void renderIndividualTile( final Tile tile ) {
 		// if it's already rendered, quit now
 		if ( alreadyRendered.contains( tile ) ) {
 			return;
 		}
-		// create the image view if needed, with default settings
-		tile.render( getContext() );
-		// add it to the list of those rendered
-		alreadyRendered.add( tile );
-		// get reference to the actual image view
-		ImageView imageView = tile.getImageView();
-		// get layout params from the tile's predefined dimensions
-		LayoutParams layoutParams = getLayoutFromTile( tile );
-		// add it to the appropriate set (which is already scaled)
-		currentTileGroup.addView( imageView, layoutParams );
-		// shouldn't be necessary, but is
-		postInvalidate();
-		// do we want to animate in tiles?
-		if( transitionsEnabled){
-			// do we have an appropriate duration?
-			if( transitionDuration > 0 ) {
-				// create the animation (will be cleared by tile.destroy).  do this here for the postInvalidate listener
-				AlphaAnimation fadeIn = new AlphaAnimation( 0f, 1f );
-				// set duration
-				fadeIn.setDuration( transitionDuration );
-				// this listener posts invalidate on complete, again should not be necessary but is
-				fadeIn.setAnimationListener( transitionListener );
-				// start it up
-				imageView.startAnimation( fadeIn );
+
+		uiThreadHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				// create the image view if needed, with default settings
+				tile.render(getContext());
+				// add it to the list of those rendered
+				alreadyRendered.add(tile);
+				// get reference to the actual image view
+				ImageView imageView = tile.getImageView();
+				// get layout params from the tile's predefined dimensions
+				LayoutParams layoutParams = getLayoutFromTile(tile);
+				// add it to the appropriate set (which is already scaled)
+				currentTileGroup.addView(imageView, layoutParams);
+				// shouldn't be necessary, but is
+				postInvalidate();
+				// do we want to animate in tiles?
+				if (transitionsEnabled) {
+					// do we have an appropriate duration?
+					if (transitionDuration > 0) {
+						// create the animation (will be cleared by tile.destroy).  do this here for the postInvalidate listener
+						AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
+						// set duration
+						fadeIn.setDuration(transitionDuration);
+						// this listener posts invalidate on complete, again should not be necessary but is
+						fadeIn.setAnimationListener(transitionListener);
+						// start it up
+						imageView.startAnimation(fadeIn);
+					}
+				}
 			}
-		}
+		});
+
 	}
-	
+
 	boolean getRenderIsCancelled() {
 		return renderIsCancelled;
 	}
-	
+
 	// TODO: instead of implements, use a member?
 	@Override
 	public void onDetailLevelChanged() {

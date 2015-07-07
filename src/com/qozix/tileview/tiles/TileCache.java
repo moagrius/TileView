@@ -6,7 +6,8 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.support.v4.util.LruCache;
 
-import com.jakewharton.DiskLruCache;
+
+import com.jakewharton.disklrucache.DiskLruCache;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -19,19 +20,19 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class TileCache {
-	
+
 	private static final int DISK_CACHE_CAPACITY = 8 * 1024;
 	private static final int IO_BUFFER_SIZE = 8 * 1024;
-	
+
 	private static final int COMPRESSION_QUALITY = 40;
-	
+
 	private static final BitmapFactory.Options BITMAPFACTORY_OPTIONS = new BitmapFactory.Options();
 	static {
 		BITMAPFACTORY_OPTIONS.inPreferredConfig = Bitmap.Config.RGB_565;
 	}
 
 	private MessageDigest digest;
-	
+
 	private LruCache<String, Bitmap> memoryCache;
 	private DiskLruCache diskCache;
 
@@ -40,7 +41,7 @@ public class TileCache {
 		try {
 			digest = MessageDigest.getInstance( "MD5" );
 		} catch ( NoSuchAlgorithmException e1 ) {
-			
+
 		}
 		// in memory cache
 		final int memory = (int) ( Runtime.getRuntime().maxMemory() / 1024 );
@@ -62,7 +63,7 @@ public class TileCache {
 				try {
 					diskCache = DiskLruCache.open( cacheDirectory, 1, 1, DISK_CACHE_CAPACITY );
 				} catch ( IOException e ) {
-					
+
 				}
 			}
 		}).start();
@@ -70,17 +71,21 @@ public class TileCache {
 
 	public void addBitmap( String key, Bitmap bitmap ) {
 		addBitmapToMemoryCache( key, bitmap );
-		addBitmapToDiskCache( key, bitmap );
+		synchronized (this){
+			addBitmapToDiskCache(key, bitmap);
+		}
 	}
-	
+
 	public Bitmap getBitmap( String key ) {
 		Bitmap bitmap = getBitmapFromMemoryCache( key );
 		if ( bitmap == null ) {
-			bitmap = getBitmapFromDiskCache( key );
+			synchronized (this){
+				bitmap = getBitmapFromDiskCache( key );
+			}
 		}
 		return bitmap;
 	}
-	
+
 	public void destroy(){
 		memoryCache.evictAll();
 		memoryCache = null;
@@ -91,12 +96,12 @@ public class TileCache {
 					diskCache.delete();
 					diskCache = null;
 				} catch ( IOException e ) {
-					
+
 				}
 			}
-		}).start();		
+		}).start();
 	}
-	
+
 	public void clear() {
 		memoryCache.evictAll();
 		new Thread(new Runnable(){
@@ -105,16 +110,16 @@ public class TileCache {
 				try {
 					diskCache.delete();
 				} catch ( IOException e ) {
-					
+
 				}
 			}
-		}).start();		
+		}).start();
 	}
-	
+
 	private void addBitmapToMemoryCache( String key, Bitmap bitmap ) {
 		if ( key == null || bitmap == null ) {
-	        return;
-	    }
+			return;
+		}
 		if ( getBitmapFromMemoryCache( key ) == null ) {
 			memoryCache.put( key, bitmap );
 		}
@@ -123,7 +128,7 @@ public class TileCache {
 	private Bitmap getBitmapFromMemoryCache( String key ) {
 		return memoryCache.get( key );
 	}
-	
+
 	private void addBitmapToDiskCache( String key, Bitmap bitmap ) {
 		if ( diskCache == null ) {
 			return;
@@ -156,11 +161,11 @@ public class TileCache {
 					editor.abort();
 				}
 			} catch ( IOException io ) {
-				
+
 			}
 		}
 	}
-	
+
 	private Bitmap getBitmapFromDiskCache( String key ) {
 		if ( diskCache == null ) {
 			return null;
@@ -179,7 +184,7 @@ public class TileCache {
 				bitmap = BitmapFactory.decodeStream( buffered, null, BITMAPFACTORY_OPTIONS );
 			}
 		} catch ( Exception e ) {
-			
+
 		} finally {
 			if ( snapshot != null ) {
 				snapshot.close();
@@ -187,7 +192,7 @@ public class TileCache {
 		}
 		return bitmap;
 	}
-	
+
 	private String getMD5( String fileName ) {
 		if ( digest != null ) {
 			digest.update( fileName.getBytes(), 0, fileName.length() );
