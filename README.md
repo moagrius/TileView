@@ -1,13 +1,13 @@
-<h1>TileView</h1>
+#TileView
 
-<p style="color:red;">Update: this repo has been updated to include a demo app,
+*Update: this repo has been updated to include a demo app,
 and the widget code as an Android Studio library module.
-All other `TileView` related repos will be deprecated.</p>
+All other `TileView` related repos will be deprecated.*
 
-<p>The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
+The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
 with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
 built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
-coordinate system.</p>
+coordinate system.
 
 <a target="_blank" href="http://www.youtube.com/watch?v=N9fzrZDqAZY">
   <img src="http://img.youtube.com/vi/N9fzrZDqAZY/1.jpg" />
@@ -17,21 +17,21 @@ coordinate system.</p>
   <img src="http://img.youtube.com/vi/N9fzrZDqAZY/3.jpg" />
 </a>
 
-<h4>Documentation</h4>
-<p>Javadocs are <a href="http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html" target="_blank">here</a>.
-Wiki is <a href="https://github.com/moagrius/TileView/wiki">here</a>.</p>
+###Documentation
+Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html).
+Wiki is [here](https://github.com/moagrius/TileView/wiki).
 
-<h4>Installation</h4>
+###Installation
 Gradle:
 ```
 compile 'com.qozix:tileview:1.0.15'
 ```
 
-<h4>Demo</h4>
-<p>A demo application, built in Android Studio, is available in the `demo` folder of this repository.
+###Demo
+A demo application, built in Android Studio, is available in the `demo` folder of this repository.
 Several use-cases are present; the `RealMapTileViewActivity` is the most substantive.
 
-<h4>Quick Setup</h4>
+###Quick Setup
 1. Tile an image into image slices of a set size, e.g., 256x256 (<a href="https://github.com/moagrius/TileView/wiki/Creating-Tiles" target="_blank">instructions</a>)
 1. Name the tiles by the row and column number, e.g., 'tile-2-3.png' for the image tile that would be
 at the 2nd column from left and 3rd row from top.
