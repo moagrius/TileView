@@ -1,0 +1,69 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".TileViewDemoActivity" >
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+    	android:layout_height="wrap_content">
+        
+        <TextView
+            android:padding="20dp"
+            android:id="@+id/show_image"
+            android:layout_width="match_parent"
+    		android:layout_height="wrap_content"
+    		android:textSize="20sp"
+    		android:gravity="center"
+    		android:text="Large Image" />
+        
+        <View 
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#FFCCCCCC"
+            />
+        
+        <TextView
+            android:padding="20dp"
+            android:id="@+id/show_plans"
+            android:layout_width="match_parent"
+    		android:layout_height="wrap_content"
+    		android:textSize="20sp"
+    		android:gravity="center"
+    		android:text="Building Plans" />
+        
+        <View 
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#FFCCCCCC"
+            />
+        
+        <TextView
+            android:padding="20dp"
+            android:id="@+id/show_fiction"
+            android:layout_width="match_parent"
+    		android:layout_height="wrap_content"
+    		android:textSize="20sp"
+    		android:gravity="center"
+    		android:text="Fictional Map" />
+        
+        <View 
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#FFCCCCCC"
+            />
+        
+        <TextView
+            android:padding="20dp"
+            android:id="@+id/show_map"
+            android:layout_width="match_parent"
+    		android:layout_height="wrap_content"
+    		android:textSize="20sp"
+    		android:gravity="center"
+    		android:text="Real Map" />
+        
+    </LinearLayout>
+    
+
+</ScrollView>
