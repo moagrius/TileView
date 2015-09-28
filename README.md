@@ -1,8 +1,8 @@
 <h1>TileView</h1>
 
-<h2 style="color:red;">Update: this repo has been updated to include a demo app,
+<p style="color:red;">Update: this repo has been updated to include a demo app,
 and the widget code as an Android Studio library module.
-All other `TileView` related repos will be deprecated.</h2>
+All other `TileView` related repos will be deprecated.</p>
 
 <p>The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
 with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
