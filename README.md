@@ -1,4 +1,9 @@
 <h1>TileView</h1>
+
+<h2 style="color:red;">Update: this repo has been updated to include a demo app,
+and the widget code as an Android Studio library module.
+The `TileViewDemo` repository will be deprecated.</h2>
+
 <p>The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
 with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
 built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
@@ -23,8 +28,8 @@ compile 'com.qozix:tileview:1.0.15'
 ```
 
 <h4>Demo</h4>
-<p>A demo application, built in Eclipse, is available <a target="_blank" href="https://github.com/moagrius/TileViewDemo">here</a>.
-<p>The .apk can be <a href="http://moagrius.github.io/TileView/TileViewDemo.apk">downloaded directly</a>.
+<p>A demo application, built in Android Studio, is available in the `demo` folder of this repository.
+Several use-cases are present; the `RealMapTileViewActivity` is the most substantive.
 
 <h4>Quick Setup</h4>
 1. Tile an image into image slices of a set size, e.g., 256x256 (<a href="https://github.com/moagrius/TileView/wiki/Creating-Tiles" target="_blank">instructions</a>)
