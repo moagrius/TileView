@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.support.v4.util.LruCache;
-import android.util.Log;
 
 import com.jakewharton.disklrucache.DiskLruCache;
 
@@ -174,11 +173,8 @@ public class TileCache {
 		try {
 			snapshot = diskCache.get( key );
 			if ( snapshot == null ) {
-				Log.d("DEBUG", "snapshot == null" );
 				return null;
-			} else {
-				Log.d( "DEBUG", "snapshot != null" );
-			}
+			} 
 			final InputStream input = snapshot.getInputStream( 0 );
 			if ( input != null ) {
 				BufferedInputStream buffered = new BufferedInputStream( input, IO_BUFFER_SIZE );
