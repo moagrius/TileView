@@ -37,7 +37,7 @@ Several use-cases are present; the `RealMapTileViewActivity` is the most substan
 at the 2nd column from left and 3rd row from top.
 1. Create a new application with a single activity ('Main').
 1. Save the image tiles to your `assets` directory.
-1. Add `compile 'com.qozix:tileview:1.0.15'` to your gradle dependencies.
+1. Add `compile 'com.qozix:tileview:1.0.16'` to your gradle dependencies.
 1. In the Main Activity, use this for `onCreate`:
 ```
 @Override
