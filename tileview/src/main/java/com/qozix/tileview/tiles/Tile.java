@@ -2,7 +2,6 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.ImageView;
@@ -15,14 +14,12 @@ public class Tile {
 	private int mHeight;
 
 	private int mRow;
-	private int mCol;
+	private int mColumn;
 
 	private Object mData;
 
 	private ImageView mImageView;
 	private Bitmap mBitmap;
-
-	private boolean mHasBitmap;
 
 	public int getWidth() {
 		return mWidth;
@@ -36,8 +33,8 @@ public class Tile {
 		return mRow;
 	}
 
-	public int getCol() {
-		return mCol;
+	public int getColumn() {
+		return mColumn;
 	}
 
 	public Object getData() {
@@ -52,17 +49,25 @@ public class Tile {
 		return mBitmap;
 	}
 
-	public boolean isHasBitmap() {
-		return mHasBitmap;
+	public boolean hasBitmap() {
+		return mBitmap != null;
+	}
+
+	public int getLeft(){
+		return mColumn * mWidth;
+	}
+
+	public int getTop(){
+		return mRow * mHeight;
 	}
 
 	public Tile() {
 
 	}
 
-	public Tile( int row, int col, int width, int height, Object data ) {
+	public Tile( int column, int row, int width, int height, Object data ) {
 		mRow = row;
-		mCol = col;
+		mColumn = column;
 		mWidth = width;
 		mHeight = height;
 		mData = data;
@@ -70,13 +75,10 @@ public class Tile {
 
 
 	public void decode( Context context, BitmapDecoder decoder ) {
-		if (mHasBitmap) {
+		if (hasBitmap()) {
 			return;
 		}
 		mBitmap = decoder.decode( this, context );
-		Log.d("DEBUG", mBitmap != null ? mBitmap.toString() : "mBitmap is null" );
-		mHasBitmap = ( mBitmap != null );
-
 	}
 
 	public void render( Context context ) {
@@ -100,7 +102,6 @@ public class Tile {
 			mImageView = null;
 		}
 		mBitmap = null;
-		mHasBitmap = false;
 	}
 
 	@Override
@@ -108,7 +109,7 @@ public class Tile {
 		if ( o instanceof Tile) {
 			Tile m = (Tile) o;
 			return ( m.getRow() == getRow() )
-					&& ( m.getCol() == getCol() )
+					&& ( m.getColumn() == getColumn() )
 					&& ( m.getWidth() == getWidth() )
 					&& ( m.getHeight() == getHeight() )
 					&& ( m.getData().equals( getData() ) );
@@ -118,7 +119,7 @@ public class Tile {
 
 	@Override
 	public String toString() {
-		return "(row=" + mRow + ", col=" + mCol + ", mWidth=" + mWidth + ", mHeight=" + mHeight + ", file=" + mData + ")";
+		return "(row=" + mRow + ", column=" + mColumn + ", width=" + mWidth + ", height=" + mHeight + ", data=" + mData + ")";
 	}
 
 }

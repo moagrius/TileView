@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 
 import com.qozix.tileview.tiles.Tile;
 
@@ -23,8 +22,7 @@ public class BitmapDecoderAssets implements BitmapDecoder {
 		Object data = tile.getData();
 		if(data instanceof String){
 			String fileName = (String) tile.getData();
-			fileName = String.format(fileName, tile.getRow(), tile.getCol());
-			Log.d( "DEBUG", fileName );
+			fileName = String.format(fileName, tile.getColumn(), tile.getRow());
 			AssetManager assets = context.getAssets();
 			try {
 				InputStream input = assets.open( fileName );

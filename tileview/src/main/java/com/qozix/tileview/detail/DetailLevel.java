@@ -40,12 +40,9 @@ public class DetailLevel implements Comparable<DetailLevel> {
 		int drawableHeight = (int) ( mDetailManager.getHeight() * getScale() * relativeScale );
 		double offsetWidth = ( mTileWidth * relativeScale );
 		double offsetHeight = ( mTileHeight * relativeScale );
-		
-		LinkedList<Tile> intersections = new LinkedList<Tile>();
-		
+
 		mViewport.set( mDetailManager.getComputedViewport() );
 		
-		// TODO test if mins are right
 		mViewport.top = Math.max( mViewport.top, 0 );
 		mViewport.left = Math.max( mViewport.left, 0 );
 		mViewport.right = Math.min( mViewport.right, drawableWidth );
@@ -55,10 +52,12 @@ public class DetailLevel implements Comparable<DetailLevel> {
 		int endingRow = (int) Math.ceil( mViewport.bottom / offsetHeight );
 		int startingColumn = (int) Math.floor( mViewport.left / offsetWidth );
 		int endingColumn = (int) Math.ceil( mViewport.right / offsetWidth );
-		
+
+		LinkedList<Tile> intersections = new LinkedList<Tile>();
+
 		for ( int iterationRow = startingRow; iterationRow < endingRow; iterationRow++ ) {
 			for ( int iterationColumn = startingColumn; iterationColumn < endingColumn; iterationColumn++ ) {
-				Tile tile = new Tile( iterationRow, iterationColumn, mTileWidth, mTileHeight, mData );
+				Tile tile = new Tile( iterationColumn, iterationRow, mTileWidth, mTileHeight, mData );
 				intersections.add( tile );
 			}
 		}

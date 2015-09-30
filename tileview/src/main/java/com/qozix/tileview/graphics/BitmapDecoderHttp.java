@@ -22,7 +22,7 @@ public class BitmapDecoderHttp implements BitmapDecoder {
 	@Override
 	public Bitmap decode( Tile tile, Context context ) {
 		String fileName = (String) tile.getData();
-		fileName = String.format(fileName, tile.getRow(), tile.getCol());
+		fileName = String.format(fileName, tile.getRow(), tile.getColumn());
 		try {
 			URL url = new URL(fileName);
 			try {

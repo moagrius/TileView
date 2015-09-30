@@ -209,13 +209,13 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 		renderPoolExecutor.queue(this, getRenderList());
 	}
 
-	private FixedLayout.LayoutParams getLayoutFromTile( Tile m ) {
-		int w = m.getWidth();
-		int h = m.getHeight();
-		int x = m.getCol() * w;
-		int y = m.getRow() * h;
-		//return new FixedLayout.LayoutParams( w, h, x, y );
-		return new FixedLayout.LayoutParams( w, h, y, x );
+	private FixedLayout.LayoutParams getLayoutFromTile( Tile tile ) {
+		return new FixedLayout.LayoutParams(
+			tile.getWidth(),
+			tile.getHeight(),
+			tile.getLeft(),
+			tile.getTop()
+		);
 	}
 
 	private void cleanup() {
