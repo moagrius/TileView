@@ -24,7 +24,7 @@ Wiki is [here](https://github.com/moagrius/TileView/wiki).
 ###Installation
 Gradle:
 ```
-compile 'com.qozix:tileview:1.0.15'
+compile 'com.qozix:tileview:1.0.16'
 ```
 
 ###Demo
