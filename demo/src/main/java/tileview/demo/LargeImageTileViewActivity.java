@@ -1,8 +1,8 @@
 package tileview.demo;
 
-import com.qozix.tileview.TileView;
-
 import android.os.Bundle;
+
+import com.qozix.tileview.TileView;
 
 public class LargeImageTileViewActivity extends TileViewActivity {
 

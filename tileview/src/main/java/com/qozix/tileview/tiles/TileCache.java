@@ -20,8 +20,8 @@ import java.security.NoSuchAlgorithmException;
 
 public class TileCache {
 
-	private static final int DISK_CACHE_CAPACITY = 8 * 1024;
-	private static final int IO_BUFFER_SIZE = 8 * 1024;
+	private static final int DISK_CACHE_CAPACITY = 8 * 1024 * 1024;
+	private static final int IO_BUFFER_SIZE = 8 * 1024 * 1024;
 
 	private static final int COMPRESSION_QUALITY = 40;
 
@@ -58,11 +58,10 @@ public class TileCache {
 		new Thread(new Runnable(){
 			@Override
 			public void run(){
-				File cacheDirectory = new File( context.getCacheDir().getPath() + File.separator + "com/qozix/mapview" );
+				File cacheDirectory = new File( context.getCacheDir().getPath() + File.separator + "com/qozix/tileview" );
 				try {
 					diskCache = DiskLruCache.open( cacheDirectory, 1, 1, DISK_CACHE_CAPACITY );
 				} catch ( IOException e ) {
-
 				}
 			}
 		}).start();
@@ -144,7 +143,6 @@ public class TileCache {
 				output = new BufferedOutputStream( editor.newOutputStream( 0 ), IO_BUFFER_SIZE );
 				boolean compressed = bitmap.compress( CompressFormat.JPEG, COMPRESSION_QUALITY, output );
 				if ( compressed ) {
-					diskCache.flush();
 					editor.commit();
 				} else {
 					editor.abort();
@@ -176,7 +174,7 @@ public class TileCache {
 			snapshot = diskCache.get( key );
 			if ( snapshot == null ) {
 				return null;
-			}
+			} 
 			final InputStream input = snapshot.getInputStream( 0 );
 			if ( input != null ) {
 				BufferedInputStream buffered = new BufferedInputStream( input, IO_BUFFER_SIZE );
