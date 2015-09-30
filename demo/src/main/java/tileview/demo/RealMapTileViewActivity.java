@@ -98,6 +98,9 @@ public class RealMapTileViewActivity extends TileViewActivity {
 		y = y / size;
 		frameTo( x, y );
 
+		// TODO: debug, remove
+		tileView.setCacheEnabled( true );
+
 		// start small and allow zoom
 		tileView.setScale( 0.3 );
 
