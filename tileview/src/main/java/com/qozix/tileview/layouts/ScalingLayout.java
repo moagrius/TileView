@@ -1,4 +1,4 @@
-package com.qozix.layouts;
+package com.qozix.tileview.layouts;
 
 import android.content.Context;
 import android.graphics.Canvas;

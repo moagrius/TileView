@@ -19,10 +19,10 @@ public class FictionalMapTileViewActivity extends TileViewActivity {
 		tileView.setSize( 4015, 4057 );
 		
 		// detail levels
-		tileView.addDetailLevel( 1.000f, "tiles/fantasy/1000/%col%_%row%.jpg", "samples/middle-earth.jpg");
-		tileView.addDetailLevel( 0.500f, "tiles/fantasy/500/%col%_%row%.jpg", "samples/middle-earth.jpg");
-		tileView.addDetailLevel( 0.250f, "tiles/fantasy/250/%col%_%row%.jpg", "samples/middle-earth.jpg");
-		tileView.addDetailLevel( 0.125f, "tiles/fantasy/125/%col%_%row%.jpg", "samples/middle-earth.jpg");
+		tileView.addDetailLevel( 1.000f, "tiles/fantasy/1000/%1_%2.jpg");
+		tileView.addDetailLevel( 0.500f, "tiles/fantasy/500/%1_%2.jpg");
+		tileView.addDetailLevel( 0.250f, "tiles/fantasy/250/%1_%2.jpg");
+		tileView.addDetailLevel( 0.125f, "tiles/fantasy/125/%1_%2.jpg");
 		
 		// allow scaling past original size
 		tileView.setScaleLimits( 0, 2 );

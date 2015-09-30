@@ -7,8 +7,8 @@ import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.ImageView;
 
-import com.qozix.layouts.FixedLayout;
-import com.qozix.layouts.ScalingLayout;
+import com.qozix.tileview.layouts.FixedLayout;
+import com.qozix.tileview.layouts.ScalingLayout;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailManager;
@@ -31,7 +31,6 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 	private BitmapDecoder decoder = new BitmapDecoderAssets();
 	private HashMap<Double, ScalingLayout> tileGroups = new HashMap<Double, ScalingLayout>();
 
-	private TileCache cache;
 	private DetailLevel detailLevelToRender;
 	private DetailLevel lastRenderedDetailLevel;
 	private TileRenderPoolExecutor renderPoolExecutor = TileRenderPoolExecutor.getInstance();
@@ -70,19 +69,6 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 
 	public void setDecoder( BitmapDecoder d ){
 		decoder = d;
-	}
-
-	public void setCacheEnabled( boolean shouldCache ) {
-		if ( shouldCache ){
-			if ( cache == null ){
-				cache = new TileCache( getContext() );
-			}
-		} else {
-			if ( cache != null ) {
-				cache.destroy();
-			}
-			cache = null;
-		}
 	}
 
 	public void setTileRenderListener( TileRenderListener listener ){
@@ -166,10 +152,6 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 			}
 			tileGroup.removeAllViews();
 		}
-		// clear the cache
-		if ( cache != null ) {
-			cache.clear();
-		}
 	}
 
 	private ScalingLayout getCurrentTileGroup() {
@@ -230,9 +212,10 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 	private FixedLayout.LayoutParams getLayoutFromTile( Tile m ) {
 		int w = m.getWidth();
 		int h = m.getHeight();
-		int x = m.getLeft();
-		int y = m.getTop();
-		return new FixedLayout.LayoutParams( w, h, x, y );
+		int x = m.getCol() * w;
+		int y = m.getRow() * h;
+		//return new FixedLayout.LayoutParams( w, h, x, y );
+		return new FixedLayout.LayoutParams( w, h, y, x );
 	}
 
 	private void cleanup() {
@@ -299,7 +282,7 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 
 	// package level access so it can be invoked by the render task
 	void decodeIndividualTile( Tile m ) {
-		m.decode( getContext(), cache, decoder );
+		m.decode( getContext(), decoder );
 	}
 
 	// package level access so it can be invoked by the render task

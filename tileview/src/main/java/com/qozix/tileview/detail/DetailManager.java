@@ -186,13 +186,13 @@ public class DetailManager {
 		}
 	}
 	
-	public void addDetailLevel( float scale, String pattern, String downsample ) {
-		DetailLevel detailLevel = new DetailLevel( this, scale, pattern, downsample );
+	public void addDetailLevel( float scale, Object data ) {
+		DetailLevel detailLevel = new DetailLevel( this, scale, data );
 		addDetailLevel( detailLevel );
 	}
 	
-	public void addDetailLevel( float scale, String pattern, String downsample, int tileWidth, int tileHeight ) {
-		DetailLevel detailLevel = new DetailLevel( this, scale, pattern, downsample, tileWidth, tileHeight );
+	public void addDetailLevel( float scale, Object data, int tileWidth, int tileHeight ) {
+		DetailLevel detailLevel = new DetailLevel( this, scale, data, tileWidth, tileHeight );
 		addDetailLevel( detailLevel );
 	}
 	

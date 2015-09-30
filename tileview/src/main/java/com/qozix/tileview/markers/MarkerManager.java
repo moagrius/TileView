@@ -5,7 +5,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.view.View;
 
-import com.qozix.layouts.TranslationLayout;
+import com.qozix.tileview.layouts.TranslationLayout;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailManager;
 

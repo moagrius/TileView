@@ -1,6 +1,6 @@
 package com.qozix.tileview.tiles;
 
-import com.qozix.os.AsyncTask;
+import android.os.AsyncTask;
 
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;

@@ -1,3 +1,14 @@
+#Version 2 Goals
+1.  Eliminate strings from detail levels
+1.  Eliminate ImageViews as Tiles
+1.  Single package
+1.  Eliminate hacked core classes
+1.  Better thread management
+1.  Issues
+1.  Allow layer insertion and scaling layer insertion
+1.  Eliminate downsample paradigm
+1.  Remove LRU cache dependency
+
 #TileView
 
 *Update: this repo has been updated to include a demo app,

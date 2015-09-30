@@ -10,94 +10,81 @@ public class DetailLevel implements Comparable<DetailLevel> {
 
 	private static final int DEFAULT_TILE_SIZE = 256;
 
-	private double scale;
+	private double mScale;
 	
-	private int tileWidth = DEFAULT_TILE_SIZE;
-	private int tileHeight = DEFAULT_TILE_SIZE;
+	private int mTileWidth = DEFAULT_TILE_SIZE;
+	private int mTileHeight = DEFAULT_TILE_SIZE;
 
-	private String pattern;
-	private String downsample;
+	private Object mData;
 
-	private DetailManager detailManager;
-	private Rect viewport = new Rect();
+	private DetailManager mDetailManager;
+	private Rect mViewport = new Rect();
 
-	public DetailLevel( DetailManager zm, float s, String p, String d, int tw, int th ) {
-		detailManager = zm;
-		scale = s;
-		pattern = p;
-		downsample = d;
-		tileWidth = tw;
-		tileHeight = th;
+	public DetailLevel( DetailManager detailManager, float scale, Object data, int tileWidth, int tileHeight ) {
+		mDetailManager = detailManager;
+		mScale = scale;
+		mData = data;
+		mTileWidth = tileWidth;
+		mTileHeight = tileHeight;
 	}
 	
-	public DetailLevel( DetailManager zm, float s, String p, String d ) {
-		this( zm, s, p, d, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE );
+	public DetailLevel( DetailManager detailManager, float scale, Object data ) {
+		this( detailManager, scale, data, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE );
 	}
 
 	public LinkedList<Tile> getIntersections() {
 		
 		double relativeScale = getRelativeScale();
 		
-		int drawableWidth = (int) ( detailManager.getWidth() * getScale() * relativeScale );
-		int drawableHeight = (int) ( detailManager.getHeight() * getScale() * relativeScale );
-		double offsetWidth = ( tileWidth * relativeScale );
-		double offsetHeight = ( tileHeight * relativeScale );
+		int drawableWidth = (int) ( mDetailManager.getWidth() * getScale() * relativeScale );
+		int drawableHeight = (int) ( mDetailManager.getHeight() * getScale() * relativeScale );
+		double offsetWidth = ( mTileWidth * relativeScale );
+		double offsetHeight = ( mTileHeight * relativeScale );
 		
 		LinkedList<Tile> intersections = new LinkedList<Tile>();
 		
-		viewport.set( detailManager.getComputedViewport() );
+		mViewport.set( mDetailManager.getComputedViewport() );
 		
 		// TODO test if mins are right
-		viewport.top = Math.max( viewport.top, 0 );
-		viewport.left = Math.max( viewport.left, 0 );
-		viewport.right = Math.min( viewport.right, drawableWidth );
-		viewport.bottom = Math.min( viewport.bottom, drawableHeight );
-		
-		
-		int startingRow = (int) Math.floor( viewport.top / offsetHeight );
-		int endingRow = (int) Math.ceil( viewport.bottom / offsetHeight );
-		int startingColumn = (int) Math.floor( viewport.left / offsetWidth );
-		int endingColumn = (int) Math.ceil( viewport.right / offsetWidth );
-		
-		DetailLevelPatternParser parser = detailManager.getDetailLevelPatternParser();
+		mViewport.top = Math.max( mViewport.top, 0 );
+		mViewport.left = Math.max( mViewport.left, 0 );
+		mViewport.right = Math.min( mViewport.right, drawableWidth );
+		mViewport.bottom = Math.min( mViewport.bottom, drawableHeight );
+
+		int startingRow = (int) Math.floor( mViewport.top / offsetHeight );
+		int endingRow = (int) Math.ceil( mViewport.bottom / offsetHeight );
+		int startingColumn = (int) Math.floor( mViewport.left / offsetWidth );
+		int endingColumn = (int) Math.ceil( mViewport.right / offsetWidth );
 		
 		for ( int iterationRow = startingRow; iterationRow < endingRow; iterationRow++ ) {
 			for ( int iterationColumn = startingColumn; iterationColumn < endingColumn; iterationColumn++ ) {
-				String fileName = parser.parse( pattern, iterationRow, iterationColumn );
-				int left = iterationColumn * tileWidth;
-				int top = iterationRow * tileHeight;
-				Tile tile = new Tile( left, top, tileWidth, tileHeight, fileName );
+				Tile tile = new Tile( iterationRow, iterationColumn, mTileWidth, mTileHeight, mData );
 				intersections.add( tile );
 			}
 		}
-		
 		
 		return intersections;
 		
 	}
 
 	public double getScale(){
-		return scale;
+		return mScale;
 	}
 	
 	public double getRelativeScale(){
-		return detailManager.getScale() / scale;
+		return mDetailManager.getScale() / mScale;
 	}
 	
 	public int getTileWidth() {
-		return tileWidth;
+		return mTileWidth;
 	}
 
 	public int getTileHeight() {
-		return tileHeight;
+		return mTileHeight;
 	}
 
-	public String getPattern() {
-		return pattern;
-	}
-
-	public String getDownsample() {
-		return downsample;
+	public Object getData(){
+		return mData;
 	}
 
 	@Override

@@ -33,11 +33,11 @@ public class RealMapTileViewActivity extends TileViewActivity {
 		// we won't use a downsample here, so color it similarly to tiles
 		tileView.setBackgroundColor( 0xFFe7e7e7 );
 
-		tileView.addDetailLevel( 0.0625f, "tiles/map/phi-62500-%col%_%row%.jpg" );
-		tileView.addDetailLevel( 0.1250f, "tiles/map/phi-125000-%col%_%row%.jpg" );
-		tileView.addDetailLevel( 0.2500f, "tiles/map/phi-250000-%col%_%row%.jpg" );
-		tileView.addDetailLevel( 0.5000f, "tiles/map/phi-500000-%col%_%row%.jpg" );
-		tileView.addDetailLevel( 1.0000f, "tiles/map/phi-1000000-%col%_%row%.jpg" );
+		tileView.addDetailLevel( 0.0625f, "tiles/map/phi-62500-%d_%d.jpg" );
+		tileView.addDetailLevel( 0.1250f, "tiles/map/phi-125000-%d_%d.jpg" );
+		tileView.addDetailLevel( 0.2500f, "tiles/map/phi-250000-%d_%d.jpg" );
+		tileView.addDetailLevel( 0.5000f, "tiles/map/phi-500000-%d_%d.jpg" );
+		tileView.addDetailLevel( 1.0000f, "tiles/map/phi-1000000-%d_%d.jpg" );
 
 		// markers should align to the coordinate along the horizontal center and vertical bottom
 		tileView.setMarkerAnchorPoints( -0.5f, -1.0f );

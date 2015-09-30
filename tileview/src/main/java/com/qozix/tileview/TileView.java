@@ -11,8 +11,8 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.qozix.layouts.AnchorLayout;
-import com.qozix.layouts.ZoomPanLayout;
+import com.qozix.tileview.layouts.AnchorLayout;
+import com.qozix.tileview.layouts.ZoomPanLayout;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailLevelPatternParser;
 import com.qozix.tileview.detail.DetailManager;
@@ -28,7 +28,6 @@ import com.qozix.tileview.markers.MarkerManager;
 import com.qozix.tileview.paths.DrawablePath;
 import com.qozix.tileview.paths.PathHelper;
 import com.qozix.tileview.paths.PathManager;
-import com.qozix.tileview.samples.SampleManager;
 import com.qozix.tileview.tiles.TileManager;
 import com.qozix.tileview.tiles.TileRenderListener;
 import com.qozix.tileview.tiles.selector.TileSetSelector;
@@ -76,7 +75,6 @@ public class TileView extends ZoomPanLayout {
 
 	private HotSpotManager hotSpotManager = new HotSpotManager( detailManager );
 
-	private SampleManager sampleManager;
 	private TileManager tileManager;
 	private PathManager pathManager;
 	private MarkerManager markerManager;
@@ -97,9 +95,6 @@ public class TileView extends ZoomPanLayout {
 
 	public TileView( Context context, AttributeSet attrs, int defStyleAttr ) {
 		super(context, attrs, defStyleAttr);
-
-		sampleManager = new SampleManager( context, detailManager );
-		addView( sampleManager );
 
 		tileManager = new TileManager( context, detailManager );
 		addView( tileManager );
@@ -171,27 +166,6 @@ public class TileView extends ZoomPanLayout {
 	}
 
 	/**
-	 * Enables or disables tile image caching (in-memory and on-disk)
-	 * @param shouldCache (boolean) true to enable caching, false to disable it (default)
-	 */
-	public void setCacheEnabled( boolean shouldCache ) {
-		tileManager.setCacheEnabled( shouldCache );
-	}
-
-	/**
-	 * Sets a custom class to perform the decode operation when tile bitmaps are requested.
-	 * By default, a BitmapDecoder implementation is provided that renders bitmaps from the context's Assets,
-	 * but alternative implementations could be used that fetch images via HTTP, or from the SD card, or resources, SVG, etc.
-	 * This signature is identical to calling setTileDecoder and setDownsampleDecoder with the same decoder instance as the parameter.
-	 * {@link BitmapDecoderHttp} is an example of such an implementation.
-	 * @param decoder (BitmapDecoder) A class instance that implements BitmapDecoder, and must define a decode method, which accepts a String file name and a Context object, and returns a Bitmap
-	 */
-	public void setDecoder( BitmapDecoder decoder ) {
-		setTileDecoder( decoder );
-		setDownsampleDecoder( decoder );
-	}
-
-	/**
 	 * Sets a custom class to perform the decode operation when tile bitmaps are requested for tile images only.
 	 * By default, a BitmapDecoder implementation is provided that renders bitmaps from the context's Assets,
 	 * but alternative implementations could be used that fetch images via HTTP, or from the SD card, or resources, SVG, etc.
@@ -200,17 +174,6 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void setTileDecoder( BitmapDecoder decoder ) {
 		tileManager.setDecoder( decoder );
-	}
-
-	/**
-	 * Sets a custom class to perform the decode operation when tile bitmaps are requested for downsample images only.
-	 * By default, a BitmapDecoder implementation is provided that renders bitmaps from the context's Assets,
-	 * but alternative implementations could be used that fetch images via HTTP, or from the SD card, or resources, SVG, etc.
-	 * {@link BitmapDecoderHttp} is an example of such an implementation.
-	 * @param decoder (BitmapDecoder) A class instance that implements BitmapDecoder, and must define a decode method, which accepts a String file name and a Context object, and returns a Bitmap
-	 */
-	public void setDownsampleDecoder( BitmapDecoder decoder ) {
-		sampleManager.setDecoder( decoder );
 	}
 
 	/**
@@ -258,13 +221,13 @@ public class TileView extends ZoomPanLayout {
 	 * @param height (int) total height of the tiled set
 	 */
 	@Override
-	public void setSize( int w, int h ) {
+	public void setSize( int width, int height ) {
 		// super (define clip area)
-		super.setSize( w, h );
+		super.setSize( width, height );
 		// coordinate with other components
-		detailManager.setSize( w, h );
+		detailManager.setSize( width, height );
 		// notify manager for relative positioning
-		positionManager.setSize( w, h );
+		positionManager.setSize( width, height );
 	}
 
 	/**
@@ -272,10 +235,9 @@ public class TileView extends ZoomPanLayout {
 	 * Each tile set to be used must be registered using this method,
 	 * and at least one tile set must be registered for the TileView to render any tiles.
 	 * @param detailScale (float) scale at which the TileView should use the tiles in this set.
-	 * @param pattern (String) string path to the location of the tile image files, to be parsed by a DetailLevelPatternParser
 	 */
-	public void addDetailLevel( float detailScale, String pattern ) {
-		detailManager.addDetailLevel( detailScale, pattern, null );
+	public void addDetailLevel( float detailScale ) {
+		detailManager.addDetailLevel( detailScale, null );
 	}
 
 	/**
@@ -283,11 +245,10 @@ public class TileView extends ZoomPanLayout {
 	 * Each tile set to be used must be registered using this method,
 	 * and at least one tile set must be registered for the TileView to render any tiles.
 	 * @param detailScale (float) scale at which the TileView should use the tiles in this set.
-	 * @param pattern (String) string path to the location of the tile image files, to be parsed by a DetailLevelPatternParser
-	 * @param downsample (String) string path to the location of an optional non-tiled single image file that will fill the tile view, on a z-layer below tiles
+	 * @param data (Object) TODO
 	 */
-	public void addDetailLevel( float detailScale, String pattern, String downsample ){
-		detailManager.addDetailLevel( detailScale, pattern, downsample );
+	public void addDetailLevel( float detailScale, Object data){
+		detailManager.addDetailLevel( detailScale, data );
 	}
 
 	/**
@@ -295,13 +256,12 @@ public class TileView extends ZoomPanLayout {
 	 * Each tile set to be used must be registered using this method,
 	 * and at least one tile set must be registered for the TileView to render any tiles.
 	 * @param detailScale (float) scale at which the TileView should use the tiles in this set.
-	 * @param pattern (String) string path to the location of the tile image files, to be parsed by a DetailLevelPatternParser
-	 * @param downsample (String) string path to the location of an optional non-tiled single image file that will fill the tile view, on a z-layer below tiles
+	 * @param data (Object) TODO
 	 * @param tileWidth (int) size of each tiled column
 	 * @param tileHeight (int) size of each tiled row
 	 */
-	public void addDetailLevel( float detailScale, String pattern, String downsample, int tileWidth, int tileHeight ){
-		detailManager.addDetailLevel( detailScale, pattern, downsample, tileWidth, tileHeight );
+	public void addDetailLevel( float detailScale, Object data, int tileWidth, int tileHeight ){
+		detailManager.addDetailLevel( detailScale, data, tileWidth, tileHeight );
 	}
 
 	/**
@@ -524,8 +484,8 @@ public class TileView extends ZoomPanLayout {
 	 * @param view (View) View instance to be added to the TileView
 	 * @param x (double) relative x position the View instance should be positioned at
 	 * @param y (double) relative y position the View instance should be positioned at
-	 * @param aX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-	 * @param aY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+	 * @param anchorX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
+	 * @param anchorY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
 	 * @return (View) the View instance added to the TileView
 	 */
 	public View addMarker( View view, double x, double y, float anchorX, float anchorY ) {
@@ -557,8 +517,8 @@ public class TileView extends ZoomPanLayout {
 	 * @param view The marker View to be repositioned.
 	 * @param x (double) relative x position the View instance should be positioned at
 	 * @param y (double) relative y position the View instance should be positioned at
-	 * @param aX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-	 * @param aY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+	 * @param anchorX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
+	 * @param anchorY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
 	 */
 	public void moveMarker( View view, double x, double y, float anchorX, float anchorY ) {
 		Point point = positionManager.translate( x, y );
@@ -568,7 +528,7 @@ public class TileView extends ZoomPanLayout {
 	/**
 	 * Scroll the TileView so that the View passed is centered in the viewport
 	 * @param view (View) the View marker that the TileView should center on.
-	 * @params animate (boolean) should the movement use a transition effectg
+	 * @param animate (boolean) should the movement use a transition effectg
 	 */
 	public void moveToMarker( View view, boolean animate ) {
 		if( markerManager.indexOfChild( view ) > -1 ){
@@ -636,8 +596,8 @@ public class TileView extends ZoomPanLayout {
 	 * @param view (View) View instance to be added to the TileView's
 	 * @param x (double) relative x position the View instance should be positioned at
 	 * @param y (double) relative y position the View instance should be positioned at
-	 * @param aX (float) the x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value
-	 * @param aY (float) the y-axis position of a callout view will be offset by a number equal to the height of the callout view multiplied by this value
+	 * @param anchorX (float) the x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value
+	 * @param anchorY (float) the y-axis position of a callout view will be offset by a number equal to the height of the callout view multiplied by this value
 	 * @return (View) the View instance added to the TileView's
 	 */
 	public View addCallout( View view, double x, double y, float anchorX, float anchorY ) {
@@ -789,7 +749,6 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void clear() {
 		tileManager.clear();
-		sampleManager.clear();
 		pathManager.setShouldDraw( false );
 	}
 
@@ -806,7 +765,6 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void destroy() {
 		tileManager.clear();
-		sampleManager.clear();
 		pathManager.clear();
 	}
 
@@ -817,7 +775,6 @@ public class TileView extends ZoomPanLayout {
 	public void resume(){
 		updateViewport();
 		tileManager.requestRender();
-		sampleManager.update();
 		pathManager.setShouldDraw( true );
 	}
 
@@ -828,7 +785,6 @@ public class TileView extends ZoomPanLayout {
 		updateViewport();
 		tileManager.updateTileSet();
 		tileManager.requestRender();
-		sampleManager.update();
 		redraw();
 	}
 

@@ -7,7 +7,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 
-import com.qozix.layouts.StaticLayout;
+import com.qozix.tileview.layouts.StaticLayout;
 import com.qozix.tileview.detail.DetailManager;
 
 import java.util.ArrayList;

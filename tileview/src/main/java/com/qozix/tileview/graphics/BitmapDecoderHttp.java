@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.qozix.tileview.tiles.Tile;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -18,8 +20,9 @@ public class BitmapDecoderHttp implements BitmapDecoder {
 	}
 	
 	@Override
-	public Bitmap decode( String fileName, Context context ) {
-		
+	public Bitmap decode( Tile tile, Context context ) {
+		String fileName = (String) tile.getData();
+		fileName = String.format(fileName, tile.getRow(), tile.getCol());
 		try {
 			URL url = new URL(fileName);
 			try {

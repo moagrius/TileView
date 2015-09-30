@@ -1,8 +1,8 @@
 package tileview.demo;
 
-import com.qozix.tileview.TileView;
-
 import android.os.Bundle;
+
+import com.qozix.tileview.TileView;
 
 public class LargeImageTileViewActivity extends TileViewActivity {
 
@@ -21,10 +21,10 @@ public class LargeImageTileViewActivity extends TileViewActivity {
 		tileView.setSize( 2835, 4289 );
 		
 		// detail levels
-		tileView.addDetailLevel( 1.000f, "tiles/painting/1000/%col%_%row%.jpg");
-		tileView.addDetailLevel( 0.500f, "tiles/painting/500/%col%_%row%.jpg");
-		tileView.addDetailLevel( 0.250f, "tiles/painting/250/%col%_%row%.jpg");
-		tileView.addDetailLevel( 0.125f, "tiles/painting/125/%col%_%row%.jpg");
+		tileView.addDetailLevel( 1.000f, "tiles/painting/1000/%1_%2.jpg");
+		tileView.addDetailLevel( 0.500f, "tiles/painting/500/%1_%2.jpg");
+		tileView.addDetailLevel( 0.250f, "tiles/painting/250/%1_%2.jpg");
+		tileView.addDetailLevel( 0.125f, "tiles/painting/125/%1_%2.jpg");
 		
 		// set scale to 0, but keep scaleToFit true, so it'll be as small as possible but still match the container
 		tileView.setScale( 0 );

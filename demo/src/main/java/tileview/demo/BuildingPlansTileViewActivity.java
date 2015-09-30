@@ -22,10 +22,10 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		tileView.setSize( 2736, 2880 );
 		
 		// detail levels
-		tileView.addDetailLevel( 1.000f, "tiles/plans/1000/%col%_%row%.jpg", "samples/plans.JPG");
-		tileView.addDetailLevel( 0.500f, "tiles/plans/500/%col%_%row%.jpg", "samples/plans.JPG");
-		tileView.addDetailLevel( 0.250f, "tiles/plans/250/%col%_%row%.jpg", "samples/plans.JPG");
-		tileView.addDetailLevel( 0.125f, "tiles/plans/125/%col%_%row%.jpg", "samples/plans.JPG");
+		tileView.addDetailLevel( 1.000f, "tiles/plans/1000/%1_%2.jpg");
+		tileView.addDetailLevel( 0.500f, "tiles/plans/500/%1_%2.jpg");
+		tileView.addDetailLevel( 0.250f, "tiles/plans/250/%1_%2.jpg");
+		tileView.addDetailLevel( 0.125f, "tiles/plans/125/%1_%2.jpg");
 		
 		// let's use 0-1 positioning...
 		tileView.defineRelativeBounds( 0, 0, 1,  1 );

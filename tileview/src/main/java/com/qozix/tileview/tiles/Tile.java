@@ -2,6 +2,7 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.ImageView;
@@ -10,111 +11,114 @@ import com.qozix.tileview.graphics.BitmapDecoder;
 
 public class Tile {
 
-	private int left;
-	private int top;
-	private int width;
-	private int height;
-	private String file;
+	private int mWidth;
+	private int mHeight;
 
-	private ImageView imageView;
-	private Bitmap bitmap;
+	private int mRow;
+	private int mCol;
 
-	private boolean hasBitmap;
+	private Object mData;
+
+	private ImageView mImageView;
+	private Bitmap mBitmap;
+
+	private boolean mHasBitmap;
+
+	public int getWidth() {
+		return mWidth;
+	}
+
+	public int getHeight() {
+		return mHeight;
+	}
+
+	public int getRow() {
+		return mRow;
+	}
+
+	public int getCol() {
+		return mCol;
+	}
+
+	public Object getData() {
+		return mData;
+	}
+
+	public ImageView getImageView() {
+		return mImageView;
+	}
+
+	public Bitmap getBitmap() {
+		return mBitmap;
+	}
+
+	public boolean isHasBitmap() {
+		return mHasBitmap;
+	}
 
 	public Tile() {
 
 	}
 
-	public Tile( int l, int t, int w, int h, String f ) {
-		left = l;
-		top = t;
-		width = w;
-		height = h;
-		file = f;
+	public Tile( int row, int col, int width, int height, Object data ) {
+		mRow = row;
+		mCol = col;
+		mWidth = width;
+		mHeight = height;
+		mData = data;
 	}
 
-	public int getLeft() {
-		return left;
-	}
 
-	public int getTop() {
-		return top;
-	}
-
-	public int getWidth() {
-		return width;
-	}
-
-	public int getHeight() {
-		return height;
-	}
-
-	public ImageView getImageView() {
-		return imageView;
-	}
-
-	public String getFileName() {
-		return file;
-	}
-
-	public void decode( Context context, TileCache cache, BitmapDecoder decoder ) {
-		if ( hasBitmap ) {
+	public void decode( Context context, BitmapDecoder decoder ) {
+		if (mHasBitmap) {
 			return;
 		}
-		if ( cache != null ) {
-			Bitmap cached = cache.getBitmap( file );
-			if ( cached != null ) {
-				bitmap = cached;
-				return;
-			}
-		}
-		bitmap = decoder.decode( file, context );
-		hasBitmap = ( bitmap != null );
-		if ( cache != null ) {
-			cache.addBitmap( file, bitmap );
-		}
+		mBitmap = decoder.decode( this, context );
+		Log.d("DEBUG", mBitmap != null ? mBitmap.toString() : "mBitmap is null" );
+		mHasBitmap = ( mBitmap != null );
+
 	}
 
 	public void render( Context context ) {
-		if ( imageView == null ) {
-			imageView = new ImageView( context );
-			imageView.setAdjustViewBounds( false );
-			imageView.setScaleType( ImageView.ScaleType.MATRIX );
+		if ( mImageView == null ) {
+			mImageView = new ImageView( context );
+			mImageView.setAdjustViewBounds( false );
+			mImageView.setScaleType( ImageView.ScaleType.MATRIX );
 		}		
-		imageView.setImageBitmap( bitmap );
+		mImageView.setImageBitmap( mBitmap );
 	}
 
 	public void destroy() {
-		if ( imageView != null ) {
-			imageView.clearAnimation();
-			imageView.setImageBitmap( null );
-			ViewParent parent = imageView.getParent();
+		if ( mImageView != null ) {
+			mImageView.clearAnimation();
+			mImageView.setImageBitmap( null );
+			ViewParent parent = mImageView.getParent();
 			if ( parent != null && parent instanceof ViewGroup) {
 				ViewGroup group = (ViewGroup) parent;
-				group.removeView( imageView );
+				group.removeView( mImageView );
 			}
-			imageView = null;
+			mImageView = null;
 		}
-		bitmap = null;
-		hasBitmap = false;
+		mBitmap = null;
+		mHasBitmap = false;
 	}
 
 	@Override
 	public boolean equals( Object o ) {
 		if ( o instanceof Tile) {
 			Tile m = (Tile) o;
-			return ( m.getLeft() == getLeft() )
-					&& ( m.getTop() == getTop() )
+			return ( m.getRow() == getRow() )
+					&& ( m.getCol() == getCol() )
 					&& ( m.getWidth() == getWidth() )
 					&& ( m.getHeight() == getHeight() )
-					&& ( m.getFileName().equals( getFileName() ) );
+					&& ( m.getData().equals( getData() ) );
 		}
 		return false;
 	}
 
 	@Override
 	public String toString() {
-		return "(left=" + left + ", top=" + top + ", width=" + width + ", height=" + height + ", file=" + file + ")";
+		return "(row=" + mRow + ", col=" + mCol + ", mWidth=" + mWidth + ", mHeight=" + mHeight + ", file=" + mData + ")";
 	}
 
 }
