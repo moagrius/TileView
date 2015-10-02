@@ -11,8 +11,6 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.qozix.tileview.layouts.AnchorLayout;
-import com.qozix.tileview.layouts.ZoomPanLayout;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailLevelPatternParser;
 import com.qozix.tileview.detail.DetailManager;
@@ -22,6 +20,8 @@ import com.qozix.tileview.graphics.BitmapDecoderHttp;
 import com.qozix.tileview.hotspots.HotSpot;
 import com.qozix.tileview.hotspots.HotSpotEventListener;
 import com.qozix.tileview.hotspots.HotSpotManager;
+import com.qozix.tileview.layouts.AnchorLayout;
+import com.qozix.tileview.layouts.ZoomPanLayout;
 import com.qozix.tileview.markers.CalloutManager;
 import com.qozix.tileview.markers.MarkerEventListener;
 import com.qozix.tileview.markers.MarkerManager;

@@ -8,6 +8,8 @@
 1.  Allow layer insertion and scaling layer insertion
 1.  Eliminate downsample paradigm
 1.  Remove LRU cache dependency
+1.  Use more framework-provided functionality, like GestureListener
+1.  Use FlingRunner from AbsListView
 
 #TileView
 

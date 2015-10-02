@@ -7,13 +7,13 @@ import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.ImageView;
 
-import com.qozix.tileview.layouts.FixedLayout;
-import com.qozix.tileview.layouts.ScalingLayout;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailManager;
 import com.qozix.tileview.graphics.BitmapDecoder;
 import com.qozix.tileview.graphics.BitmapDecoderAssets;
+import com.qozix.tileview.layouts.FixedLayout;
+import com.qozix.tileview.layouts.ScalingLayout;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -292,19 +292,19 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 			return;
 		}
 
-		uiThreadHandler.post(new Runnable() {
+		uiThreadHandler.post( new Runnable() {
 			@Override
 			public void run() {
 				// create the image view if needed, with default settings
-				tile.render(getContext());
+				tile.render( getContext() );
 				// add it to the list of those rendered
-				alreadyRendered.add(tile);
+				alreadyRendered.add( tile );
 				// get reference to the actual image view
 				ImageView imageView = tile.getImageView();
 				// get layout params from the tile's predefined dimensions
-				FixedLayout.LayoutParams layoutParams = getLayoutFromTile(tile);
+				FixedLayout.LayoutParams layoutParams = getLayoutFromTile( tile );
 				// add it to the appropriate set (which is already scaled)
-				currentTileGroup.addView(imageView, layoutParams);
+				currentTileGroup.addView( imageView, layoutParams );
 				// shouldn't be necessary, but is
 				postInvalidate();
 				// do we want to animate in tiles?
@@ -312,17 +312,17 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 					// do we have an appropriate duration?
 					if (transitionDuration > 0) {
 						// create the animation (will be cleared by tile.destroy).  do this here for the postInvalidate listener
-						AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
+						AlphaAnimation fadeIn = new AlphaAnimation( 0f, 1f );
 						// set duration
-						fadeIn.setDuration(transitionDuration);
+						fadeIn.setDuration( transitionDuration );
 						// this listener posts invalidate on complete, again should not be necessary but is
-						fadeIn.setAnimationListener(transitionListener);
+						fadeIn.setAnimationListener( transitionListener );
 						// start it up
-						imageView.startAnimation(fadeIn);
+						imageView.startAnimation( fadeIn );
 					}
 				}
 			}
-		});
+		} );
 
 	}
 
