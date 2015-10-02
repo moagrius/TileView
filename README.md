@@ -9,13 +9,7 @@ with additional functionality for 2D dragging, flinging, pinch or double-tap to 
 built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
 coordinate system.
 
-<a target="_blank" href="http://www.youtube.com/watch?v=N9fzrZDqAZY">
-  <img src="http://img.youtube.com/vi/N9fzrZDqAZY/1.jpg" />
-</a><a target="_blank" href="http://www.youtube.com/watch?v=N9fzrZDqAZY">
-  <img src="http://img.youtube.com/vi/N9fzrZDqAZY/2.jpg" />
-</a><a target="_blank" href="http://www.youtube.com/watch?v=N9fzrZDqAZY">
-  <img src="http://img.youtube.com/vi/N9fzrZDqAZY/3.jpg" />
-</a>
+![Demo Gif](https://cloud.githubusercontent.com/assets/701344/10254372/da002dea-6908-11e5-920c-814b09c90c80.gif)
 
 ###Documentation
 Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html).
