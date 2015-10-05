@@ -32,6 +32,10 @@ public class DetailLevel implements Comparable<DetailLevel> {
 		this( detailManager, scale, data, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE );
 	}
 
+  public boolean isTileInViewport( Tile tile ) {
+    return mViewport.contains( tile.getRect() );
+  }
+
 	public LinkedList<Tile> getIntersections() {
 		
 		double relativeScale = getRelativeScale();

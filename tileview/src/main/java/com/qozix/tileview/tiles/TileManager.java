@@ -15,8 +15,11 @@ import com.qozix.tileview.graphics.BitmapDecoderAssets;
 import com.qozix.tileview.layouts.FixedLayout;
 import com.qozix.tileview.layouts.ScalingLayout;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class TileManager extends ScalingLayout implements DetailLevelEventListener {
 
@@ -175,7 +178,7 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 		return tileGroup;
 	}
 
-
+  private ThreadPoolExecutor downloadThreadPool = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
 	// access omitted deliberately - need package level access for the TileRenderHandler
 	void renderTiles() {
@@ -204,10 +207,17 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 		}
 		// if we made it here, then replace the old list with the new list
 		scheduledToRender = intersections;
-		// cancel task if it's already running
-		renderPoolExecutor.clearQueue();
-		renderPoolExecutor.queue(this, getRenderList());
+		// start it up
+    for( Tile tile : scheduledToRender ){
+      Runnable task = new TileRenderRunnable( this, tile );
+      downloadThreadPool.execute( task );
+    }
 	}
+
+  public boolean isTileStillInView( Tile tile ){
+    return detailLevelToRender.isTileInViewport( tile );
+  }
+
 
 	private FixedLayout.LayoutParams getLayoutFromTile( Tile tile ) {
 		return new FixedLayout.LayoutParams(
@@ -271,7 +281,6 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 				if (renderListener != null) {
 					renderListener.onRenderComplete();
 				}
-
 			}
 		});
 	}

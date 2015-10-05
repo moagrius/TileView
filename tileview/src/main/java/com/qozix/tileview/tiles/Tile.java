@@ -2,6 +2,7 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.ImageView;
@@ -20,6 +21,8 @@ public class Tile {
 
 	private ImageView mImageView;
 	private Bitmap mBitmap;
+
+	private Rect mRect;
 
 	public int getWidth() {
 		return mWidth;
@@ -102,6 +105,17 @@ public class Tile {
 			mImageView = null;
 		}
 		mBitmap = null;
+	}
+
+	public Rect getRect(){
+		if(mRect == null){
+			mRect = new Rect();
+			mRect.top = getTop();
+			mRect.left = getLeft();
+			mRect.bottom = mRect.top + getHeight();
+			mRect.right = mRect.left + getWidth();
+		}
+		return mRect;
 	}
 
 	@Override
