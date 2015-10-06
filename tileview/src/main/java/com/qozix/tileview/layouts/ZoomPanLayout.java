@@ -31,7 +31,9 @@ public class ZoomPanLayout extends ViewGroup
   implements
   GestureDetector.OnGestureListener,
   GestureDetector.OnDoubleTapListener,
-  ScaleGestureDetector.OnScaleGestureListener {
+  ScaleGestureDetector.OnScaleGestureListener,
+  ValueAnimator.AnimatorListener,
+  ValueAnimator.AnimatorUpdateListener {
 
   private static final int ZOOM_ANIMATION_DURATION = 500;
   private static final int SLIDE_DURATION = 500;
@@ -62,7 +64,8 @@ public class ZoomPanLayout extends ViewGroup
 
   private boolean mShouldScaleToFit = true;
 
-  private boolean mIsBeingFlung = false;
+  private boolean mIsBeingFlung;
+  private boolean mIsDragging;
   private boolean mIsTweening;
 
   private FlingHandler mFlingHandler;
@@ -70,55 +73,9 @@ public class ZoomPanLayout extends ViewGroup
 
   private Scroller mScroller;
 
-  private HashSet<GestureListener> mGestureListeners = new HashSet<GestureListener>();
   private HashSet<ZoomPanListener> mZoomPanListeners = new HashSet<ZoomPanListener>();
 
-  private ValueAnimator.AnimatorUpdateListener mAnimatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
-    @Override
-    public void onAnimationUpdate( ValueAnimator valueAnimator ) {
-      setScale( (float) valueAnimator.getAnimatedValue() );
-      maintainScrollDuringScaleOperation();
-    }
-  };
-
-  private ValueAnimator.AnimatorListener mAnimatorListener = new ValueAnimator.AnimatorListener() {
-
-    @Override
-    public void onAnimationStart( Animator animator ) {
-      mIsTweening = true;
-      for (ZoomPanListener listener : mZoomPanListeners) {
-        listener.onZoomStart( mScale );
-        listener.onZoomPanEvent();
-      }
-    }
-
-    @Override
-    public void onAnimationEnd( Animator animator ) {
-      mIsTweening = false;
-      for (ZoomPanListener listener : mZoomPanListeners) {
-        listener.onZoomComplete( mScale );
-        listener.onZoomPanEvent();
-      }
-    }
-
-    @Override
-    public void onAnimationCancel( Animator animator ) {
-
-    }
-
-    @Override
-    public void onAnimationRepeat( Animator animator ) {
-
-    }
-  };
-
   private ValueAnimator mValueAnimator = ValueAnimator.ofFloat( 0, 1 );
-
-  {
-    mValueAnimator.addListener( mAnimatorListener );
-    mValueAnimator.addUpdateListener( mAnimatorUpdateListener );
-  }
-
 
   private ScaleGestureDetector mScaleGestureDetector;
   private GestureDetector mGestureDetector;
@@ -139,17 +96,14 @@ public class ZoomPanLayout extends ViewGroup
 
   public ZoomPanLayout( Context context, AttributeSet attrs, int defStyleAttr ) {
     super( context, attrs, defStyleAttr );
-
     setWillNotDraw( false );
-
+    mScroller = new Scroller( context );
     mFlingHandler = new FlingHandler( this );
     mScrollHandler = new ScrollHandler( this );
-
-    mScroller = new Scroller( context );
-
     mScaleGestureDetector = new ScaleGestureDetector( context, this );
     mGestureDetector = new GestureDetector( context, this );
-
+    mValueAnimator.addListener( this );
+    mValueAnimator.addUpdateListener( this );
   }
 
   //------------------------------------------------------------------------------------
@@ -241,12 +195,12 @@ public class ZoomPanLayout extends ViewGroup
     scale = Math.max( scale, mMinScale );
     scale = Math.min( scale, mMaxScale );
     if (mScale != scale) {
+      float previousScale = mScale;
       mScale = scale;
       updateScaledDimensions();
-      postInvalidate();
+      invalidate();
       for (ZoomPanListener listener : mZoomPanListeners) {
-        listener.onScaleChanged( mScale );
-        listener.onZoomPanEvent();
+        listener.onScaleChanged( mScale, previousScale );
       }
     }
   }
@@ -274,12 +228,30 @@ public class ZoomPanLayout extends ViewGroup
   }
 
   /**
-   * Returns whether the ZoomPanLayout is currently being flung
+   * Returns whether the ZoomPanLayout is currently being flung.
    *
-   * @return (boolean) true if the ZoomPanLayout is currently flinging, false otherwise
+   * @return true if the ZoomPanLayout is currently flinging, false otherwise.
    */
   public boolean isFlinging() {
     return mIsBeingFlung;
+  }
+
+  /**
+   * Returns whether the ZoomPanLayout is currently being dragged.
+   *
+   * @return true if the ZoomPanLayout is currently dragging, false otherwise.
+   */
+  public boolean isDragging(){
+    return mIsDragging;
+  }
+
+  /**
+   * Returns whether the ZoomPanLayout is currently being tweened.
+   *
+   * @return true if the ZoomPanLayout is currently tweening, false otherwise.
+   */
+  public boolean isTweening(){
+    return mIsTweening;
   }
 
   /**
@@ -289,26 +261,6 @@ public class ZoomPanLayout extends ViewGroup
    */
   public Scroller getScroller() {
     return mScroller;
-  }
-
-  /**
-   * Adds a GestureListener to the ZoomPanLayout, which will receive gesture events
-   *
-   * @param listener (GestureListener) Listener to add
-   * @return (boolean) true when the listener set did not already contain the Listener, false otherwise
-   */
-  public boolean addGestureListener( GestureListener listener ) {
-    return mGestureListeners.add( listener );
-  }
-
-  /**
-   * Removes a GestureListener from the ZoomPanLayout
-   *
-   * @param listener (GestureListener) Listener to remove
-   * @return (boolean) if the Listener was removed, false otherwise
-   */
-  public boolean removeGestureListener( GestureListener listener ) {
-    return mGestureListeners.remove( listener );
   }
 
   /**
@@ -352,7 +304,11 @@ public class ZoomPanLayout extends ViewGroup
     int startY = getScrollY();
     int dx = x - startX;
     int dy = y - startY;
+
     mScroller.startScroll( startX, startY, dx, dy, SLIDE_DURATION );
+    mIsBeingFlung = true;  // TODO: this is a misnomer, but required for the handler
+    flingFinalX = mScroller.getFinalX();
+    flingFinalY = mScroller.getFinalY(); // TODO: DRY method
     determineIfFlingComplete();
   }
 
@@ -464,11 +420,8 @@ public class ZoomPanLayout extends ViewGroup
 
   @Override
   protected void onScrollChanged (int l, int t, int oldl, int oldt){
-
-    // TODO: kill? No, needed to update viewport
-    Log.d( "TileView", "ZoomPanLayout.onScrollChanged" );
     for( ZoomPanListener listener : mZoomPanListeners ) {
-      listener.onScrollChanged( l, t );
+      listener.onScrollChanged( l, t, oldl, oldt );
     }
   }
 
@@ -518,18 +471,18 @@ public class ZoomPanLayout extends ViewGroup
     return mScaledHeight - getHeight();
   }
 
-  // TODO: do we need this still?  is handler enough?
   @Override
   public void computeScroll() {
     if (mScroller.computeScrollOffset()) {
-      int currentX = getScrollX();
-      int currentY = getScrollY();
-      int destinationX = constrainX( mScroller.getCurrX() );
-      int destinationY = constrainY( mScroller.getCurrY() );
-      if(currentX != destinationX || currentY != destinationY ) {
-        scrollTo( destinationX, destinationY );
-        //determineIfFlingComplete();
-        Log.d( "TileView", "scrollTo called in computeScroll" );
+      int startX = getScrollX();
+      int startY = getScrollY();
+      int endX = constrainX( mScroller.getCurrX() );
+      int endY = constrainY( mScroller.getCurrY() );
+      if(startX != endX || startY != endY ) {
+        scrollTo( endX, endY );
+        for (ZoomPanListener listener : mZoomPanListeners) {
+          listener.onPan( endX, endY, ZoomPanListener.State.PROGRESS );
+        }
       }
     }
     invalidate();  // TODO: need this?
@@ -577,7 +530,7 @@ public class ZoomPanLayout extends ViewGroup
   }
   private void notifyScrollHasStoppedEnough(){
     for( ZoomPanListener listener : mZoomPanListeners ) {
-      listener.onPan();
+      listener.onPan( getScrollX(), getScrollY(), ZoomPanListener.State.COMPLETE );
     }
   }
   private boolean determineIfScrollHasChanged(){
@@ -653,10 +606,8 @@ public class ZoomPanLayout extends ViewGroup
   private void flingComplete() {
     if (mIsBeingFlung) {
       mIsBeingFlung = false;
-      int x = getScrollX();
-      int y = getScrollY();
-      for (GestureListener listener : mGestureListeners) {
-        listener.onFlingComplete( x, y );
+      for (ZoomPanListener listener : mZoomPanListeners) {
+        listener.onPan( getScrollX(), getScrollY(), ZoomPanListener.State.COMPLETE );
       }
     }
     invalidate();  // TODO: need this?
@@ -681,52 +632,30 @@ public class ZoomPanLayout extends ViewGroup
   // Public static interfaces and classes
   //------------------------------------------------------------------------------------
 
-  public interface ZoomPanListener {
-    void onPan();
-    void onScaleChanged( float scale );
-    void onScrollChanged( int x, int y );
-    void onZoomStart( float scale );
-    void onZoomComplete( float scale );
-    void onZoomPanEvent();
-  }
 
-  public interface GestureListener {
-    void onFingerDown( int x, int y );
-    void onScrollComplete( int x, int y );
-    void onFingerUp( int x, int y );
-    void onDrag( int x, int y );
-    void onDoubleTap( int x, int y );
-    void onTap( int x, int y );
-    void onPinch( int x, int y );
-    void onPinchStart( int x, int y );
-    void onPinchComplete( int x, int y );
-    void onFling( int startX, int startY, int endX, int endY );
-    void onFlingComplete( int x, int y );
-  }
 
-  /*
+
+
   public interface ZoomPanListener {
     enum State {
       STARTED,
       COMPLETE,
-      PROGESS
-    };
+      PROGRESS
+    }
     void onPan( int x, int y, State state);
-    void onZoom( float scale, int focusX, int focusY, State state );
-    void onFling( int startX, int startY, int finalX, int finalY, State state);
+    void onZoom( float scale, float focusX, float focusY, State state );
+    void onScaleChanged( float currentScale, float previousScale );
+    void onScrollChanged( int currentX, int currentY, int previousX, int previousY );
   }
-  */
 
 
 
+  //START OnGestureListener
   @Override
   public boolean onDown( MotionEvent event ) {
     if (!mScroller.isFinished()) {
       mScroller.abortAnimation();
       // TODO: kill handler
-    }
-    for (GestureListener listener : mGestureListeners) {
-      listener.onFingerDown( (int) event.getX(), (int) event.getY() );
     }
     return true;
   }
@@ -738,8 +667,8 @@ public class ZoomPanLayout extends ViewGroup
     // TODO: check current scroll to finalPoint to determine end
     flingFinalX = mScroller.getFinalX();
     flingFinalY = mScroller.getFinalY();
-    for (GestureListener listener : mGestureListeners) {
-      listener.onFling( getScrollX(), getScrollY(), flingFinalX, flingFinalY );
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPan( getScrollX(), getScrollY(), ZoomPanListener.State.STARTED );
     }
     determineIfFlingComplete();
     return true;
@@ -756,12 +685,12 @@ public class ZoomPanLayout extends ViewGroup
     int scrollEndY = (int) (getScrollY() + distanceY);
     scrollTo( scrollEndX, scrollEndY );
     mScrollHandler.submit();
-    for (GestureListener listener : mGestureListeners) {
-      listener.onDrag( scrollEndX, scrollEndY );
+    ZoomPanListener.State state = mIsDragging ? ZoomPanListener.State.PROGRESS : ZoomPanListener.State.STARTED;
+    if(!mIsDragging){
+      mIsDragging = true;
     }
     for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onScrollChanged( scrollEndX, scrollEndY );
-      listener.onZoomPanEvent();
+      listener.onPan( scrollEndX, scrollEndY, ZoomPanListener.State.STARTED );
     }
     return true;
   }
@@ -771,33 +700,34 @@ public class ZoomPanLayout extends ViewGroup
 
   }
 
+  /*
+  TODO: do we want to stop drag here, and just pipe renders during drags?  it's more solid
+  (the complete event would really be complete), but the render requests might add up.
+  leaning toward do it.
+   */
   @Override
   public boolean onSingleTapUp( MotionEvent event ) {
-    for (GestureListener listener : mGestureListeners) {
-      listener.onFingerUp( (int) event.getX(), (int) event.getY() );
+    if(mIsDragging){
+      mIsDragging = false;
+      for (ZoomPanListener listener : mZoomPanListeners) {
+        listener.onPan( getScrollX(), getScrollY(), ZoomPanListener.State.COMPLETE );
+      }
     }
     return true;
   }
+  //END OnGestureListener
 
+  //START OnDoubleTapListener
   @Override
   public boolean onSingleTapConfirmed( MotionEvent event ) {
-    for (GestureListener listener : mGestureListeners) {
-      listener.onTap( (int) event.getX(), (int) event.getY() );
-    }
     return true;
   }
 
   @Override
   public boolean onDoubleTap( MotionEvent event ) {
-    mScroller.forceFinished( true );
-    float destination = mScale >= mMaxScale
-      ? mMinScale :
-      Math.min( mMaxScale, mScale * 2 );
+    float destination = mScale >= mMaxScale ? mMinScale : Math.min( mMaxScale, mScale * 2 );
     saveScaleOrigination( event.getX(), event.getY() );
     startSmoothScaleTo( destination, ZOOM_ANIMATION_DURATION );
-    for (GestureListener listener : mGestureListeners) {
-      listener.onDoubleTap( (int) event.getX(), (int) event.getY() );
-    }
     return true;
   }
 
@@ -805,32 +735,26 @@ public class ZoomPanLayout extends ViewGroup
   public boolean onDoubleTapEvent( MotionEvent event ) {
     return true;
   }
+  //END OnDoubleTapListener
 
+  //START OnScaleGestureListener
   @Override
   public boolean onScaleBegin( ScaleGestureDetector scaleGestureDetector ) {
     float focusX = scaleGestureDetector.getFocusX();
     float focusY = scaleGestureDetector.getFocusY();
     saveScaleOrigination( focusX, focusY );
-    for (GestureListener listener : mGestureListeners) {
-      listener.onPinchStart( (int) focusX, (int) focusY );
-    }
     for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onZoomStart( mScale );
-      listener.onZoomPanEvent();
+      listener.onZoom( mScale, focusX, focusY, ZoomPanListener.State.STARTED );
     }
     return true;
   }
 
   @Override
   public void onScaleEnd( ScaleGestureDetector scaleGestureDetector ) {
-    for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onZoomComplete( mScale );
-      listener.onZoomPanEvent();
-    }
     int focusX = (int) scaleGestureDetector.getFocusX();
     int focusY = (int) scaleGestureDetector.getFocusY();
-    for (GestureListener listener : mGestureListeners) {
-      listener.onPinchComplete( focusX, focusY );
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoom( mScale, focusX, focusY, ZoomPanListener.State.COMPLETE );
     }
   }
 
@@ -841,10 +765,52 @@ public class ZoomPanLayout extends ViewGroup
     maintainScrollDuringScaleOperation();
     int focusX = (int) scaleGestureDetector.getFocusX();
     int focusY = (int) scaleGestureDetector.getFocusY();
-    for (GestureListener listener : mGestureListeners) {
-      listener.onPinch( focusX, focusY );
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoom( mScale, focusX, focusY, ZoomPanListener.State.PROGRESS );
     }
     return true;
   }
+  //END OnScaleGestureListener
+
+  //START AnimatorUpdateListener
+  @Override
+  public void onAnimationUpdate( ValueAnimator valueAnimator ) {
+    float scale = (float) valueAnimator.getAnimatedValue();
+    setScale( scale );
+    maintainScrollDuringScaleOperation();
+    // TODO: update startFocusX/Y?
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoom( scale, startFocusX, startFocusY, ZoomPanListener.State.PROGRESS );
+    }
+  }
+  //END AnimatorUpdateListener
+
+  //START AnimatorListener
+  @Override
+  public void onAnimationStart( Animator animator ) {
+    mIsTweening = true;
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoom( mScale, startFocusX, startFocusY, ZoomPanListener.State.STARTED );
+    }
+  }
+
+  @Override
+  public void onAnimationEnd( Animator animator ) {
+    mIsTweening = false;
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoom( mScale, startFocusX, startFocusY, ZoomPanListener.State.COMPLETE );
+    }
+  }
+
+  @Override
+  public void onAnimationCancel( Animator animator ) {
+
+  }
+
+  @Override
+  public void onAnimationRepeat( Animator animator ) {
+
+  }
+  //END AnimatorListener
 
 }
