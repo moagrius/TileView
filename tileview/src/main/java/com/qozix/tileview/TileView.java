@@ -827,6 +827,11 @@ public class TileView extends ZoomPanLayout {
 
 	private ZoomPanListener zoomPanListener = new ZoomPanListener() {
 		@Override
+		public void onPan(){
+      Log.d("TileView", "onPan in TileView");
+			requestRender();
+		}
+		@Override
 		public void onZoomPanEvent(){
 
 		}

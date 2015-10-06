@@ -65,7 +65,8 @@ public class ZoomPanLayout extends ViewGroup
   private boolean mIsBeingFlung = false;
   private boolean mIsTweening;
 
-  private ScrollActionHandler mScrollActionHandler;
+  private FlingHandler mFlingHandler;
+  private ScrollHandler mScrollHandler;
 
   private Scroller mScroller;
 
@@ -141,7 +142,8 @@ public class ZoomPanLayout extends ViewGroup
 
     setWillNotDraw( false );
 
-    mScrollActionHandler = new ScrollActionHandler( this );
+    mFlingHandler = new FlingHandler( this );
+    mScrollHandler = new ScrollHandler( this );
 
     mScroller = new Scroller( context );
 
@@ -351,6 +353,7 @@ public class ZoomPanLayout extends ViewGroup
     int dx = x - startX;
     int dy = y - startY;
     mScroller.startScroll( startX, startY, dx, dy, SLIDE_DURATION );
+    determineIfFlingComplete();
   }
 
   /**
@@ -461,6 +464,9 @@ public class ZoomPanLayout extends ViewGroup
 
   @Override
   protected void onScrollChanged (int l, int t, int oldl, int oldt){
+
+    // TODO: kill? No, needed to update viewport
+    Log.d( "TileView", "ZoomPanLayout.onScrollChanged" );
     for( ZoomPanListener listener : mZoomPanListeners ) {
       listener.onScrollChanged( l, t );
     }
@@ -472,7 +478,7 @@ public class ZoomPanLayout extends ViewGroup
     x = constrainX( x );
     y = constrainY( y );
     super.scrollTo( x, y );
-    notifyOfScrollActivity();
+    //determineIfFlingComplete();
     invalidate();  // TODO: needed?
   }
 
@@ -504,19 +510,6 @@ public class ZoomPanLayout extends ViewGroup
     return Math.max( 0, Math.min( y, getLimitY() ) );
   }
 
-  // TODO: fix up all scroll stuff
-  /*
-  private void constrainScroll() {
-    int x = getScrollX();
-    int y = getScrollY();
-    int constrainedX = constrainX( x );
-    int constrainedY = constrainY( y );
-    if (x != constrainedX || y != constrainedY) {
-      scrollTo( constrainedX, constrainedY );
-    }
-  }
-  */
-
   private int getLimitX(){
     return  mScaledWidth - getWidth();
   }
@@ -535,16 +528,11 @@ public class ZoomPanLayout extends ViewGroup
       int destinationY = constrainY( mScroller.getCurrY() );
       if(currentX != destinationX || currentY != destinationY ) {
         scrollTo( destinationX, destinationY );
-        /*
-        for( ZoomPanListener listener : mZoomPanListeners ) {
-          listener.onScrollChanged( destinationX, destinationY );
-        }
-        */
-        notifyOfScrollActivity();
+        //determineIfFlingComplete();
         Log.d( "TileView", "scrollTo called in computeScroll" );
       }
     }
-    invalidate();
+    invalidate();  // TODO: need this?
   }
 
 
@@ -581,55 +569,102 @@ public class ZoomPanLayout extends ViewGroup
 
 
 
-  private boolean determineIfScrollComplete(){
-    int x = getScrollX();
-    int y = getScrollY();
-    if(mIsBeingFlung){
-      return x == flingFinalX && y == flingFinalY;
-    }
-    return x == lastRecordedFlingX && y == lastRecordedFlingY;
+  private int lastRecordedScrollX;
+  private int lastRecordedScrollY;
+  private void recordScrollState(){
+    lastRecordedScrollX = getScrollX();
+    lastRecordedScrollY = getScrollY();
   }
-
-  private void notifyOfScrollActivity() {
-    if (mScrollActionHandler.hasMessages( 0 )) {
-      mScrollActionHandler.removeMessages( 0 );
-    }
-    int x = getScrollX();
-    int y = getScrollY();
-    // if scroll position is same as last recorded, assume we're done with the fling
-
-    // SEPARATE THIS OUT
-    // fling needs to check against final values
-    // drag should not need to run a handler
-    // slide to should stop in animationComplete
-    if( determineIfScrollComplete() ){
-      mIsBeingFlung = false;
-      handleScrollerComplete();
-    } else {
-      lastRecordedFlingX = x;
-      lastRecordedFlingY = y;
-      mScrollActionHandler.sendEmptyMessageDelayed( 0, FLYWHEEL_TIMEOUT );
+  private void notifyScrollHasStoppedEnough(){
+    for( ZoomPanListener listener : mZoomPanListeners ) {
+      listener.onPan();
     }
   }
-
-  private void handleScrollerComplete() {
-    int x = getScrollX();
-    int y = getScrollY();
-    for (GestureListener listener : mGestureListeners) {
-      listener.onScrollComplete( x, y );
+  private boolean determineIfScrollHasChanged(){
+    return getScrollX() != lastRecordedScrollX || getScrollY() != lastRecordedScrollY;
+  }
+  private static class ScrollHandler extends Handler {
+    private static final int MESSAGE = 0;
+    private boolean isCompleteEnough = false;
+    private final WeakReference<ZoomPanLayout> mZoomPanLayoutWeakReference;
+    public ScrollHandler( ZoomPanLayout zoomPanLayout ) {
+      super();
+      mZoomPanLayoutWeakReference = new WeakReference<ZoomPanLayout>( zoomPanLayout );
     }
+    @Override
+    public void handleMessage( Message msg ) {
+      Log.d( "TileView", "handleMessage" );
+      ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
+      if (zoomPanLayout != null) {
+        if (zoomPanLayout.determineIfScrollHasChanged()){
+          Log.d( "TileView", "submit" );
+          zoomPanLayout.recordScrollState();
+          submit();
+        } else {
+          zoomPanLayout.notifyScrollHasStoppedEnough();
+        }
+      }
+    }
+    public void clear(){
+      Log.d( "TileView", "clear" );
+      if (hasMessages( MESSAGE )) {
+        removeMessages( MESSAGE );
+      }
+    }
+    public void submit(){
+      Log.d( "TileView", "submit" );
+      clear();
+      sendEmptyMessageDelayed( MESSAGE, FLYWHEEL_TIMEOUT );
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+  private void determineIfFlingComplete() {
+    if(mIsBeingFlung) {
+      if (mFlingHandler.hasMessages( 0 )) {
+        mFlingHandler.removeMessages( 0 );
+      }
+      int x = getScrollX();
+      int y = getScrollY();
+      // if scroll position is same as last recorded, assume we're done with the fling
+
+      // SEPARATE THIS OUT
+      // fling needs to check against final values
+      // drag should not need to run a handler WRONG
+      // slide to should stop in animationComplete
+      // LATEST IDEA - run everything thing a single onScrollChanged handler
+      if( x == flingFinalX && y == flingFinalY ){  // TODO: mScroller.isFinished()?
+        mIsBeingFlung = false;
+        flingComplete();
+      } else {
+        mFlingHandler.sendEmptyMessageDelayed( 0, FLYWHEEL_TIMEOUT );
+      }
+    }
+  }
+
+  private void flingComplete() {
     if (mIsBeingFlung) {
       mIsBeingFlung = false;
+      int x = getScrollX();
+      int y = getScrollY();
       for (GestureListener listener : mGestureListeners) {
         listener.onFlingComplete( x, y );
       }
     }
-    invalidate();
+    invalidate();  // TODO: need this?
   }
 
-  private static class ScrollActionHandler extends Handler {
+  private static class FlingHandler extends Handler {
     private final WeakReference<ZoomPanLayout> mZoomPanLayoutWeakReference;
-    public ScrollActionHandler( ZoomPanLayout zoomPanLayout ) {
+    public FlingHandler( ZoomPanLayout zoomPanLayout ) {
       super();
       mZoomPanLayoutWeakReference = new WeakReference<ZoomPanLayout>( zoomPanLayout );
     }
@@ -637,7 +672,7 @@ public class ZoomPanLayout extends ViewGroup
     public void handleMessage( Message msg ) {
       ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
       if (zoomPanLayout != null) {
-        zoomPanLayout.notifyOfScrollActivity();
+        zoomPanLayout.determineIfFlingComplete();
       }
     }
   }
@@ -647,6 +682,7 @@ public class ZoomPanLayout extends ViewGroup
   //------------------------------------------------------------------------------------
 
   public interface ZoomPanListener {
+    void onPan();
     void onScaleChanged( float scale );
     void onScrollChanged( int x, int y );
     void onZoomStart( float scale );
@@ -668,11 +704,26 @@ public class ZoomPanLayout extends ViewGroup
     void onFlingComplete( int x, int y );
   }
 
+  /*
+  public interface ZoomPanListener {
+    enum State {
+      STARTED,
+      COMPLETE,
+      PROGESS
+    };
+    void onPan( int x, int y, State state);
+    void onZoom( float scale, int focusX, int focusY, State state );
+    void onFling( int startX, int startY, int finalX, int finalY, State state);
+  }
+  */
+
+
 
   @Override
   public boolean onDown( MotionEvent event ) {
     if (!mScroller.isFinished()) {
       mScroller.abortAnimation();
+      // TODO: kill handler
     }
     for (GestureListener listener : mGestureListeners) {
       listener.onFingerDown( (int) event.getX(), (int) event.getY() );
@@ -682,7 +733,7 @@ public class ZoomPanLayout extends ViewGroup
 
   @Override
   public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
-    mIsBeingFlung = true;
+    mIsBeingFlung = true;  // TODO: put save state in a method
     mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, getLimitX(), 0, getLimitY() );
     // TODO: check current scroll to finalPoint to determine end
     flingFinalX = mScroller.getFinalX();
@@ -690,6 +741,7 @@ public class ZoomPanLayout extends ViewGroup
     for (GestureListener listener : mGestureListeners) {
       listener.onFling( getScrollX(), getScrollY(), flingFinalX, flingFinalY );
     }
+    determineIfFlingComplete();
     return true;
   }
 
@@ -703,6 +755,7 @@ public class ZoomPanLayout extends ViewGroup
     int scrollEndX = (int) (getScrollX() + distanceX);
     int scrollEndY = (int) (getScrollY() + distanceY);
     scrollTo( scrollEndX, scrollEndY );
+    mScrollHandler.submit();
     for (GestureListener listener : mGestureListeners) {
       listener.onDrag( scrollEndX, scrollEndY );
     }

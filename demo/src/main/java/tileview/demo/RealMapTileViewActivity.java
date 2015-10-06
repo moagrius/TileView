@@ -8,8 +8,6 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 
 import com.qozix.tileview.TileView;
 
@@ -115,6 +113,8 @@ public class RealMapTileViewActivity extends Activity {
 		// start small and allow zoom
 		tileView.setScale( 0.3f );
 
+    setContentView( tileView );
+    /*
 		LinearLayout linearLayout = new LinearLayout( this );
 		linearLayout.setOrientation( LinearLayout.VERTICAL );
 
@@ -128,6 +128,8 @@ public class RealMapTileViewActivity extends Activity {
 		linearLayout.addView( tileView, tileViewLayoutParams );
 
 		setContentView( linearLayout );
+
+		*/
 
 	}
 
