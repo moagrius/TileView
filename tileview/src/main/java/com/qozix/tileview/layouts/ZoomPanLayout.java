@@ -542,7 +542,6 @@ public class ZoomPanLayout extends ViewGroup
   }
   private static class ScrollActionHandler extends Handler {
     private static final int MESSAGE = 0;
-    private boolean isCompleteEnough = false;
     private final WeakReference<ZoomPanLayout> mZoomPanLayoutWeakReference;
     public ScrollActionHandler( ZoomPanLayout zoomPanLayout ) {
       super();

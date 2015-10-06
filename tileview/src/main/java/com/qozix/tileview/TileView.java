@@ -819,7 +819,8 @@ public class TileView extends ZoomPanLayout {
 
     @Override
     public void onPanUpdate( int x, int y, Origination origin ) {
-
+      // TODO: debug
+      suppressRender();
     }
 
     @Override
@@ -877,15 +878,23 @@ public class TileView extends ZoomPanLayout {
     detailManager.setScale( scale );
   }
 
+  // TODO: debug, this was onSingleTap up and super.onSingleTapUp
   @Override
-  public boolean onSingleTapUp( MotionEvent event ) {
+  public boolean onSingleTapConfirmed( MotionEvent event ) {
     // TODO: test
     int x = (int) (getScrollX() + event.getX());
     int y = (int) (getScrollY() + event.getY());
     Point point = new Point( x, y );
     markerManager.processHit( point );
     hotSpotManager.processHit( point );
-    return super.onSingleTapUp( event );
+    return super.onSingleTapConfirmed( event );
+  }
+
+  // TODO: debug
+  @Override
+  public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
+    suppressRender();
+    return super.onFling( event1, event2, velocityX, velocityY );
   }
 
   public DetailManager getDetailManager(){
