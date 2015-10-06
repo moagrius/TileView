@@ -7,7 +7,6 @@ import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -64,18 +63,17 @@ public class ZoomPanLayout extends ViewGroup
 
   private boolean mShouldScaleToFit = true;
 
-  private boolean mIsBeingFlung;
+  private boolean mIsFlinging;
   private boolean mIsDragging;
-  private boolean mIsTweening;
-
-  private FlingHandler mFlingHandler;
-  private ScrollHandler mScrollHandler;
-
-  private Scroller mScroller;
+  private boolean mIsScaling;
+  private boolean mIsSliding;
 
   private HashSet<ZoomPanListener> mZoomPanListeners = new HashSet<ZoomPanListener>();
 
-  private ValueAnimator mValueAnimator = ValueAnimator.ofFloat( 0, 1 );
+  private ScrollActionHandler mScrollActionHandler;
+  private Scroller mScroller;
+
+  private ValueAnimator mValueAnimator;
 
   private ScaleGestureDetector mScaleGestureDetector;
   private GestureDetector mGestureDetector;
@@ -84,7 +82,7 @@ public class ZoomPanLayout extends ViewGroup
   /**
    * Constructor to use when creating a ZoomPanLayout from code.
    *
-   * @param context (Context) The Context the ZoomPanLayout is running in, through which it can access the current theme, resources, etc.
+   * @param context The Context the ZoomPanLayout is running in, through which it can access the current theme, resources, etc.
    */
   public ZoomPanLayout( Context context ) {
     this( context, null );
@@ -98,12 +96,9 @@ public class ZoomPanLayout extends ViewGroup
     super( context, attrs, defStyleAttr );
     setWillNotDraw( false );
     mScroller = new Scroller( context );
-    mFlingHandler = new FlingHandler( this );
-    mScrollHandler = new ScrollHandler( this );
+    mScrollActionHandler = new ScrollActionHandler( this );
     mScaleGestureDetector = new ScaleGestureDetector( context, this );
     mGestureDetector = new GestureDetector( context, this );
-    mValueAnimator.addListener( this );
-    mValueAnimator.addUpdateListener( this );
   }
 
   //------------------------------------------------------------------------------------
@@ -111,10 +106,10 @@ public class ZoomPanLayout extends ViewGroup
   //------------------------------------------------------------------------------------
 
   /**
-   * Determines whether the ZoomPanLayout should limit it's minimum mScale to no less than what
-   * would be required to fill it's container
+   * Determines whether the ZoomPanLayout should limit it's minimum scale to no less than what
+   * would be required to fill it's container.
    *
-   * @param shouldScaleToFit True to limit minimum mScale, false to allow arbitrary minimum scale.
+   * @param shouldScaleToFit True to limit minimum scale, false to allow arbitrary minimum scale.
    */
   public void setShouldScaleToFit( boolean shouldScaleToFit ) {
     mShouldScaleToFit = shouldScaleToFit;
@@ -139,70 +134,76 @@ public class ZoomPanLayout extends ViewGroup
   }
 
   /**
-   * Sets the size (width and height) of the ZoomPanLayout as it should be rendered at a mScale of 1f (100%)
+   * Sets the size (width and height) of the ZoomPanLayout
+   * as it should be rendered at a scale of 1f (100%).
    *
-   * @param wide width
-   * @param tall height
+   * @param width Width of the underlying image, not the view or viewport.
+   * @param height Height of the underlying image, not the view or viewport.
    */
-  public void setSize( int wide, int tall ) {
-    mBaseWidth = wide;
-    mBaseHeight = tall;
+  public void setSize( int width, int height ) {
+    mBaseWidth = width;
+    mBaseHeight = height;
     updateScaledDimensions();
   }
 
   /**
-   * Returns the base (un-scaled) width
+   * Returns the base (not scaled) width of the underlying composite image.
    *
-   * @return (int) base width
+   * @return The base (not scaled) width of the underlying composite image.
    */
   public int getBaseWidth() {
     return mBaseWidth;
   }
 
   /**
-   * Returns the base (un-scaled) height
+   * Returns the base (not scaled) height of the underlying composite image.
    *
-   * @return (int) base height
+   * @return The base (not scaled) height of the underlying composite image.
    */
   public int getBaseHeight() {
     return mBaseHeight;
   }
 
   /**
-   * Returns the scaled width
+   * Returns the scaled width of the underlying composite image.
    *
-   * @return (int) scaled width
+   * @return The scaled width of the underlying composite image.
    */
   public int getScaledWidth() {
     return mScaledWidth;
   }
 
   /**
-   * Returns the scaled height
+   * Returns the scaled height of the underlying composite image.
    *
-   * @return (int) scaled height
+   * @return The scaled height of the underlying composite image.
    */
   public int getScaledHeight() {
     return mScaledHeight;
   }
 
   /**
-   * Sets the mScale (0-1) of the ZoomPanLayout
+   * Sets the scale (0-1) of the ZoomPanLayout.
    *
-   * @param scale The new value of the ZoomPanLayout mScale
+   * @param scale The new value of the ZoomPanLayout scale.
    */
   public void setScale( float scale ) {
     scale = Math.max( scale, mMinScale );
     scale = Math.min( scale, mMaxScale );
     if (mScale != scale) {
-      float previousScale = mScale;
+      float previous = mScale;
       mScale = scale;
       updateScaledDimensions();
+      onScaleChanged( scale, previous );
       invalidate();
-      for (ZoomPanListener listener : mZoomPanListeners) {
-        listener.onScaleChanged( mScale, previousScale );
-      }
     }
+  }
+
+  /**
+   * Provide this method to be overriden by subclasses, e.g., onScrollChanged
+   */
+  public void onScaleChanged( float currentScale, float previousScale ) {
+    // noop
   }
 
   private void updateScaledDimensions() {
@@ -215,7 +216,7 @@ public class ZoomPanLayout extends ViewGroup
    */
   public void redraw() {
     requestLayout();
-    postInvalidate();
+    invalidate();
   }
 
   /**
@@ -233,7 +234,7 @@ public class ZoomPanLayout extends ViewGroup
    * @return true if the ZoomPanLayout is currently flinging, false otherwise.
    */
   public boolean isFlinging() {
-    return mIsBeingFlung;
+    return mIsFlinging;
   }
 
   /**
@@ -246,12 +247,21 @@ public class ZoomPanLayout extends ViewGroup
   }
 
   /**
-   * Returns whether the ZoomPanLayout is currently being tweened.
+   * Returns whether the ZoomPanLayout is currently being slid.
+   *
+   * @return true if the ZoomPanLayout is currently sliding, false otherwise.
+   */
+  public boolean isSliding(){
+    return mIsSliding;
+  }
+
+  /**
+   * Returns whether the ZoomPanLayout is currently being scale tweened.
    *
    * @return true if the ZoomPanLayout is currently tweening, false otherwise.
    */
-  public boolean isTweening(){
-    return mIsTweening;
+  public boolean isScaling(){
+    return mIsScaling;
   }
 
   /**
@@ -304,12 +314,9 @@ public class ZoomPanLayout extends ViewGroup
     int startY = getScrollY();
     int dx = x - startX;
     int dy = y - startY;
-
     mScroller.startScroll( startX, startY, dx, dy, SLIDE_DURATION );
-    mIsBeingFlung = true;  // TODO: this is a misnomer, but required for the handler
-    flingFinalX = mScroller.getFinalX();
-    flingFinalY = mScroller.getFinalY(); // TODO: DRY method
-    determineIfFlingComplete();
+    mIsSliding = true;
+    startWatchingScrollActions();
   }
 
   /**
@@ -331,8 +338,7 @@ public class ZoomPanLayout extends ViewGroup
    * @param rect A Rectangle instance describing the area to frame.
    */
   public void frameViewport( Rect rect ) {
-    // TODO: slideTo?
-    // TODO: center the axis that's smaller?
+    // TODO: slideTo? center the axis that's smaller?
     scrollTo( rect.left, rect.top );
     float scaleX = getWidth() / (float) rect.width();
     float scaleY = getHeight() / (float) rect.height();
@@ -370,7 +376,7 @@ public class ZoomPanLayout extends ViewGroup
    * @param duration    (int) The duration (in milliseconds) of the animation
    */
   public void smoothScaleTo( float destination, int duration ) {
-    if (mIsTweening) {
+    if (mIsScaling) {
       return;
     }
     saveScaleOrigination( getHalfWidth(), getHalfHeight() );
@@ -387,7 +393,6 @@ public class ZoomPanLayout extends ViewGroup
   // PRIVATE/PROTECTED
   //------------------------------------------------------------------------------------
 
-  // TODO: account for all cases (except wrap content)
   @Override
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     measureChildren( widthMeasureSpec, heightMeasureSpec );
@@ -419,20 +424,10 @@ public class ZoomPanLayout extends ViewGroup
   }
 
   @Override
-  protected void onScrollChanged (int l, int t, int oldl, int oldt){
-    for( ZoomPanListener listener : mZoomPanListeners ) {
-      listener.onScrollChanged( l, t, oldl, oldt );
-    }
-  }
-
-  // TODO: update all old references to constrain, etc
-  @Override
   public void scrollTo( int x, int y ) {
     x = constrainX( x );
     y = constrainY( y );
     super.scrollTo( x, y );
-    //determineIfFlingComplete();
-    invalidate();  // TODO: needed?
   }
 
   private void calculateMinimumScaleToFit() {
@@ -445,6 +440,15 @@ public class ZoomPanLayout extends ViewGroup
         setScale( mScale );
       }
     }
+  }
+
+  private ValueAnimator getAnimator(){
+    if(mValueAnimator == null) {
+      mValueAnimator = ValueAnimator.ofFloat( 0, 1 );
+      mValueAnimator.addListener( this );
+      mValueAnimator.addUpdateListener( this );
+    }
+    return mValueAnimator;
   }
 
   private int getHalfWidth(){
@@ -480,12 +484,14 @@ public class ZoomPanLayout extends ViewGroup
       int endY = constrainY( mScroller.getCurrY() );
       if(startX != endX || startY != endY ) {
         scrollTo( endX, endY );
-        for (ZoomPanListener listener : mZoomPanListeners) {
-          listener.onPan( endX, endY, ZoomPanListener.State.PROGRESS );
+        if(mIsFlinging){
+          broadcastFlingUpdate( endX, endY );
+        } else if(mIsSliding){
+          broadcastProgrammaticPanUpdate( endX, endY );
         }
+        startWatchingScrollActions();
       }
     }
-    invalidate();  // TODO: need this?
   }
 
 
@@ -510,121 +516,57 @@ public class ZoomPanLayout extends ViewGroup
   }
 
   private void startSmoothScaleTo( float destination, int duration ) {
-    if (mIsTweening) {
+    if (mIsScaling) {
       return;
     }
-    mValueAnimator.setFloatValues( mScale, destination );
-    mValueAnimator.setDuration( duration );
-    mValueAnimator.start();
+    ValueAnimator animator = getAnimator();
+    animator.setFloatValues( mScale, destination );
+    animator.setDuration( duration );
+    animator.start();
   }
 
 
 
 
-
-  private int lastRecordedScrollX;
-  private int lastRecordedScrollY;
-  private void recordScrollState(){
-    lastRecordedScrollX = getScrollX();
-    lastRecordedScrollY = getScrollY();
+  private void startWatchingScrollActions(){
+    mScrollActionHandler.submit();
   }
-  private void notifyScrollHasStoppedEnough(){
-    for( ZoomPanListener listener : mZoomPanListeners ) {
-      listener.onPan( getScrollX(), getScrollY(), ZoomPanListener.State.COMPLETE );
+  private void onScrollerActionComplete(){
+    int x = mScroller.getFinalX();
+    int y = mScroller.getFinalY();
+    if(mIsFlinging){
+      broadcastFlingEnd( x, y );
+    } else if (mIsSliding){
+      broadcastProgrammaticPanEnd( x, y );
     }
   }
-  private boolean determineIfScrollHasChanged(){
-    return getScrollX() != lastRecordedScrollX || getScrollY() != lastRecordedScrollY;
-  }
-  private static class ScrollHandler extends Handler {
+  private static class ScrollActionHandler extends Handler {
     private static final int MESSAGE = 0;
     private boolean isCompleteEnough = false;
     private final WeakReference<ZoomPanLayout> mZoomPanLayoutWeakReference;
-    public ScrollHandler( ZoomPanLayout zoomPanLayout ) {
+    public ScrollActionHandler( ZoomPanLayout zoomPanLayout ) {
       super();
       mZoomPanLayoutWeakReference = new WeakReference<ZoomPanLayout>( zoomPanLayout );
     }
     @Override
     public void handleMessage( Message msg ) {
-      Log.d( "TileView", "handleMessage" );
       ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
       if (zoomPanLayout != null) {
-        if (zoomPanLayout.determineIfScrollHasChanged()){
-          Log.d( "TileView", "submit" );
-          zoomPanLayout.recordScrollState();
-          submit();
+        if (zoomPanLayout.getScroller().isFinished()){
+          zoomPanLayout.onScrollerActionComplete();
         } else {
-          zoomPanLayout.notifyScrollHasStoppedEnough();
+          submit();
         }
       }
     }
     public void clear(){
-      Log.d( "TileView", "clear" );
       if (hasMessages( MESSAGE )) {
         removeMessages( MESSAGE );
       }
     }
     public void submit(){
-      Log.d( "TileView", "submit" );
       clear();
       sendEmptyMessageDelayed( MESSAGE, FLYWHEEL_TIMEOUT );
-    }
-  }
-
-
-
-
-
-
-
-
-
-
-  private void determineIfFlingComplete() {
-    if(mIsBeingFlung) {
-      if (mFlingHandler.hasMessages( 0 )) {
-        mFlingHandler.removeMessages( 0 );
-      }
-      int x = getScrollX();
-      int y = getScrollY();
-      // if scroll position is same as last recorded, assume we're done with the fling
-
-      // SEPARATE THIS OUT
-      // fling needs to check against final values
-      // drag should not need to run a handler WRONG
-      // slide to should stop in animationComplete
-      // LATEST IDEA - run everything thing a single onScrollChanged handler
-      if( x == flingFinalX && y == flingFinalY ){  // TODO: mScroller.isFinished()?
-        mIsBeingFlung = false;
-        flingComplete();
-      } else {
-        mFlingHandler.sendEmptyMessageDelayed( 0, FLYWHEEL_TIMEOUT );
-      }
-    }
-  }
-
-  private void flingComplete() {
-    if (mIsBeingFlung) {
-      mIsBeingFlung = false;
-      for (ZoomPanListener listener : mZoomPanListeners) {
-        listener.onPan( getScrollX(), getScrollY(), ZoomPanListener.State.COMPLETE );
-      }
-    }
-    invalidate();  // TODO: need this?
-  }
-
-  private static class FlingHandler extends Handler {
-    private final WeakReference<ZoomPanLayout> mZoomPanLayoutWeakReference;
-    public FlingHandler( ZoomPanLayout zoomPanLayout ) {
-      super();
-      mZoomPanLayoutWeakReference = new WeakReference<ZoomPanLayout>( zoomPanLayout );
-    }
-    @Override
-    public void handleMessage( Message msg ) {
-      ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
-      if (zoomPanLayout != null) {
-        zoomPanLayout.determineIfFlingComplete();
-      }
     }
   }
 
@@ -632,45 +574,97 @@ public class ZoomPanLayout extends ViewGroup
   // Public static interfaces and classes
   //------------------------------------------------------------------------------------
 
-
-
-
-
-  public interface ZoomPanListener {
-    enum State {
-      STARTED,
-      COMPLETE,
-      PROGRESS
+  private void broadcastDragBegin( int x, int y ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPanBegin( x, y, ZoomPanListener.Origination.DRAG );
     }
-    void onPan( int x, int y, State state);
-    void onZoom( float scale, float focusX, float focusY, State state );
-    void onScaleChanged( float currentScale, float previousScale );
-    void onScrollChanged( int currentX, int currentY, int previousX, int previousY );
   }
-
-
+  private void broadcastDragUpdate( int x, int y ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPanUpdate( x, y, ZoomPanListener.Origination.DRAG );
+    }
+  }
+  private void broadcastDragEnd( int x, int y ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPanEnd( x, y, ZoomPanListener.Origination.DRAG );
+    }
+  }
+  private void broadcastFlingBegin( int x, int y ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPanBegin( x, y, ZoomPanListener.Origination.FLING );
+    }
+  }
+  private void broadcastFlingUpdate( int x, int y ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPanUpdate( x, y, ZoomPanListener.Origination.FLING );
+    }
+  }
+  private void broadcastFlingEnd( int x, int y ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPanEnd( x, y, ZoomPanListener.Origination.FLING );
+    }
+  }
+  private void broadcastProgrammaticPanBegin( int x, int y ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPanBegin( x, y, null );
+    }
+  }
+  private void broadcastProgrammaticPanUpdate( int x, int y ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPanUpdate( x, y, null );
+    }
+  }
+  private void broadcastProgrammaticPanEnd( int x, int y ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onPanEnd( x, y, null );
+    }
+  }
+  private void broadcastPinchBegin(float scale, float focusX, float focusY){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoomBegin( scale, focusX, focusY, ZoomPanListener.Origination.PINCH );
+    }
+  }
+  private void broadcastPinchUpdate(float scale, float focusX, float focusY){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoomUpdate( scale, focusX, focusY, ZoomPanListener.Origination.PINCH );
+    }
+  }
+  private void broadcastPinchEnd(float scale, float focusX, float focusY){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoomEnd( scale, focusX, focusY, ZoomPanListener.Origination.PINCH );
+    }
+  }
+  private void broadcastProgrammaticZoomBegin( float scale, float focusX, float focusY ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoomBegin( scale, focusX, focusY, null );
+    }
+  }
+  private void broadcastProgrammaticZoomUpdate( float scale, float focusX, float focusY ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoomUpdate( scale, focusX, focusY, null );
+    }
+  }
+  private void broadcastProgrammaticZoomEnd( float scale, float focusX, float focusY ){
+    for (ZoomPanListener listener : mZoomPanListeners) {
+      listener.onZoomEnd( scale, focusX, focusY, null );
+    }
+  }
 
   //START OnGestureListener
   @Override
   public boolean onDown( MotionEvent event ) {
     if (!mScroller.isFinished()) {
       mScroller.abortAnimation();
-      // TODO: kill handler
+      mScrollActionHandler.clear();
     }
     return true;
   }
 
   @Override
   public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
-    mIsBeingFlung = true;  // TODO: put save state in a method
     mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, getLimitX(), 0, getLimitY() );
-    // TODO: check current scroll to finalPoint to determine end
-    flingFinalX = mScroller.getFinalX();
-    flingFinalY = mScroller.getFinalY();
-    for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onPan( getScrollX(), getScrollY(), ZoomPanListener.State.STARTED );
-    }
-    determineIfFlingComplete();
+    broadcastFlingBegin( getScrollX(), getScrollY() );
+    startWatchingScrollActions();
     return true;
   }
 
@@ -684,13 +678,11 @@ public class ZoomPanLayout extends ViewGroup
     int scrollEndX = (int) (getScrollX() + distanceX);
     int scrollEndY = (int) (getScrollY() + distanceY);
     scrollTo( scrollEndX, scrollEndY );
-    mScrollHandler.submit();
-    ZoomPanListener.State state = mIsDragging ? ZoomPanListener.State.PROGRESS : ZoomPanListener.State.STARTED;
     if(!mIsDragging){
       mIsDragging = true;
-    }
-    for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onPan( scrollEndX, scrollEndY, ZoomPanListener.State.STARTED );
+      broadcastDragBegin( scrollEndX, scrollEndY );
+    } else {
+      broadcastDragUpdate( scrollEndX, scrollEndY );
     }
     return true;
   }
@@ -700,18 +692,11 @@ public class ZoomPanLayout extends ViewGroup
 
   }
 
-  /*
-  TODO: do we want to stop drag here, and just pipe renders during drags?  it's more solid
-  (the complete event would really be complete), but the render requests might add up.
-  leaning toward do it.
-   */
   @Override
   public boolean onSingleTapUp( MotionEvent event ) {
     if(mIsDragging){
       mIsDragging = false;
-      for (ZoomPanListener listener : mZoomPanListeners) {
-        listener.onPan( getScrollX(), getScrollY(), ZoomPanListener.State.COMPLETE );
-      }
+      broadcastDragEnd( getScrollX(), getScrollY() );
     }
     return true;
   }
@@ -743,19 +728,13 @@ public class ZoomPanLayout extends ViewGroup
     float focusX = scaleGestureDetector.getFocusX();
     float focusY = scaleGestureDetector.getFocusY();
     saveScaleOrigination( focusX, focusY );
-    for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onZoom( mScale, focusX, focusY, ZoomPanListener.State.STARTED );
-    }
+    broadcastPinchBegin( mScale, focusX, focusY );
     return true;
   }
 
   @Override
   public void onScaleEnd( ScaleGestureDetector scaleGestureDetector ) {
-    int focusX = (int) scaleGestureDetector.getFocusX();
-    int focusY = (int) scaleGestureDetector.getFocusY();
-    for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onZoom( mScale, focusX, focusY, ZoomPanListener.State.COMPLETE );
-    }
+    broadcastPinchEnd( mScale, scaleGestureDetector.getFocusX(), scaleGestureDetector.getFocusY() );
   }
 
   @Override
@@ -763,11 +742,7 @@ public class ZoomPanLayout extends ViewGroup
     float currentScale = mScale * mScaleGestureDetector.getScaleFactor();
     setScale( currentScale );
     maintainScrollDuringScaleOperation();
-    int focusX = (int) scaleGestureDetector.getFocusX();
-    int focusY = (int) scaleGestureDetector.getFocusY();
-    for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onZoom( mScale, focusX, focusY, ZoomPanListener.State.PROGRESS );
-    }
+    broadcastPinchUpdate( mScale, scaleGestureDetector.getFocusX(), scaleGestureDetector.getFocusY() );
     return true;
   }
   //END OnScaleGestureListener
@@ -778,33 +753,27 @@ public class ZoomPanLayout extends ViewGroup
     float scale = (float) valueAnimator.getAnimatedValue();
     setScale( scale );
     maintainScrollDuringScaleOperation();
-    // TODO: update startFocusX/Y?
-    for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onZoom( scale, startFocusX, startFocusY, ZoomPanListener.State.PROGRESS );
-    }
+    broadcastProgrammaticZoomUpdate( scale, startFocusX, startFocusY );
   }
   //END AnimatorUpdateListener
 
   //START AnimatorListener
   @Override
   public void onAnimationStart( Animator animator ) {
-    mIsTweening = true;
-    for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onZoom( mScale, startFocusX, startFocusY, ZoomPanListener.State.STARTED );
-    }
+    mIsScaling = true;
+    broadcastProgrammaticZoomBegin( mScale, startFocusX, startFocusY );
   }
 
   @Override
   public void onAnimationEnd( Animator animator ) {
-    mIsTweening = false;
-    for (ZoomPanListener listener : mZoomPanListeners) {
-      listener.onZoom( mScale, startFocusX, startFocusY, ZoomPanListener.State.COMPLETE );
-    }
+    mIsScaling = false;
+    broadcastProgrammaticZoomEnd( mScale, startFocusX, startFocusY );
   }
 
   @Override
   public void onAnimationCancel( Animator animator ) {
-
+    mIsScaling = false;
+    broadcastProgrammaticZoomEnd( mScale, startFocusX, startFocusY );
   }
 
   @Override
@@ -812,5 +781,19 @@ public class ZoomPanLayout extends ViewGroup
 
   }
   //END AnimatorListener
+
+  public interface ZoomPanListener {
+    enum Origination {
+      DRAG,
+      FLING,
+      PINCH
+    }
+    void onPanBegin( int x, int y, Origination origin );
+    void onPanUpdate( int x, int y, Origination origin );
+    void onPanEnd( int x, int y, Origination origin );
+    void onZoomBegin( float scale, float focusX, float focusY, Origination origin );
+    void onZoomUpdate( float scale, float focusX, float focusY, Origination origin );
+    void onZoomEnd( float scale, float focusX, float focusY, Origination origin );
+  }
 
 }

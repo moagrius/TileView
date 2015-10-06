@@ -2,8 +2,11 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.ImageView;
 
 import com.qozix.tileview.detail.DetailLevel;
@@ -14,6 +17,7 @@ import com.qozix.tileview.graphics.BitmapDecoderAssets;
 import com.qozix.tileview.layouts.FixedLayout;
 import com.qozix.tileview.layouts.ScalingLayout;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -341,5 +345,58 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 	public void onDetailScaleChanged( double scale ) {
 		setScale( scale );
 	}
+
+	public static class TileRenderHandler extends Handler {
+
+		private final WeakReference<TileManager> reference;
+		public TileRenderHandler( TileManager tm ) {
+			super();
+			reference = new WeakReference<TileManager>( tm );
+		}
+		@Override
+		public final void handleMessage( Message message ) {
+			final TileManager tileManager = reference.get();
+			if ( tileManager != null ) {
+				tileManager.renderTiles();
+			}
+		}
+	}
+
+  public static class TileTransitionListener implements Animation.AnimationListener {
+
+    private WeakReference<TileManager> reference;
+
+    public TileTransitionListener( TileManager tm ) {
+      reference = new WeakReference<TileManager>( tm );
+    }
+
+    @Override
+    public void onAnimationStart( Animation animation ) {
+
+    }
+
+    @Override
+    public void onAnimationRepeat( Animation animation ) {
+
+    }
+
+    @Override
+    public void onAnimationEnd( Animation animation ) {
+      TileManager tileManager = reference.get();
+      if( tileManager != null) {
+        // why both?  no clue...  omit either one and abuse it,  you'll get incomplete draws...
+        tileManager.invalidate();
+        tileManager.postInvalidate();
+      }
+    }
+
+  }
+
+
+  public interface TileRenderListener {
+    void onRenderStart();
+    void onRenderCancelled();
+    void onRenderComplete();
+  }
 
 }

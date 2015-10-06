@@ -7,8 +7,10 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -30,11 +32,10 @@ import com.qozix.tileview.paths.DrawablePath;
 import com.qozix.tileview.paths.PathHelper;
 import com.qozix.tileview.paths.PathManager;
 import com.qozix.tileview.tiles.TileManager;
-import com.qozix.tileview.tiles.TileRenderListener;
 import com.qozix.tileview.tiles.selector.TileSetSelector;
 import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
 
-import java.util.HashSet;
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**
@@ -69,8 +70,6 @@ import java.util.List;
  */
 public class TileView extends ZoomPanLayout {
 
-	private HashSet<TileViewEventListener> tileViewEventListeners = new HashSet<TileViewEventListener>();
-
 	private DetailManager detailManager = new DetailManager();
 	private PositionManager positionManager = new PositionManager();
 
@@ -81,10 +80,12 @@ public class TileView extends ZoomPanLayout {
 	private MarkerManager markerManager;
 	private CalloutManager calloutManager;
 
+  private RenderThrottleHandler mRenderThrottleHandler;
+
 	private boolean mIsUsingRelativePositioning;
 
 	/**
-	 * Constructor to use when creating a TileView from code.  Inflating from XML is not currently supported.
+	 * Constructor to use when creating a TileView from code.
 	 * @param context (Context) The Context the TileView is running in, through which it can access the current theme, resources, etc.
 	 */
 	public TileView( Context context ) {
@@ -111,9 +112,10 @@ public class TileView extends ZoomPanLayout {
 		addView( calloutManager );
 
 		detailManager.addDetailLevelEventListener( detailLevelEventListener );
-		tileManager.setTileRenderListener( renderListener );
 
 		addZoomPanListener( zoomPanListener );
+
+    mRenderThrottleHandler = new RenderThrottleHandler( this );  // TODO: cleanup
 
 		requestRender();
 
@@ -122,28 +124,6 @@ public class TileView extends ZoomPanLayout {
 	//------------------------------------------------------------------------------------
 	// PUBLIC API
 	//------------------------------------------------------------------------------------
-
-	//------------------------------------------------------------------------------------
-	// Event Management API
-	//------------------------------------------------------------------------------------
-
-	/**
-	 * Register an event listener callback object for this TileView.
-	 * Note this is method adds a listener to an array of listeners, and does not set
-	 * a single listener member a single listener.
-	 * @param listener (TileViewEventListener) an implementation of the TileViewEventListener interface
-	 */
-	public void addTileViewEventListener( TileViewEventListener listener ) {
-		tileViewEventListeners.add( listener );
-	}
-
-	/**
-	 * Removes a TileViewEventListener object from those listening to this TileView.
-	 * @param listener (TileViewEventListener) an implementation of the TileViewEventListener interface
-	 */
-	public void removeTileViewEventListener( TileViewEventListener listener ) {
-		tileViewEventListeners.remove( listener );
-	}
 
 	//------------------------------------------------------------------------------------
 	// Rendering API
@@ -155,7 +135,6 @@ public class TileView extends ZoomPanLayout {
 	 * time, and will never be handled immediately.
 	 */
 	public void requestRender(){
-    Log.d( "TileView", "requestRender" );
 		tileManager.requestRender();
 	}
 
@@ -166,6 +145,13 @@ public class TileView extends ZoomPanLayout {
 	public void cancelRender() {
 		tileManager.cancelRender();
 	}
+
+  /**
+   * TODO: comments
+   */
+  public void requestThrottledRender(){
+    mRenderThrottleHandler.submit();
+  }
 
 	/**
 	 * Sets a custom class to perform the decode operation when tile bitmaps are requested for tile images only.
@@ -825,43 +811,40 @@ public class TileView extends ZoomPanLayout {
 	//------------------------------------------------------------------------------------
 
 	private ZoomPanListener zoomPanListener = new ZoomPanListener() {
-		@Override
-		public void onPan( int x, int y, State state){
-      updateViewport(); // TODO: this should not need to be in 2 places (onScrollChanged)
-      switch( state ) {
-        case STARTED :
-        case PROGRESS :
-          suppressRender();
-          break;
-        case COMPLETE :
-          Log.d( "TileView", "TileView received onPan complete" );
-          requestRender();
-          break;
-      }
-		}
+
     @Override
-    public void onZoom( float scale, float focusX, float focusY, State state  ) {
-      switch( state ) {
-        case STARTED :
-          detailManager.lockDetailLevel();
-          detailManager.setScale( scale );
-          break;
-        case COMPLETE :
-          detailManager.unlockDetailLevel();
-          detailManager.setScale( scale );
-          requestRender();
-          break;
-      }
+    public void onPanBegin( int x, int y, Origination origin ) {
+      suppressRender();
     }
-		@Override
-		public void onScrollChanged( int currentX, int currentY, int previousX, int previousY ) {
-      Log.d( "TileView", "onScrollChanged called from TileView, updating viewport" );
-      updateViewport();
-		}
-		@Override
-		public void onScaleChanged( float currentScale, float previousScale ) {
-			detailManager.setScale( currentScale );
-		}
+
+    @Override
+    public void onPanUpdate( int x, int y, Origination origin ) {
+
+    }
+
+    @Override
+    public void onPanEnd( int x, int y, Origination origin ) {
+      requestRender();
+    }
+
+    @Override
+    public void onZoomBegin( float scale, float focusX, float focusY, Origination origin ) {
+      detailManager.lockDetailLevel();
+      detailManager.setScale( scale );
+    }
+
+    @Override
+    public void onZoomUpdate( float scale, float focusX, float focusY, Origination origin ) {
+
+    }
+
+    @Override
+    public void onZoomEnd( float scale, float focusX, float focusY, Origination origin ) {
+      detailManager.unlockDetailLevel();
+      detailManager.setScale( scale );
+      requestRender();
+    }
+
 	};
 
 	private DetailLevelEventListener detailLevelEventListener = new DetailLevelEventListener(){
@@ -881,286 +864,82 @@ public class TileView extends ZoomPanLayout {
 		}
 	};
 
-  public void onTap( int x, int y ) {
-    // TODO: need to implement our own GestureDetector
+  @Override
+  protected void onScrollChanged (int l, int t, int oldl, int oldt){
+    super.onScrollChanged( l, t, oldl, oldt );
+    updateViewport();
+    requestThrottledRender();
+  }
+
+  @Override
+  public void onScaleChanged( float scale, float previous ) {
+    super.onScaleChanged( scale, previous );
+    detailManager.setScale( scale );
+  }
+
+  @Override
+  public boolean onSingleTapUp( MotionEvent event ) {
+    // TODO: test
+    int x = (int) (getScrollX() + event.getX());
+    int y = (int) (getScrollY() + event.getY());
     Point point = new Point( x, y );
     markerManager.processHit( point );
     hotSpotManager.processHit( point );
-
+    return super.onSingleTapUp( event );
   }
 
-	private TileRenderListener renderListener = new TileRenderListener(){
-		@Override
-		public void onRenderCancelled() {
-
-		}
-		@Override
-		public void onRenderComplete() {
-			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onRenderComplete();
-			}
-		}
-		@Override
-		public void onRenderStart() {
-			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onRenderStart();
-			}
-		}
-	};
-
-	//------------------------------------------------------------------------------------
-	// Public static interfaces and classes
-	//------------------------------------------------------------------------------------
-
-	/**
-	 * Interface for implementations to receive TileView events.  This interface consolidates several disparate
-	 * listeners (Gestures, ZoomPan Events, TileView events) into a single unit for ease of use.
-	 */
-	public static interface TileViewEventListener {
-		/**
-		 * Fires when a ACTION_DOWN event is raised from the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onFingerDown( int x, int y );
-		/**
-		 * Fires when a ACTION_UP event is raised from the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onFingerUp( int x, int y );
-		/**
-		 * Fires while the TileView is being dragged
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onDrag( int x, int y );
-		/**
-		 * Fires when a user double-taps the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onDoubleTap( int x, int y );
-		/**
-		 * Fires when a user taps the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onTap( int x, int y );
-		/**
-		 * Fires while a user is pinching the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onPinch( int x, int y );
-		/**
-		 * Fires when a user starts a pinch action
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onPinchStart( int x, int y );
-		/**
-		 * Fires when a user completes a pinch action
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onPinchComplete( int x, int y );
-		/**
-		 * Fires when a user initiates a fling action
-		 * @param sx (int) the x position of the start of the fling
-		 * @param sy (int) the y position of the start of the fling
-		 * @param dx (int) the x position of the end of the fling
-		 * @param dy (int) the y position of the end of the fling
-		 */
-		public void onFling( int sx, int sy, int dx, int dy );
-		/**
-		 * Fires when a fling action has completed
-		 * @param x (int) the final x scroll position of the TileView after the fling
-		 * @param y (int) the final y scroll position of the TileView after the fling
-		 */
-		public void onFlingComplete( int x, int y );
-		/**
-		 * Fires when the TileView's scale has updated
-		 * @param scale (double) the new scale of the TileView (0-1)
-		 */
-		public void onScaleChanged( double scale );
-		/**
-		 * Fires when the TileView's scroll position has updated
-		 * @param x (int) the new x scroll position of the TileView
-		 * @param y (int) the new y scroll position of the TileView
-		 */
-		public void onScrollChanged( int x, int y );
-		/**
-		 * Fires when a zoom action starts (typically through a pinch of double-tap action,
-		 * or by programmatic animated zoom methods.
-		 * @param scale (double) the new scale of the TileView (0-1)
-		 */
-		public void onZoomStart( double scale );
-		/**
-		 * Fires when a zoom action ends (typically through a pinch of double-tap action,
-		 * or by programmatic animated zoom methods.
-		 * @param scale (double) the new scale of the TileView (0-1)
-		 */
-		public void onZoomComplete( double scale );
-		/**
-		 * Fires when the TileView should start using a new DetailLevel
-		 */
-		public void onDetailLevelChanged();
-		/**
-		 * Fires when the rendering thread has started to update the visible tiles.
-		 */
-		public void onRenderStart();
-		/**
-		 * Fires when the rendering thread has completed updating the visible tiles, but before cleanup
-		 */
-		public void onRenderComplete();
-	}
-
-	/**
-	 * Convenience class that implements {@TileViewEventListener}
-	 */
-	public static class TileViewEventListenerImplementation implements TileViewEventListener {
-
-		/**
-		 * Fires when a ACTION_DOWN event is raised from the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onFingerDown( int x, int y ) {
-
-		}
-		/**
-		 * Fires when a ACTION_UP event is raised from the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onFingerUp( int x, int y ) {
-
-		}
-		/**
-		 * Fires while the TileView is being dragged
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onDrag( int x, int y ) {
-
-		}
-		/**
-		 * Fires when a user double-taps the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onDoubleTap( int x, int y ) {
-
-		}
-		/**
-		 * Fires when a user taps the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onTap( int x, int y ) {
-
-		}
-		/**
-		 * Fires while a user is pinching the TileView
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onPinch( int x, int y ) {
-
-		}
-		/**
-		 * Fires when a user starts a pinch action
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onPinchStart( int x, int y ) {
-
-		}
-		/**
-		 * Fires when a user completes a pinch action
-		 * @param x (int) the x position of the event
-		 * @param y (int) the y position of the event
-		 */
-		public void onPinchComplete( int x, int y ) {
-
-		}
-		/**
-		 * Fires when a user initiates a fling action
-		 * @param sx (int) the x position of the start of the fling
-		 * @param sy (int) the y position of the start of the fling
-		 * @param dx (int) the x position of the end of the fling
-		 * @param dy (int) the y position of the end of the fling
-		 */
-		public void onFling( int sx, int sy, int dx, int dy ) {
-
-		}
-		/**
-		 * Fires when a fling action has completed
-		 * @param x (int) the final x scroll position of the TileView after the fling
-		 * @param y (int) the final y scroll position of the TileView after the fling
-		 */
-		public void onFlingComplete( int x, int y ) {
-
-		}
-		/**
-		 * Fires when the TileView's scale has updated
-		 * @param scale (double) the new scale of the TileView (0-1)
-		 */
-		public void onScaleChanged( double scale ) {
-
-		}
-		/**
-		 * Fires when the TileView's scroll position has updated
-		 * @param x (int) the new x scroll position of the TileView
-		 * @param y (int) the new y scroll position of the TileView
-		 */
-		public void onScrollChanged( int x, int y ) {
-
-		}
-		/**
-		 * Fires when a zoom action starts (typically through a pinch of double-tap action,
-		 * or by programmatic animated zoom methods.
-		 * @param scale (double) the new scale of the TileView (0-1)
-		 */
-		public void onZoomStart( double scale ) {
-
-		}
-		/**
-		 * Fires when a zoom action ends (typically through a pinch of double-tap action,
-		 * or by programmatic animated zoom methods.
-		 * @param scale (double) the new scale of the TileView (0-1)
-		 */
-		public void onZoomComplete( double scale ) {
-
-		}
-		/**
-		 * Fires when the TileView should start using a new DetailLevel
-		 */
-		public void onDetailLevelChanged() {
-
-		}
-		/**
-		 * Fires when the rendering thread has started to update the visible tiles.
-		 */
-		public void onRenderStart() {
-
-		}
-		/**
-		 * Fires when the rendering thread has completed updating the visible tiles, but before cleanup
-		 */
-		public void onRenderComplete() {
-
-		}
-
-	}
+  public DetailManager getDetailManager(){
+    return detailManager;
+  }
 
 	public PositionManager getPositionManager() {
 		return positionManager;
 	}
 
+  public HotSpotManager getHotSpotManager(){
+    return hotSpotManager;
+  }
+
 	public PathManager getPathManager() {
 		return pathManager;
 	}
+
+  public TileManager getTileManager(){
+    return tileManager;
+  }
+
+  public MarkerManager getMarkerManager(){
+    return markerManager;
+  }
+
+  public CalloutManager getCalloutManager(){
+    return calloutManager;
+  }
+
+  private static class RenderThrottleHandler extends Handler {
+    private static final int MESSAGE = 0;
+    private static final int RENDER_THROTTLE_TIMEOUT = 100;
+    private final WeakReference<TileView> mTileViewWeakReference;
+    public RenderThrottleHandler( TileView tileView ) {
+      super();
+      mTileViewWeakReference = new WeakReference<TileView>( tileView );
+    }
+    @Override
+    public void handleMessage( Message msg ) {
+      TileView tileView = mTileViewWeakReference.get();
+      if (tileView != null) {
+        tileView.requestRender();
+      }
+    }
+    public void clear(){
+      if (hasMessages( MESSAGE )) {
+        removeMessages( MESSAGE );
+      }
+    }
+    public void submit(){
+      clear();
+      sendEmptyMessageDelayed( MESSAGE, RENDER_THROTTLE_TIMEOUT );
+    }
+  }
 
 }

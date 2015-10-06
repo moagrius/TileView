@@ -7,17 +7,17 @@ import java.util.LinkedList;
 
 class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 
-	private final WeakReference<TileManager> reference;
+	private final WeakReference<TileManager> mTileManagerWeakReference;
 
 	// package level access
-	TileRenderTask( TileManager tm ) {
+	TileRenderTask( TileManager tileManager ) {
 		super();
-		reference = new WeakReference<TileManager>( tm );
+		mTileManagerWeakReference = new WeakReference<TileManager>( tileManager );
 	}
 	
 	@Override
 	protected void onPreExecute() {
-		final TileManager tileManager = reference.get();
+		final TileManager tileManager = mTileManagerWeakReference.get();
 		if ( tileManager != null ) {
 			tileManager.onRenderTaskPreExecute();
 		}		
@@ -35,7 +35,7 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 	@Override
 	protected Void doInBackground( Void... params ) {
 		// have we been stopped or dereffed?
-		TileManager tileManager = reference.get();
+		TileManager tileManager = mTileManagerWeakReference.get();
 		// if not go ahead, but check again in each iteration
 		if ( tileManager != null ) {
 			// avoid concurrent modification exceptions by duplicating
@@ -43,7 +43,7 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 			// start rendering, checking each iteration if we need to break out
 			for ( Tile tile : renderList ) {
 				// check again if we've been stopped or gc'ed
-				tileManager = reference.get();
+				tileManager = mTileManagerWeakReference.get();
 				if ( tileManager == null ) {
 					return null;
 				}
@@ -68,7 +68,7 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 	@Override
 	protected void onProgressUpdate( Tile... params ) {
 		// have we been stopped or dereffed?
-		TileManager tileManager = reference.get();
+		TileManager tileManager = mTileManagerWeakReference.get();
 		// if not go ahead but check other cancel states
 		if ( tileManager != null ) {
 			// quit if it's been force-stopped
@@ -80,9 +80,9 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 				return;
 			}
 			// tile should already have bitmap decoded
-			Tile m = params[0];
+			Tile tile = params[0];
 			// add the bitmap to it's view, add the view to the current detail level layout
-			tileManager.renderIndividualTile( m );
+			tileManager.renderIndividualTile( tile );
 		}
 		
 	}
@@ -90,7 +90,7 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 	@Override
 	protected void onPostExecute( Void param ) {
 		// have we been stopped or dereffed?
-		TileManager tileManager = reference.get();
+		TileManager tileManager = mTileManagerWeakReference.get();
 		// if not go ahead but check other cancel states
 		if ( tileManager != null ) {
 			tileManager.onRenderTaskPostExecute();
@@ -100,7 +100,7 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 	@Override
 	protected void onCancelled() {
 		// have we been stopped or dereffed?
-		TileManager tileManager = reference.get();
+		TileManager tileManager = mTileManagerWeakReference.get();
 		// if not go ahead but check other cancel states
 		if ( tileManager != null ) {
 			tileManager.onRenderTaskCancelled();
