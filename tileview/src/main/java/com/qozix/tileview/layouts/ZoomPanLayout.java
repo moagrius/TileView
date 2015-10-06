@@ -35,7 +35,6 @@ public class ZoomPanLayout extends ViewGroup
 
   private static final int ZOOM_ANIMATION_DURATION = 500;
   private static final int SLIDE_DURATION = 500;
-
   private static final int FLYWHEEL_TIMEOUT = 40;  // from AbsListView
 
   private int mBaseWidth;
@@ -49,6 +48,17 @@ public class ZoomPanLayout extends ViewGroup
 
   private float mMinScale = 0;
   private float mMaxScale = 1;
+
+  private int lastRecordedFlingX;
+  private int lastRecordedFlingY;
+
+  private int flingFinalX;
+  private int flingFinalY;
+
+  private float startFocusX;
+  private float startFocusY;
+  private int startScaleScrollX;
+  private int startScaleScrollY;
 
   private boolean mShouldScaleToFit = true;
 
@@ -65,12 +75,6 @@ public class ZoomPanLayout extends ViewGroup
   private ValueAnimator.AnimatorUpdateListener mAnimatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
     @Override
     public void onAnimationUpdate( ValueAnimator valueAnimator ) {
-      /*
-      float originalChange = mDestinationScale - mHistoricalScale;
-      float updatedChange = originalChange * (float) valueAnimator.getAnimatedValue();
-      float currentScale = mHistoricalScale + updatedChange;
-      setScale( currentScale );
-      */
       setScale( (float) valueAnimator.getAnimatedValue() );
       maintainScrollDuringScaleOperation();
     }
@@ -80,7 +84,6 @@ public class ZoomPanLayout extends ViewGroup
 
     @Override
     public void onAnimationStart( Animator animator ) {
-      //saveHistoricalScale();
       mIsTweening = true;
       for (ZoomPanListener listener : mZoomPanListeners) {
         listener.onZoomStart( mScale );
@@ -362,11 +365,11 @@ public class ZoomPanLayout extends ViewGroup
 
   /**
    * <i>This method is experimental</i>
-   * Scroll and mScale to match passed Rect as closely as possible.
+   * Scroll and scale to match passed Rect as closely as possible.
    * The widget will attempt to frame the Rectangle, so that it's contained
    * within the viewport, if possible.
    *
-   * @param rect (Rect) rectangle to frame
+   * @param rect A Rectangle instance describing the area to frame.
    */
   public void frameViewport( Rect rect ) {
     // TODO: slideTo?
@@ -548,10 +551,7 @@ public class ZoomPanLayout extends ViewGroup
 
 
 
-  private float startFocusX;
-  private float startFocusY;
-  private int startScaleScrollX;
-  private int startScaleScrollY;
+
 
   private void saveScaleOrigination( float focusX, float focusY ) {
     mHistoricalScale = mScale;
@@ -581,8 +581,14 @@ public class ZoomPanLayout extends ViewGroup
 
 
 
-  private int lastRecordedFlingX;
-  private int lastRecordedFlingY;
+  private boolean determineIfScrollComplete(){
+    int x = getScrollX();
+    int y = getScrollY();
+    if(mIsBeingFlung){
+      return x == flingFinalX && y == flingFinalY;
+    }
+    return x == lastRecordedFlingX && y == lastRecordedFlingY;
+  }
 
   private void notifyOfScrollActivity() {
     if (mScrollActionHandler.hasMessages( 0 )) {
@@ -591,11 +597,15 @@ public class ZoomPanLayout extends ViewGroup
     int x = getScrollX();
     int y = getScrollY();
     // if scroll position is same as last recorded, assume we're done with the fling
-    if( x == lastRecordedFlingX && y == lastRecordedFlingY ){
-      Log.d( "TileView", "complete" );
+
+    // SEPARATE THIS OUT
+    // fling needs to check against final values
+    // drag should not need to run a handler
+    // slide to should stop in animationComplete
+    if( determineIfScrollComplete() ){
+      mIsBeingFlung = false;
       handleScrollerComplete();
     } else {
-      Log.d( "TileView", "movement, x=" + x + ", y=" + y + ", lastRecordedX=" + lastRecordedFlingX + ", lastRecordedY=" + lastRecordedFlingY);
       lastRecordedFlingX = x;
       lastRecordedFlingY = y;
       mScrollActionHandler.sendEmptyMessageDelayed( 0, FLYWHEEL_TIMEOUT );
@@ -608,13 +618,11 @@ public class ZoomPanLayout extends ViewGroup
     for (GestureListener listener : mGestureListeners) {
       listener.onScrollComplete( x, y );
     }
-    Log.d( "TileView", "onScrollComplete just fired");
     if (mIsBeingFlung) {
       mIsBeingFlung = false;
       for (GestureListener listener : mGestureListeners) {
         listener.onFlingComplete( x, y );
       }
-      Log.d( "TileView", "onFlingComplete just fired");
     }
     invalidate();
   }
@@ -677,9 +685,10 @@ public class ZoomPanLayout extends ViewGroup
     mIsBeingFlung = true;
     mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, getLimitX(), 0, getLimitY() );
     // TODO: check current scroll to finalPoint to determine end
+    flingFinalX = mScroller.getFinalX();
+    flingFinalY = mScroller.getFinalY();
     for (GestureListener listener : mGestureListeners) {
-      listener.onFling( getScrollX(), getScrollY(), mScroller.getFinalX(), mScroller.getFinalY() );
-      // ViewCompat.postInvalidateOnAnimation( this );
+      listener.onFling( getScrollX(), getScrollY(), flingFinalX, flingFinalY );
     }
     return true;
   }

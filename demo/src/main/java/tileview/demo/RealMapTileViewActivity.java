@@ -1,5 +1,6 @@
 package tileview.demo;
 
+import android.app.Activity;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.os.Bundle;
@@ -7,17 +8,21 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 
 import com.qozix.tileview.TileView;
 
 import java.util.ArrayList;
 
-public class RealMapTileViewActivity extends TileViewActivity {
+public class RealMapTileViewActivity extends Activity {
 
 	public static final double NORTH_WEST_LATITUDE = 39.9639998777094;
 	public static final double NORTH_WEST_LONGITUDE = -75.17261900652977;
 	public static final double SOUTH_EAST_LATITUDE = 39.93699709962642;
 	public static final double SOUTH_EAST_LONGITUDE = -75.12462846235614;
+
+	private TileView tileView;
 
 	@Override
 	public void onCreate( Bundle savedInstanceState ) {
@@ -25,7 +30,7 @@ public class RealMapTileViewActivity extends TileViewActivity {
 		super.onCreate( savedInstanceState );
 
 		// we'll reference the TileView multiple times
-		TileView tileView = getTileView();
+		tileView = new TileView(this);
 
 		// size and geolocation
 		tileView.setSize( 17934 / 2, 13452 / 2);
@@ -94,6 +99,7 @@ public class RealMapTileViewActivity extends TileViewActivity {
 		}
 
 		// let's start off framed to the center of all points
+		/*
 		double x = 0;
 		double y = 0;
 		for (double[] point : points) {
@@ -104,9 +110,24 @@ public class RealMapTileViewActivity extends TileViewActivity {
 		x = x / size;
 		y = y / size;
 		frameTo( x, y );
+		*/
 
 		// start small and allow zoom
 		tileView.setScale( 0.3f );
+
+		LinearLayout linearLayout = new LinearLayout( this );
+		linearLayout.setOrientation( LinearLayout.VERTICAL );
+
+		View spacer = new View( this );
+		LayoutParams spacerLayoutParams =  new LayoutParams( LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT );
+		spacerLayoutParams.weight = 1;
+		linearLayout.addView( spacer, spacerLayoutParams );
+
+		LayoutParams tileViewLayoutParams = new LayoutParams( LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT );
+		tileViewLayoutParams.weight = 1;
+		linearLayout.addView( tileView, tileViewLayoutParams );
+
+		setContentView( linearLayout );
 
 	}
 
@@ -114,8 +135,6 @@ public class RealMapTileViewActivity extends TileViewActivity {
 
 		@Override
 		public void onClick( View view ) {
-			// get reference to the TileView
-			TileView tileView = getTileView();
 			// we saved the coordinate in the marker's tag
 			double[] position = (double[]) view.getTag();
 			// lets center the screen to that coordinate
