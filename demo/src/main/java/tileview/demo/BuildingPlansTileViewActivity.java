@@ -44,7 +44,7 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		addPin( 0.50, 0.50 );
 		
 		// scale it down to manageable size
-		tileView.setScale( 0.5 );
+		tileView.setScale( 0.5f );
 		
 		// center the frame
 		frameTo( 0.5, 0.5 );

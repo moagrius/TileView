@@ -41,7 +41,7 @@ public class FictionalMapTileViewActivity extends TileViewActivity {
 		frameTo( 3267, 1896 );
 
 		// scale down a little
-		tileView.setScale( 0.5 );
+		tileView.setScale( 0.5f );
 				
 	}
 	

@@ -10,6 +10,7 @@
 1.  Remove LRU cache dependency
 1.  Use more framework-provided functionality, like GestureListener
 1.  Use FlingRunner from AbsListView
+1.  End fling (test for change)
 
 #TileView
 

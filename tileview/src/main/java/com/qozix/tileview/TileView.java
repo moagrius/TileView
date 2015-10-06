@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -80,6 +81,7 @@ public class TileView extends ZoomPanLayout {
 	private MarkerManager markerManager;
 	private CalloutManager calloutManager;
 
+	private boolean mIsUsingRelativePositioning;
 
 	/**
 	 * Constructor to use when creating a TileView from code.  Inflating from XML is not currently supported.
@@ -154,6 +156,7 @@ public class TileView extends ZoomPanLayout {
 	 * time, and will never be handled immediately.
 	 */
 	public void requestRender(){
+    Log.d( "TileView", "requestRender" );
 		tileManager.requestRender();
 	}
 
@@ -324,6 +327,7 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void defineRelativeBounds( double left, double top, double right, double bottom  ) {
 		positionManager.setBounds( left, top, right, bottom );
+		mIsUsingRelativePositioning = true;
 	}
 
 	/**
@@ -331,6 +335,7 @@ public class TileView extends ZoomPanLayout {
 	 * receive position method parameters will use pixel values, relative to the TileView's registered size (at 1.0d scale)
 	 */
 	public void undefineRelativeBounds() {
+		mIsUsingRelativePositioning = false;
 		positionManager.unsetBounds();
 	}
 
@@ -371,7 +376,7 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void moveTo( double x, double y ) {
 		Point point = positionManager.translate( x, y, getScale() );
-		scrollToPoint( point );
+		scrollTo( point.x, point.y );
 		requestRender();
 	}
 
@@ -382,7 +387,7 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void moveToAndCenter( double x, double y ) {
 		Point point = positionManager.translate( x, y, getScale() );
-		scrollToAndCenter( point );
+		scrollToAndCenter( point.x, point.y );
 		requestRender();
 	}
 
@@ -393,7 +398,7 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void slideTo( double x, double y ) {
 		Point point = positionManager.translate( x, y, getScale() );
-		slideToPoint( point );
+		slideTo( point.x, point.y );
 	}
 
 	/**
@@ -403,7 +408,7 @@ public class TileView extends ZoomPanLayout {
 	 */
 	public void slideToAndCenter( double x, double y ) {
 		Point point = positionManager.translate( x, y, getScale() );
-		slideToAndCenter( point );
+		slideToAndCenter( point.x, point.y );
 	}
 
 	/**
@@ -434,10 +439,10 @@ public class TileView extends ZoomPanLayout {
 		int width = bottomLeft.x - topRight.x;
 		int height = bottomLeft.y - topRight.y;
 
-		double scaleX = Math.abs( getWidth() / (double) width );
-		double scaleY = Math.abs( getHeight() / (double) height );
+		float scaleX = Math.abs( getWidth() / width );
+    float scaleY = Math.abs( getHeight() / height );
 
-		double destinationScale = Math.min( scaleX, scaleY );
+    float destinationScale = Math.min( scaleX, scaleY );
 
 		double middleX = ( rightMost + leftMost ) * 0.5f;
 		double middleY = ( topMost + bottomMost ) * 0.5f;
@@ -539,9 +544,9 @@ public class TileView extends ZoomPanLayout {
 				int scaledY = (int) ( anchorLayoutParams.y * getScale() );
 				Point point = new Point( scaledX, scaledY );
 				if( animate ) {
-					slideToAndCenter( point );
+					slideToAndCenter( point.x, point.y );
 				} else {
-					scrollToAndCenter( point );
+					scrollToAndCenter( point.x, point.y );
 				}
 			}
 		}
@@ -827,20 +832,21 @@ public class TileView extends ZoomPanLayout {
 		}
 		@Override
 		public void onScrollChanged( int x, int y ) {
+      Log.d("TileView", "onScrollChanged in TileView");
 			updateViewport();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
 				listener.onScrollChanged( x, y );
 			}
 		}
 		@Override
-		public void onScaleChanged( double scale ) {
+		public void onScaleChanged( float scale ) {
 			detailManager.setScale( scale );
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
 				listener.onScaleChanged( scale );
 			}
 		}
 		@Override
-		public void onZoomStart( double scale ) {
+		public void onZoomStart( float scale ) {
 			detailManager.lockDetailLevel();
 			detailManager.setScale( scale );
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
@@ -848,7 +854,7 @@ public class TileView extends ZoomPanLayout {
 			}
 		}
 		@Override
-		public void onZoomComplete( double scale ) {
+		public void onZoomComplete( float scale ) {
 			detailManager.unlockDetailLevel();
 			detailManager.setScale( scale );
 			requestRender();  // put this here instead of gesture listener so we catch animations and pinches
@@ -881,82 +887,83 @@ public class TileView extends ZoomPanLayout {
 	private GestureListener gestureListener = new GestureListener(){
 
 		@Override
-		public void onDoubleTap( Point point ) {
+		public void onDoubleTap( int x, int y ) {
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onDoubleTap( point.x, point.y );
+				listener.onDoubleTap( x, y );
 			}
 		}
 		@Override
-		public void onDrag( Point point ) {
+		public void onDrag( int x, int y ) {
 			suppressRender();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onDrag( point.x, point.y );
+				listener.onDrag( x, y );
 			}
 		}
 		@Override
-		public void onFingerDown( Point point ) {
+		public void onFingerDown( int x, int y ) {
 			suppressRender();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onFingerDown( point.x, point.y );
+				listener.onFingerDown( x, y );
 			}
 		}
 		@Override
-		public void onFingerUp( Point point ) {
+		public void onFingerUp( int x, int y ) {
 			if ( !isFlinging() ) {
 				requestRender();
 			}
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onFingerUp( point.x, point.y );
+				listener.onFingerUp( x, y );
 			}
 		}
 		@Override
-		public void onFling( Point startPoint, Point finalPoint ) {
+		public void onFling( int startX, int startY, int endX, int endY ) {
 			suppressRender();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onFling( startPoint.x, startPoint.y, finalPoint.x, finalPoint.y );
+				listener.onFling( startX, startY, endX, endY );
 			}
 		}
 		@Override
-		public void onFlingComplete( Point point ) {
+		public void onFlingComplete( int x, int y ) {
 			requestRender();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onFlingComplete( point.x, point.y );
+				listener.onFlingComplete( x, y );
 			}
 		}
 		@Override
-		public void onPinch( Point point ) {
+		public void onPinch( int x, int y ) {
 			suppressRender();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onPinch( point.x, point.y );
+				listener.onPinch( x, y );
 			}
 		}
 		@Override
-		public void onPinchComplete( Point point ) {
+		public void onPinchComplete( int x, int y ) {
 			requestRender();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onPinchComplete( point.x, point.y );
+				listener.onPinchComplete( x, y );
 			}
 		}
 		@Override
-		public void onPinchStart( Point point ) {
+		public void onPinchStart( int x, int y ) {
 			suppressRender();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onPinchStart( point.x, point.y );
+				listener.onPinchStart( x, y );
 			}
 		}
 		@Override
-		public void onTap( Point point ) {
+		public void onTap( int x, int y ) {
+      Point point = new Point( x, y );
 			markerManager.processHit( point );
 			hotSpotManager.processHit( point );
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onTap( point.x, point.y );
+				listener.onTap( x, y );
 			}
 		}
 		@Override
-		public void onScrollComplete( Point point ) {
+		public void onScrollComplete( int x, int y ) {
 			requestRender();
 			for ( TileViewEventListener listener : tileViewEventListeners ) {
-				listener.onScrollChanged( point.x, point.y );
+				listener.onScrollChanged( x, y );
 			}
 		}
 	};
