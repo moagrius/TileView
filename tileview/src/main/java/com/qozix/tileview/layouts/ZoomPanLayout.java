@@ -6,7 +6,6 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -349,7 +348,6 @@ public class ZoomPanLayout extends ViewGroup
     int dx = x - startX;
     int dy = y - startY;
     mScroller.startScroll( startX, startY, dx, dy, SLIDE_DURATION );
-    dispatchScrollActionNotification();
   }
 
   /**
@@ -471,6 +469,8 @@ public class ZoomPanLayout extends ViewGroup
     x = constrainX( x );
     y = constrainY( y );
     super.scrollTo( x, y );
+    notifyOfScrollActivity();
+    invalidate();  // TODO: needed?
   }
 
   private void calculateMinimumScaleToFit() {
@@ -537,7 +537,7 @@ public class ZoomPanLayout extends ViewGroup
           listener.onScrollChanged( destinationX, destinationY );
         }
         */
-        dispatchScrollActionNotification();
+        notifyOfScrollActivity();
         Log.d( "TileView", "scrollTo called in computeScroll" );
       }
     }
@@ -584,7 +584,7 @@ public class ZoomPanLayout extends ViewGroup
   private int lastRecordedFlingX;
   private int lastRecordedFlingY;
 
-  private void dispatchScrollActionNotification() {
+  private void notifyOfScrollActivity() {
     if (mScrollActionHandler.hasMessages( 0 )) {
       mScrollActionHandler.removeMessages( 0 );
     }
@@ -593,7 +593,7 @@ public class ZoomPanLayout extends ViewGroup
     // if scroll position is same as last recorded, assume we're done with the fling
     if( x == lastRecordedFlingX && y == lastRecordedFlingY ){
       Log.d( "TileView", "complete" );
-      handleScrollerAction();
+      handleScrollerComplete();
     } else {
       Log.d( "TileView", "movement, x=" + x + ", y=" + y + ", lastRecordedX=" + lastRecordedFlingX + ", lastRecordedY=" + lastRecordedFlingY);
       lastRecordedFlingX = x;
@@ -602,7 +602,7 @@ public class ZoomPanLayout extends ViewGroup
     }
   }
 
-  private void handleScrollerAction() {
+  private void handleScrollerComplete() {
     int x = getScrollX();
     int y = getScrollY();
     for (GestureListener listener : mGestureListeners) {
@@ -629,7 +629,7 @@ public class ZoomPanLayout extends ViewGroup
     public void handleMessage( Message msg ) {
       ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
       if (zoomPanLayout != null) {
-        zoomPanLayout.dispatchScrollActionNotification();
+        zoomPanLayout.notifyOfScrollActivity();
       }
     }
   }
@@ -679,7 +679,7 @@ public class ZoomPanLayout extends ViewGroup
     // TODO: check current scroll to finalPoint to determine end
     for (GestureListener listener : mGestureListeners) {
       listener.onFling( getScrollX(), getScrollY(), mScroller.getFinalX(), mScroller.getFinalY() );
-      ViewCompat.postInvalidateOnAnimation( this );
+      // ViewCompat.postInvalidateOnAnimation( this );
     }
     return true;
   }
@@ -694,8 +694,6 @@ public class ZoomPanLayout extends ViewGroup
     int scrollEndX = (int) (getScrollX() + distanceX);
     int scrollEndY = (int) (getScrollY() + distanceY);
     scrollTo( scrollEndX, scrollEndY );
-    dispatchScrollActionNotification();
-    invalidate();
     for (GestureListener listener : mGestureListeners) {
       listener.onDrag( scrollEndX, scrollEndY );
     }
