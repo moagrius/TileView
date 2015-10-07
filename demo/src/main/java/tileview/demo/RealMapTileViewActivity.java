@@ -1,11 +1,8 @@
 package tileview.demo;
 
 import android.app.Activity;
-import android.graphics.CornerPathEffect;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -60,25 +57,27 @@ public class RealMapTileViewActivity extends Activity {
 			SOUTH_EAST_LATITUDE
 		);
 
+    // get metrics for programmatic DP
+    DisplayMetrics metrics = getResources().getDisplayMetrics();
+
+    /* TODO: debug
 		// get the default paint and style it.  the same effect could be achieved by passing a custom Paint instnace
 		Paint paint = tileView.getPathPaint();
 
-		// get metrics for programmatic DP
-		DisplayMetrics metrics = getResources().getDisplayMetrics();
-
 		// dress up the path effects and draw it between some points
 		paint.setShadowLayer(
-			TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 4, metrics ),
-			TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 2, metrics ),
-			TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 2, metrics ),
-			0x66000000
-		);
+      TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 4, metrics ),
+      TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 2, metrics ),
+      TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 2, metrics ),
+      0x66000000
+    );
 		paint.setPathEffect(
-			new CornerPathEffect(
-				TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 5, metrics )
-			)
-		);
+      new CornerPathEffect(
+        TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 5, metrics )
+      )
+    );
 		tileView.drawPath( points.subList( 1, 5 ) );
+		*/
 
 		// add markers for all the points
 		for (double[] point : points) {

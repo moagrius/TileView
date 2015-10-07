@@ -39,6 +39,7 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**
+ * // TODO: occassional stutter in fling, see if moving away from ImageViews helps.
  * The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
  * with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
  * built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
@@ -232,8 +233,8 @@ public class TileView extends ZoomPanLayout {
 	 * Register a tile set to be used for a particular detail level.
 	 * Each tile set to be used must be registered using this method,
 	 * and at least one tile set must be registered for the TileView to render any tiles.
-	 * @param detailScale (float) scale at which the TileView should use the tiles in this set.
-	 * @param data (Object) TODO
+	 * @param detailScale Scale at which the TileView should use the tiles in this set.
+	 * @param data An arbitrary object of any type that is passed to the (Adapter|Decoder) for each tile on this level.
 	 */
 	public void addDetailLevel( float detailScale, Object data){
 		detailManager.addDetailLevel( detailScale, data );
@@ -244,7 +245,7 @@ public class TileView extends ZoomPanLayout {
 	 * Each tile set to be used must be registered using this method,
 	 * and at least one tile set must be registered for the TileView to render any tiles.
 	 * @param detailScale (float) scale at which the TileView should use the tiles in this set.
-	 * @param data (Object) TODO
+	 * @param data An arbitrary object of any type that is passed to the (Adapter|Decoder) for each tile on this level.
 	 * @param tileWidth (int) size of each tiled column
 	 * @param tileHeight (int) size of each tiled row
 	 */
@@ -655,7 +656,6 @@ public class TileView extends ZoomPanLayout {
 	/**
 	 * Remove a HotSpot registered with addHotSpot
 	 * @param hotSpot (HotSpot) the hotspot to remove
-	 * @return (boolean) true if a hotspot was removed, false if not
 	 */
 	public void removeHotSpot( HotSpot hotSpot ) {
 		hotSpotManager.removeHotSpot( hotSpot );
@@ -819,8 +819,7 @@ public class TileView extends ZoomPanLayout {
 
     @Override
     public void onPanUpdate( int x, int y, Origination origin ) {
-      // TODO: debug
-      suppressRender();
+
     }
 
     @Override
@@ -853,12 +852,6 @@ public class TileView extends ZoomPanLayout {
 		public void onDetailLevelChanged() {
 			requestRender();
 		}
-		/*
-		 * do *not* update scale in response to changes in the zoom manager
-		 * transactions are one-way - set scale on TileView (ZoomPanLayout)
-		 * and pass those to DetailManager, which then distributes, manages
-		 * and notifies all other interested parties.
-		 */
 		@Override
 		public void onDetailScaleChanged( double scale ) {
 
@@ -878,7 +871,6 @@ public class TileView extends ZoomPanLayout {
     detailManager.setScale( scale );
   }
 
-  // TODO: debug, this was onSingleTap up and super.onSingleTapUp
   @Override
   public boolean onSingleTapConfirmed( MotionEvent event ) {
     // TODO: test
@@ -888,13 +880,6 @@ public class TileView extends ZoomPanLayout {
     markerManager.processHit( point );
     hotSpotManager.processHit( point );
     return super.onSingleTapConfirmed( event );
-  }
-
-  // TODO: debug
-  @Override
-  public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
-    suppressRender();
-    return super.onFling( event1, event2, velocityX, velocityY );
   }
 
   public DetailManager getDetailManager(){

@@ -11,6 +11,8 @@
 1.  Use more framework-provided functionality, like GestureListener
 1.  Use FlingRunner from AbsListView
 1.  End fling (test for change)
+1.  Other Issues
+    a.  when detail levels change with no downsample, there's a moment when the old one dies before the new one is done.
 
 #TileView
 

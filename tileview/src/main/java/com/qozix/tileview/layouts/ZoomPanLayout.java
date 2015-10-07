@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Scroller;
 
+import com.qozix.tileview.view.TouchUpGestureDetector;
+
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 
@@ -26,16 +28,16 @@ import java.util.HashSet;
  * and will always be positioned at 0,0.
  */
 
-public class ZoomPanLayout extends ViewGroup
-  implements
+public class ZoomPanLayout extends ViewGroup implements
   GestureDetector.OnGestureListener,
   GestureDetector.OnDoubleTapListener,
   ScaleGestureDetector.OnScaleGestureListener,
   ValueAnimator.AnimatorListener,
-  ValueAnimator.AnimatorUpdateListener {
+  ValueAnimator.AnimatorUpdateListener,
+  TouchUpGestureDetector.OnTouchUpListener {
 
-  private static final int ZOOM_ANIMATION_DURATION = 500;
-  private static final int SLIDE_DURATION = 500;
+  private static final int ZOOM_ANIMATION_DURATION = 400;
+  private static final int SLIDE_DURATION = 400;
   private static final int FLYWHEEL_TIMEOUT = 40;  // from AbsListView
 
   private int mBaseWidth;
@@ -77,7 +79,7 @@ public class ZoomPanLayout extends ViewGroup
 
   private ScaleGestureDetector mScaleGestureDetector;
   private GestureDetector mGestureDetector;
-
+  private TouchUpGestureDetector mTouchUpGestureDetector;
 
   /**
    * Constructor to use when creating a ZoomPanLayout from code.
@@ -97,8 +99,9 @@ public class ZoomPanLayout extends ViewGroup
     setWillNotDraw( false );
     mScroller = new Scroller( context );
     mScrollActionHandler = new ScrollActionHandler( this );
-    mScaleGestureDetector = new ScaleGestureDetector( context, this );
     mGestureDetector = new GestureDetector( context, this );
+    mScaleGestureDetector = new ScaleGestureDetector( context, this );
+    mTouchUpGestureDetector = new TouchUpGestureDetector( this );
   }
 
   //------------------------------------------------------------------------------------
@@ -200,7 +203,7 @@ public class ZoomPanLayout extends ViewGroup
   }
 
   /**
-   * Provide this method to be overriden by subclasses, e.g., onScrollChanged
+   * Provide this method to be overriden by subclasses, e.g., onScrollChanged.
    */
   public void onScaleChanged( float currentScale, float previousScale ) {
     // noop
@@ -420,7 +423,8 @@ public class ZoomPanLayout extends ViewGroup
   public boolean onTouchEvent( MotionEvent event ) {
     boolean gestureIntercept = mGestureDetector.onTouchEvent( event );
     boolean scaleIntercept = mScaleGestureDetector.onTouchEvent( event );
-    return gestureIntercept || scaleIntercept || super.onTouchEvent( event );
+    boolean touchIntercept = mTouchUpGestureDetector.onTouchEvent( event );
+    return gestureIntercept || scaleIntercept || touchIntercept || super.onTouchEvent( event );
   }
 
   @Override
@@ -535,11 +539,16 @@ public class ZoomPanLayout extends ViewGroup
     int x = mScroller.getFinalX();
     int y = mScroller.getFinalY();
     if(mIsFlinging){
+      mIsFlinging = false;
       broadcastFlingEnd( x, y );
     } else if (mIsSliding){
+      mIsSliding = false;
       broadcastProgrammaticPanEnd( x, y );
     }
   }
+
+
+
   private static class ScrollActionHandler extends Handler {
     private static final int MESSAGE = 0;
     private final WeakReference<ZoomPanLayout> mZoomPanLayoutWeakReference;
@@ -662,8 +671,9 @@ public class ZoomPanLayout extends ViewGroup
   @Override
   public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
     mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, getLimitX(), 0, getLimitY() );
-    broadcastFlingBegin( getScrollX(), getScrollY() );
+    mIsFlinging = true;
     startWatchingScrollActions();
+    broadcastFlingBegin( getScrollX(), getScrollY() );
     return true;
   }
 
@@ -693,10 +703,6 @@ public class ZoomPanLayout extends ViewGroup
 
   @Override
   public boolean onSingleTapUp( MotionEvent event ) {
-    if(mIsDragging){
-      mIsDragging = false;
-      broadcastDragEnd( getScrollX(), getScrollY() );
-    }
     return true;
   }
   //END OnGestureListener
@@ -720,6 +726,17 @@ public class ZoomPanLayout extends ViewGroup
     return true;
   }
   //END OnDoubleTapListener
+
+  //START OnTouchUpListener
+  @Override
+  public boolean onTouchUp() {
+    if (mIsDragging) {
+      mIsDragging = false;
+      broadcastDragEnd( getScrollX(), getScrollY() );
+    }
+    return true;
+  }
+  //END OnTouchUpListener
 
   //START OnScaleGestureListener
   @Override
