@@ -6,7 +6,9 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -51,9 +53,6 @@ public class ZoomPanLayout extends ViewGroup implements
 
   private float mMinScale = 0;
   private float mMaxScale = 1;
-
-  private int lastRecordedFlingX;
-  private int lastRecordedFlingY;
 
   private int flingFinalX;
   private int flingFinalY;
@@ -481,7 +480,8 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public void computeScroll() {
-    if (mScroller.computeScrollOffset()) {
+    Log.d( "TileView", "computeScroll, scroller.isFinished=" + mScroller.isFinished());
+    if (!mScroller.isFinished() && mScroller.computeScrollOffset()) {
       int startX = getScrollX();
       int startY = getScrollY();
       int endX = constrainX( mScroller.getCurrX() );
@@ -493,7 +493,9 @@ public class ZoomPanLayout extends ViewGroup implements
         } else if(mIsSliding){
           broadcastProgrammaticPanUpdate( endX, endY );
         }
-        startWatchingScrollActions();
+        if(!isWatchingForScrollActionComplete){
+          startWatchingScrollActions();
+        }
       }
     }
   }
@@ -531,21 +533,59 @@ public class ZoomPanLayout extends ViewGroup implements
 
 
 
+  private void concludeFling(){
+    Log.d( "TileView", "fling ends" );
+    mIsFlinging = false;
+    mScroller.forceFinished( true );
+    mScrollActionHandler.clear();
+    broadcastFlingEnd( getScrollX(), getScrollY() );
+  }
 
+  private void concludeSlide(){
+    mIsSliding = false;
+    mScroller.forceFinished( true );
+    mScrollActionHandler.clear();
+    broadcastProgrammaticPanEnd( getScrollX(), getScrollY() );
+  }
+
+
+
+  private void initiateFling( int velocityX, int velocityY ){
+    mScroller.fling( getScrollX(), getScrollY(), velocityX, velocityY, 0, getLimitX(), 0, getLimitY() );
+    flingFinalX = constrainX( mScroller.getFinalX() );
+    flingFinalY = constrainY( mScroller.getFinalY() );
+    mIsFlinging = true;
+    broadcastFlingBegin( getScrollX(), getScrollY() );
+    ViewCompat.postInvalidateOnAnimation( this );
+    Log.d( "TileView", "fling started" );
+  }
+
+  private boolean isWatchingForScrollActionComplete = false;
+
+  private boolean isScrollActionComplete(){
+    if(mScroller.isFinished()){
+      return true;
+    }
+    boolean atEnd = getScrollX() == flingFinalX && getScrollY() == flingFinalY;
+    if(atEnd){
+      mScroller.forceFinished( true );
+      return true;
+    }
+    return false;
+  }
   private void startWatchingScrollActions(){
     mScrollActionHandler.submit();
+    isWatchingForScrollActionComplete = true;
   }
   private void onScrollerActionComplete(){
-    int x = mScroller.getFinalX();
-    int y = mScroller.getFinalY();
     if(mIsFlinging){
-      mIsFlinging = false;
-      broadcastFlingEnd( x, y );
+      concludeFling();
     } else if (mIsSliding){
-      mIsSliding = false;
-      broadcastProgrammaticPanEnd( x, y );
+      concludeSlide();
     }
+    isWatchingForScrollActionComplete = false;
   }
+
 
 
 
@@ -560,9 +600,19 @@ public class ZoomPanLayout extends ViewGroup implements
     public void handleMessage( Message msg ) {
       ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
       if (zoomPanLayout != null) {
-        if (zoomPanLayout.getScroller().isFinished()){
+        Log.d( "TileView", "test if scroll action is complete" );
+        if (zoomPanLayout.isScrollActionComplete()){
+          Log.d( "TileView", "action is complete, set flinging false" );
           zoomPanLayout.onScrollerActionComplete();
         } else {
+          ZoomPanLayout z = zoomPanLayout;
+          Scroller s = zoomPanLayout.getScroller();
+          Log.d( "TileView", "action is not complete: scroller=" +
+            s.isFinished() +
+            ", flinging=" + z.mIsFlinging + ", sliding" + z.mIsSliding );
+          Log.d( "TileView", "finalX=" + z.flingFinalX + ", currX=" + z.getScrollX() +
+            "finalY=" + z.flingFinalY + ", currY=" + z.getScrollY());
+
           submit();
         }
       }
@@ -662,18 +712,15 @@ public class ZoomPanLayout extends ViewGroup implements
   @Override
   public boolean onDown( MotionEvent event ) {
     if (!mScroller.isFinished()) {
-      mScroller.abortAnimation();
-      mScrollActionHandler.clear();
+      concludeFling();
+      concludeSlide();
     }
     return true;
   }
 
   @Override
   public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
-    mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, getLimitX(), 0, getLimitY() );
-    mIsFlinging = true;
-    startWatchingScrollActions();
-    broadcastFlingBegin( getScrollX(), getScrollY() );
+    initiateFling( (int) -velocityX, (int) -velocityY );
     return true;
   }
 

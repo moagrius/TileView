@@ -10,6 +10,7 @@ import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -123,10 +124,6 @@ public class TileView extends ZoomPanLayout {
 	}
 
 	//------------------------------------------------------------------------------------
-	// PUBLIC API
-	//------------------------------------------------------------------------------------
-
-	//------------------------------------------------------------------------------------
 	// Rendering API
 	//------------------------------------------------------------------------------------
 
@@ -139,19 +136,36 @@ public class TileView extends ZoomPanLayout {
 		tileManager.requestRender();
 	}
 
-	/**
-	 * Notify the TileView that it may stop rendering tiles.  The rendering thread will be
-	 * sent an interrupt request, but no guarantee is provided when the request will be responded to.
-	 */
-	public void cancelRender() {
-		tileManager.cancelRender();
-	}
-
   /**
-   * TODO: comments
+   * While all render operation requests are queued and batched, this method provides an additional
+   * throttle layer, so that any subsequent invocations cancel and pending invocations.
+   *
+   * This is useful when requesting in a stream fashion, either in a loop or in response to a
+   * progressive action like an animation or touch move.
    */
   public void requestThrottledRender(){
     mRenderThrottleHandler.submit();
+  }
+
+  /**
+   * If flinging, defer render, otherwise request now.
+   * If a render operation starts at the beginning of a fling, a stutter can occur.
+   */
+  private void requestSafeRender(){
+    if(isFlinging()){
+      //Log.d( "TileView", "flinging, throttle it" );
+      requestThrottledRender();
+    } else {
+      requestRender();
+    }
+  }
+
+  /**
+   * Notify the TileView that it may stop rendering tiles.  The rendering thread will be
+   * sent an interrupt request, but no guarantee is provided when the request will be responded to.
+   */
+  public void cancelRender() {
+    tileManager.cancelRender();
   }
 
 	/**
@@ -814,17 +828,19 @@ public class TileView extends ZoomPanLayout {
 
     @Override
     public void onPanBegin( int x, int y, Origination origin ) {
+      Log.d( "TileView", "onPanBegin, origin=" + origin );
       suppressRender();
     }
 
     @Override
     public void onPanUpdate( int x, int y, Origination origin ) {
-
+      Log.d( "TileView", "onPanUpdate, origin=" + origin );
     }
 
     @Override
     public void onPanEnd( int x, int y, Origination origin ) {
-      requestRender();
+      Log.d( "TileView", "onPanEnd, origin=" + origin );
+      requestSafeRender();
     }
 
     @Override
@@ -922,7 +938,7 @@ public class TileView extends ZoomPanLayout {
     public void handleMessage( Message msg ) {
       TileView tileView = mTileViewWeakReference.get();
       if (tileView != null) {
-        tileView.requestRender();
+        tileView.requestSafeRender();
       }
     }
     public void clear(){
