@@ -10,7 +10,6 @@ import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -153,7 +152,6 @@ public class TileView extends ZoomPanLayout {
    */
   private void requestSafeRender(){
     if(isFlinging()){
-      //Log.d( "TileView", "flinging, throttle it" );
       requestThrottledRender();
     } else {
       requestRender();
@@ -828,18 +826,16 @@ public class TileView extends ZoomPanLayout {
 
     @Override
     public void onPanBegin( int x, int y, Origination origin ) {
-      Log.d( "TileView", "onPanBegin, origin=" + origin );
       suppressRender();
     }
 
     @Override
     public void onPanUpdate( int x, int y, Origination origin ) {
-      Log.d( "TileView", "onPanUpdate, origin=" + origin );
+
     }
 
     @Override
     public void onPanEnd( int x, int y, Origination origin ) {
-      Log.d( "TileView", "onPanEnd, origin=" + origin );
       requestSafeRender();
     }
 
