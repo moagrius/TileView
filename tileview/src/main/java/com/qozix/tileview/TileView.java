@@ -39,7 +39,6 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**
- * // TODO: occassional stutter in fling, see if moving away from ImageViews helps.
  * The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
  * with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
  * built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
