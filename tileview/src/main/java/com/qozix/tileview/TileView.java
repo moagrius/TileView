@@ -68,7 +68,9 @@ import java.util.List;
  * }</pre>
  *
  */
-public class TileView extends ZoomPanLayout {
+public class TileView extends ZoomPanLayout implements ZoomPanLayout.ZoomPanListener,
+TileManager.TileRenderListener,
+DetailLevelEventListener {
 
 	private DetailManager detailManager = new DetailManager();
 	private PositionManager positionManager = new PositionManager();
@@ -111,9 +113,9 @@ public class TileView extends ZoomPanLayout {
 		calloutManager = new CalloutManager( context, detailManager );
 		addView( calloutManager );
 
-		detailManager.addDetailLevelEventListener( detailLevelEventListener );
-
-		addZoomPanListener( zoomPanListener );
+		detailManager.addDetailLevelEventListener( this );
+    tileManager.setTileRenderListener( this );
+		addZoomPanListener( this );
 
     mRenderThrottleHandler = new RenderThrottleHandler( this );  // TODO: cleanup
 
@@ -163,6 +165,14 @@ public class TileView extends ZoomPanLayout {
    */
   public void cancelRender() {
     tileManager.cancelRender();
+  }
+
+  /**
+   * Notify the TileView that it should continue to render any pending tiles, but should not
+   * accept new render tasks.
+   */
+  public void suppressRender() {
+    tileManager.suppressRender();
   }
 
 	/**
@@ -260,6 +270,7 @@ public class TileView extends ZoomPanLayout {
 	 * @param tileWidth (int) size of each tiled column
 	 * @param tileHeight (int) size of each tiled row
 	 */
+  // TODO: one signature in detailManager, multiple sigs in TileView just rerout.  int to Integer for null
 	public void addDetailLevel( float detailScale, Object data, int tileWidth, int tileHeight ){
 		detailManager.addDetailLevel( detailScale, data, tileWidth, tileHeight );
 	}
@@ -811,77 +822,77 @@ public class TileView extends ZoomPanLayout {
 		detailManager.updateViewport( left, top, right, bottom );
 	}
 
-	// tell the tile renderer to not start any more tasks, but it can continue with any that are already running
-	private void suppressRender() {
-		tileManager.suppressRender();
-	}
 
 
-	//------------------------------------------------------------------------------------
-	// Private Listeners
-	//------------------------------------------------------------------------------------
 
-	private ZoomPanListener zoomPanListener = new ZoomPanListener() {
+  //------------------------------------------------------------------------------------
+  // start hooks
+  //------------------------------------------------------------------------------------
 
-    @Override
-    public void onPanBegin( int x, int y, Origination origin ) {
-      suppressRender();
-    }
-
-    @Override
-    public void onPanUpdate( int x, int y, Origination origin ) {
-
-    }
-
-    @Override
-    public void onPanEnd( int x, int y, Origination origin ) {
-      requestSafeRender();
-    }
-
-    @Override
-    public void onZoomBegin( float scale, float focusX, float focusY, Origination origin ) {
-      detailManager.lockDetailLevel();
-      detailManager.setScale( scale );
-    }
-
-    @Override
-    public void onZoomUpdate( float scale, float focusX, float focusY, Origination origin ) {
-
-    }
-
-    @Override
-    public void onZoomEnd( float scale, float focusX, float focusY, Origination origin ) {
-      detailManager.unlockDetailLevel();
-      detailManager.setScale( scale );
-      requestRender();
-    }
-
-	};
-
-	private DetailLevelEventListener detailLevelEventListener = new DetailLevelEventListener(){
-		@Override
-		public void onDetailLevelChanged() {
-			requestRender();
-		}
-		@Override
-		public void onDetailScaleChanged( double scale ) {
-
-		}
-	};
-
+  // start View
   @Override
   protected void onScrollChanged (int l, int t, int oldl, int oldt){
     super.onScrollChanged( l, t, oldl, oldt );
     updateViewport();
     requestThrottledRender();
   }
+  // end View
 
+  // start ZoomPanLayout
   @Override
   public void onScaleChanged( float scale, float previous ) {
     super.onScaleChanged( scale, previous );
     detailManager.setScale( scale );
   }
+  // end ZoomPanLayout
 
+  // start ZoomPanListener
+  @Override
+  public void onPanBegin( int x, int y, Origination origin ) {
+    suppressRender();
+  }
+
+  @Override
+  public void onPanUpdate( int x, int y, Origination origin ) {
+
+  }
+
+  @Override
+  public void onPanEnd( int x, int y, Origination origin ) {
+    requestSafeRender();
+  }
+
+  @Override
+  public void onZoomBegin( float scale, float focusX, float focusY, Origination origin ) {
+    detailManager.lockDetailLevel();
+    detailManager.setScale( scale );
+  }
+
+  @Override
+  public void onZoomUpdate( float scale, float focusX, float focusY, Origination origin ) {
+
+  }
+
+  @Override
+  public void onZoomEnd( float scale, float focusX, float focusY, Origination origin ) {
+    detailManager.unlockDetailLevel();
+    detailManager.setScale( scale );
+    requestRender();
+  }
+  // end ZoomPanListener
+
+  // start DetailLevelListener
+  @Override
+  public void onDetailLevelChanged() {
+    requestRender();
+  }
+  @Override
+  public void onDetailScaleChanged( double scale ) {
+
+  }
+  // end DetailLevelListener
+
+  // start OnDoubleTapListener
   @Override
   public boolean onSingleTapConfirmed( MotionEvent event ) {
     // TODO: test
@@ -892,6 +903,32 @@ public class TileView extends ZoomPanLayout {
     hotSpotManager.processHit( point );
     return super.onSingleTapConfirmed( event );
   }
+  // end OnDoubleTapListener
+
+  // start TileRenderListener
+  @Override
+  public void onRenderStart() {
+
+  }
+
+  @Override
+  public void onRenderCancelled() {
+
+  }
+
+  @Override
+  public void onRenderComplete() {
+
+  }
+  // end TileRenderListener
+
+  //------------------------------------------------------------------------------------
+  // end hooks
+  //------------------------------------------------------------------------------------
+
+  //------------------------------------------------------------------------------------
+  // start high-level accessors
+  //------------------------------------------------------------------------------------
 
   public DetailManager getDetailManager(){
     return detailManager;
@@ -921,6 +958,13 @@ public class TileView extends ZoomPanLayout {
     return calloutManager;
   }
 
+  //------------------------------------------------------------------------------------
+  // end high-level accessors
+  //------------------------------------------------------------------------------------
+
+  //------------------------------------------------------------------------------------
+  // private internal classes
+  //------------------------------------------------------------------------------------
   private static class RenderThrottleHandler extends Handler {
     private static final int MESSAGE = 0;
     private static final int RENDER_THROTTLE_TIMEOUT = 100;
@@ -946,5 +990,8 @@ public class TileView extends ZoomPanLayout {
       sendEmptyMessageDelayed( MESSAGE, RENDER_THROTTLE_TIMEOUT );
     }
   }
+  //------------------------------------------------------------------------------------
+  // end internal classes
+  //------------------------------------------------------------------------------------
 
 }
