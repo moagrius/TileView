@@ -9,15 +9,15 @@ import java.util.HashSet;
 
 public class DetailManager {
 
-	private static final double PRECISION = 6;
+	private static final float PRECISION = 6;
 	private static final double DECIMAL = Math.pow( 10, PRECISION );
 	
 	private DetailLevelSet detailLevels = new DetailLevelSet();
 	private HashSet<DetailLevelEventListener> detailLevelEventListeners = new HashSet<DetailLevelEventListener>();
 	private HashSet<DetailLevelSetupListener> detailLevelSetupListeners = new HashSet<DetailLevelSetupListener>();
 
-	private double scale = 1;
-	private double historicalScale;
+	private float scale = 1;
+	private float historicalScale;
 	
 	private DetailLevel currentDetailLevel;
 	
@@ -34,19 +34,19 @@ public class DetailManager {
 	
 	private DetailLevelPatternParser detailLevelPatternParser = new DetailLevelPatternParserDefault();
 
-	private static double getAtPrecision( double s ) {
-		return Math.round( s * DECIMAL ) / DECIMAL;
+	private static float getAtPrecision( float s ) {
+		return (float) (Math.round( s * DECIMAL ) / DECIMAL);
 	}
 
 	public DetailManager(){
 		update( true );
 	}
 
-	public double getScale() {
+	public float getScale() {
 		return scale;
 	}
 
-	public void setScale( double s ) {
+	public void setScale( float s ) {
 		// round to PRECISION decimal places
 		// DEBUG: why are we rounding still?
 		s = getAtPrecision( s );
@@ -205,7 +205,7 @@ public class DetailManager {
 		return currentDetailLevel;
 	}
 	
-	public double getCurrentDetailLevelScale(){
+	public float getCurrentDetailLevelScale(){
 		if(currentDetailLevel != null ) {
 			return currentDetailLevel.getScale();
 		}

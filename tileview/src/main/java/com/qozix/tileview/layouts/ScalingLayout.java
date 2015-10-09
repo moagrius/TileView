@@ -5,25 +5,25 @@ import android.graphics.Canvas;
 
 public class ScalingLayout extends FixedLayout {
 
-	private double scale = 1;
+	private float scale = 1;
 
 	public ScalingLayout( Context context ) {
 		super( context );
 		setWillNotDraw( false );
 	}
 
-	public void setScale( double factor ) {
+	public void setScale( float factor ) {
 		scale = factor;
 		postInvalidate();
 	}
 
-	public double getScale() {
+	public float getScale() {
 		return scale;
 	}
 
 	@Override
 	public void onDraw( Canvas canvas ) {
-		canvas.scale( (float) scale, (float) scale );
+		canvas.scale(  scale, scale );
 		super.onDraw( canvas );
 	}
 

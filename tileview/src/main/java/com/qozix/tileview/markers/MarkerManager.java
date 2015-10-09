@@ -139,7 +139,7 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 	}
 
 	@Override
-	public void onDetailScaleChanged( double scale ) {
+	public void onDetailScaleChanged( float scale ) {
 		setScale( scale );
 	}
 

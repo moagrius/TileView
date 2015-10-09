@@ -887,7 +887,7 @@ DetailLevelEventListener {
     requestRender();
   }
   @Override
-  public void onDetailScaleChanged( double scale ) {
+  public void onDetailScaleChanged( float scale ) {
 
   }
   // end DetailLevelListener

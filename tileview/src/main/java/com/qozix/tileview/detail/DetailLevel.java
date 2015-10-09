@@ -10,7 +10,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
 
 	private static final int DEFAULT_TILE_SIZE = 256;
 
-	private double mScale;
+	private float mScale;
 	
 	private int mTileWidth = DEFAULT_TILE_SIZE;
 	private int mTileHeight = DEFAULT_TILE_SIZE;
@@ -33,7 +33,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
 	}
 
   public boolean isTileInViewport( Tile tile ) {
-    return mViewport.contains( tile.getRect() );
+    return mViewport.contains( tile.getOutputRect() );
   }
 
 	public LinkedList<Tile> getIntersections() {
@@ -70,11 +70,11 @@ public class DetailLevel implements Comparable<DetailLevel> {
 		
 	}
 
-	public double getScale(){
+	public float getScale(){
 		return mScale;
 	}
 	
-	public double getRelativeScale(){
+	public float getRelativeScale(){
 		return mDetailManager.getScale() / mScale;
 	}
 	
@@ -110,5 +110,13 @@ public class DetailLevel implements Comparable<DetailLevel> {
 		return ( ( (int) bits ) ^ ( (int) ( bits >> 32 ) ) );
 	}
 
+	@Override
+	public String toString(){
+		String value = "scale=" + mScale;
+		if(mData != null){
+			value = value + ", data=" + mData;
+		}
+		return value;
+	}
 	
 }

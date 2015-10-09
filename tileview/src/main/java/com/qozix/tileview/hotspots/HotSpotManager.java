@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class HotSpotManager implements DetailLevelEventListener {
 
-	private double scale = 1;
+	private float scale = 1;
 	
 	private ArrayList<HotSpotEventListener> listeners = new ArrayList<HotSpotEventListener>();
 	private ArrayList<HotSpot> spots = new ArrayList<HotSpot>();
@@ -72,7 +72,7 @@ public class HotSpotManager implements DetailLevelEventListener {
 	}
 
 	@Override
-	public void onDetailScaleChanged( double s ) {
+	public void onDetailScaleChanged( float s ) {
 		scale = s;
 	}
 }

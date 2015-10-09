@@ -2,12 +2,13 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Paint;
 import android.graphics.Rect;
-import android.view.ViewGroup;
-import android.view.ViewParent;
-import android.widget.ImageView;
+import android.view.animation.AnimationUtils;
 
 import com.qozix.tileview.graphics.BitmapDecoder;
+
+import java.util.List;
 
 public class Tile {
 
@@ -19,10 +20,41 @@ public class Tile {
 
 	private Object mData;
 
-	private ImageView mImageView;
 	private Bitmap mBitmap;
 
-	private Rect mRect;
+	private Rect mInputRect;
+	private Rect mOutputRect;
+
+	private int duration = 200;
+
+	private Paint mPaint = new Paint();
+
+
+  private List<Tile> mParentList;
+
+	public double renderTimestamp;
+
+	public void stampTime(){
+		// TODO: set a flag when completely rendered, and unset here, so we dont' have to recompute if we don't need to
+		renderTimestamp = AnimationUtils.currentAnimationTimeMillis();
+	}
+
+	public float getRendered(){
+		double now = AnimationUtils.currentAnimationTimeMillis();
+		double ellapsed = now - renderTimestamp;
+		return (float) Math.min(1, ellapsed / duration);
+	}
+
+	public boolean getIsDirty(){
+		return getRendered() < 1f;
+	}
+
+	public Paint getPaint(){
+		float rendered = getRendered();
+		int opacity = (int) (rendered * 255);
+		mPaint.setAlpha( opacity );
+		return mPaint;
+	}
 
 	public int getWidth() {
 		return mWidth;
@@ -44,10 +76,6 @@ public class Tile {
 		return mData;
 	}
 
-	public ImageView getImageView() {
-		return mImageView;
-	}
-
 	public Bitmap getBitmap() {
 		return mBitmap;
 	}
@@ -64,6 +92,20 @@ public class Tile {
 		return mRow * mHeight;
 	}
 
+  public void setParentList( List<Tile> parentList ) {
+    if(mParentList != null){
+      if(mParentList.contains( this )){
+        mParentList.remove( this );
+      }
+    }
+    mParentList = parentList;
+    if(mParentList!= null){
+      if(!mParentList.contains( this )){
+        mParentList.add( this );
+      }
+    }
+  }
+
 	public Tile() {
 
 	}
@@ -76,7 +118,6 @@ public class Tile {
 		mData = data;
 	}
 
-
 	public void decode( Context context, BitmapDecoder decoder ) {
 		if (hasBitmap()) {
 			return;
@@ -84,38 +125,44 @@ public class Tile {
 		mBitmap = decoder.decode( this, context );
 	}
 
-	public void render( Context context ) {
-		if ( mImageView == null ) {
-			mImageView = new ImageView( context );
-			mImageView.setAdjustViewBounds( false );
-			mImageView.setScaleType( ImageView.ScaleType.MATRIX );
-		}		
-		mImageView.setImageBitmap( mBitmap );
-	}
+  public void addToList( List<Tile> tiles ) {
+    tiles.add( this );
+    mParentList = tiles;
+  }
+
+  public void removeFromList( List<Tile> tiles ) {
+    if( tiles.contains( this ) ){
+      tiles.remove(this );
+      mParentList = null;
+    }
+  }
 
 	public void destroy() {
-		if ( mImageView != null ) {
-			mImageView.clearAnimation();
-			mImageView.setImageBitmap( null );
-			ViewParent parent = mImageView.getParent();
-			if ( parent != null && parent instanceof ViewGroup) {
-				ViewGroup group = (ViewGroup) parent;
-				group.removeView( mImageView );
-			}
-			mImageView = null;
-		}
 		mBitmap = null;
+    setParentList( null );
 	}
 
-	public Rect getRect(){
-		if(mRect == null){
-			mRect = new Rect();
-			mRect.top = getTop();
-			mRect.left = getLeft();
-			mRect.bottom = mRect.top + getHeight();
-			mRect.right = mRect.left + getWidth();
+	// TODO: measure bitmap here?
+	public Rect getOutputRect(){
+		if( mOutputRect == null){
+			mOutputRect = new Rect();
+			mOutputRect.top = getTop();
+			mOutputRect.left = getLeft();
+			mOutputRect.bottom = mOutputRect.top + getHeight();
+			mOutputRect.right = mOutputRect.left + getWidth();
 		}
-		return mRect;
+		return mOutputRect;
+	}
+
+	public Rect getInputRect(){
+		if( mInputRect == null){
+			mInputRect = new Rect();
+			mInputRect.top = 0;
+			mInputRect.left = 0;
+			mInputRect.bottom = mInputRect.top + getHeight();
+			mInputRect.right = mInputRect.left + getWidth();
+		}
+		return mInputRect;
 	}
 
 	@Override

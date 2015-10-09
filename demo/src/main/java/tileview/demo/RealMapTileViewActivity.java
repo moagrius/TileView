@@ -110,7 +110,7 @@ public class RealMapTileViewActivity extends Activity {
 		*/
 
 		// start small and allow zoom
-		tileView.setScale( 0.3f );
+		//tileView.setScale( 0.3f );
 
     setContentView( tileView );
     /*

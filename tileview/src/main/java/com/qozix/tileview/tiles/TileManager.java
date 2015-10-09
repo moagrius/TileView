@@ -5,9 +5,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.widget.ImageView;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelEventListener;
@@ -32,13 +30,13 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 	private LinkedList<Tile> alreadyRendered = new LinkedList<Tile>();
 
 	private BitmapDecoder decoder = new BitmapDecoderAssets();
-	private HashMap<Double, ScalingLayout> tileGroups = new HashMap<Double, ScalingLayout>();
+	private HashMap<Float, TileCanvasView> tileGroups = new HashMap<Float, TileCanvasView>();
 
 	private TileRenderTask lastRunRenderTask;
 
 	private DetailLevel detailLevelToRender;
 	private DetailLevel lastRenderedDetailLevel;
-	private ScalingLayout currentTileGroup;
+	private TileCanvasView currentTileGroup;
 	private DetailManager detailManager;
 
 	private boolean renderIsCancelled = false;
@@ -149,36 +147,25 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 			m.destroy();
 		}
 		alreadyRendered.clear();
-		// the above should clear everything, but let's be redundant
-		for ( ScalingLayout tileGroup : tileGroups.values() ) {
-			int totalChildren = tileGroup.getChildCount();
-			for ( int i = 0; i < totalChildren; i++ ) {
-				View child = tileGroup.getChildAt( i );
-				if ( child instanceof ImageView) {
-					ImageView imageView = (ImageView) child;
-					imageView.setImageBitmap( null );
-				}
-			}
-			tileGroup.removeAllViews();
-		}
 	}
 
-	private ScalingLayout getCurrentTileGroup() {
+	private TileCanvasView getCurrentTileGroup() {
 		// get the registered scale for the active detail level
-		double levelScale = detailManager.getCurrentDetailLevelScale();
+		float levelScale = detailManager.getCurrentDetailLevelScale();
 		// if a tile group has already been created and registered...
 		if ( tileGroups.containsKey( levelScale ) ) {
 			// ... we're done.  return cached level.
 			return tileGroups.get( levelScale );
 		}
 		// otherwise create one
-		ScalingLayout tileGroup = new ScalingLayout( getContext() );
+    TileCanvasView tileGroup = new TileCanvasView( getContext() );
 		// scale it to the inverse of the levels scale (so 0.25 levels are shown at 400%)
+    // TODO: use this for inSampleSize in decoder
 		tileGroup.setScale( 1 / levelScale );
 		// register it scale (key) for re-use
 		tileGroups.put( levelScale, tileGroup );
-		// add it to the view tree
 		// MATCH_PARENT should work here but doesn't, roll back if reverting to FrameLayout
+    // TODO: all children should match parent
 		addView( tileGroup, new FixedLayout.LayoutParams( detailManager.getWidth(), detailManager.getHeight() ) );
 		// send it off
 		return tileGroup;
@@ -226,16 +213,6 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
     return detailLevelToRender.isTileInViewport( tile );
   }
 
-
-	private FixedLayout.LayoutParams getLayoutFromTile( Tile tile ) {
-		return new FixedLayout.LayoutParams(
-			tile.getWidth(),
-			tile.getHeight(),
-			tile.getLeft(),
-			tile.getTop()
-		);
-	}
-
 	private void cleanup() {
 		// start with all rendered tiles...
 		LinkedList<Tile> condemned = new LinkedList<Tile>( alreadyRendered );
@@ -247,11 +224,12 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 			alreadyRendered.remove( m );
 		}
 		// hide all other groups
-		for ( ScalingLayout tileGroup : tileGroups.values() ) {
+		for ( TileCanvasView tileGroup : tileGroups.values() ) {
 			if ( currentTileGroup == tileGroup ) {
 				continue;
 			}
 			tileGroup.setVisibility( View.GONE );
+      tileGroup.clearTiles();
 		}
 	}
 
@@ -303,30 +281,16 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
     if ( alreadyRendered.contains( tile ) ) {
       return;
     }
-    // create the image view if needed, with default settings
-    tile.render( getContext() );
+    tile.stampTime();
     // add it to the list of those rendered
     alreadyRendered.add( tile );
-    // get reference to the actual image view
-    ImageView imageView = tile.getImageView();
-    // get layout params from the tile's predefined dimensions
-    LayoutParams layoutParams = getLayoutFromTile( tile );
     // add it to the appropriate set (which is already scaled)
-    currentTileGroup.addView( imageView, layoutParams );
-    // shouldn't be necessary, but is
-    postInvalidate();
+    currentTileGroup.addTile( tile );
     // do we want to animate in tiles?
     if( transitionsEnabled){
       // do we have an appropriate duration?
       if( transitionDuration > 0 ) {
-        // create the animation (will be cleared by tile.destroy).  do this here for the postInvalidate listener
-        AlphaAnimation fadeIn = new AlphaAnimation( 0f, 1f );
-        // set duration
-        fadeIn.setDuration( transitionDuration );
-        // this listener posts invalidate on complete, again should not be necessary but is
-        fadeIn.setAnimationListener( transitionListener );
-        // start it up
-        imageView.startAnimation( fadeIn );
+        // TODO:
       }
     }
   }
@@ -342,20 +306,20 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 	}
 
 	@Override
-	public void onDetailScaleChanged( double scale ) {
+	public void onDetailScaleChanged( float scale ) {
 		setScale( scale );
 	}
 
 	public static class TileRenderHandler extends Handler {
 
-		private final WeakReference<TileManager> reference;
-		public TileRenderHandler( TileManager tm ) {
+		private final WeakReference<TileManager> mTileManagerWeakReference;
+		public TileRenderHandler( TileManager tileManager ) {
 			super();
-			reference = new WeakReference<TileManager>( tm );
+      mTileManagerWeakReference = new WeakReference<TileManager>( tileManager );
 		}
 		@Override
 		public final void handleMessage( Message message ) {
-			final TileManager tileManager = reference.get();
+			final TileManager tileManager = mTileManagerWeakReference.get();
 			if ( tileManager != null ) {
 				tileManager.renderTiles();
 			}
