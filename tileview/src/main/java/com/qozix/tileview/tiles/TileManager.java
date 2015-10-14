@@ -157,6 +157,8 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 		}
 		// otherwise create one
     TileCanvasView tileGroup = new TileCanvasView( getContext() );
+    // listener for clean draws
+    tileGroup.setTileCanvasDrawListener( this );
 		// scale it to the inverse of the levels scale (so 0.25 levels are shown at 400%)
     // TODO: use this for inSampleSize in decoder
 		tileGroup.setScale( 1 / levelScale );
@@ -258,6 +260,12 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
     isRendering = false;
     // everything's been rendered, so get rid of the old tiles
     cleanup();
+    // TODO:
+    /*
+    if( !transitionsEnabled) {
+      cleanup();
+    }
+    */
     // recurse - request another round of render - if the same intersections are discovered, recursion will end anyways
     requestRender();
     // notify anybody interested
@@ -308,7 +316,8 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 
   @Override
   public void onCleanDrawComplete( TileCanvasView tileCanvasView ) {
-    if( tileCanvasView == currentTileGroup ) {
+    if( transitionsEnabled && tileCanvasView == currentTileGroup ) {
+      cleanup();
       Log.d( "Tiles", "current group is done rending including transitions" );
     }
   }

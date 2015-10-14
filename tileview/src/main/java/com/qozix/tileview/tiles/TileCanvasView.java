@@ -15,6 +15,7 @@ public class TileCanvasView extends View {
 
   private float mScale = 1;
   private LinkedList<Tile> mTiles = new LinkedList<Tile>();
+  private TileCanvasDrawListener mTileCanvasDrawListener;
 
   public TileCanvasView( Context context ) {
     super( context );
@@ -22,7 +23,7 @@ public class TileCanvasView extends View {
 
   public void addTile(Tile tile){
     tile.setParentList( mTiles );
-    Log.d( "TileView", "tile count=" + mTiles.size() );
+    Log.d( "Tiles", "tile count=" + mTiles.size() );
     postInvalidate();
   }
 
@@ -47,6 +48,10 @@ public class TileCanvasView extends View {
     return mScale;
   }
 
+  public void setTileCanvasDrawListener( TileCanvasDrawListener tileCanvasDrawListener ) {
+    mTileCanvasDrawListener = tileCanvasDrawListener;
+  }
+
   private boolean drawTiles( Canvas canvas ) {
     boolean dirty = false;
     for( Tile tile : mTiles ) {
@@ -59,6 +64,10 @@ public class TileCanvasView extends View {
     if(dirty){
       Log.d( "TileView", "dirty, calling invalidate again" );
       invalidate();
+    } else {
+      if( mTileCanvasDrawListener != null ) {
+        mTileCanvasDrawListener.onCleanDrawComplete( this );
+      }
     }
   }
 
