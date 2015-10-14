@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelEventListener;
@@ -20,7 +19,7 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class TileManager extends ScalingLayout implements DetailLevelEventListener {
+public class TileManager extends ScalingLayout implements DetailLevelEventListener, TileCanvasView.TileCanvasDrawListener {
 
 	private static final int RENDER_FLAG = 1;
 	private static final int RENDER_BUFFER = 250;
@@ -49,14 +48,12 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 
 	private TileRenderHandler handler;
 	private TileRenderListener renderListener;
-	private TileTransitionListener transitionListener;
 
 	public TileManager( Context context, DetailManager zm ) {
 		super( context );
 		detailManager = zm;
 		detailManager.addDetailLevelEventListener( this );
 		handler = new TileRenderHandler( this );
-		transitionListener = new TileTransitionListener( this );
 	}
 
 	public void setTransitionsEnabled( boolean enabled ) {
@@ -284,18 +281,14 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
     if ( alreadyRendered.contains( tile ) ) {
       return;
     }
+    // do we animate?
+    tile.setTransitionsEnabled( transitionsEnabled );
+    // stamp no matter what, transitions might be enabled later
     tile.stampTime();
     // add it to the list of those rendered
     alreadyRendered.add( tile );
     // add it to the appropriate set (which is already scaled)
     currentTileGroup.addTile( tile );
-    // do we want to animate in tiles?
-    if( transitionsEnabled){
-      // do we have an appropriate duration?
-      if( transitionDuration > 0 ) {
-        // TODO:
-      }
-    }
   }
 
 	boolean getRenderIsCancelled() {
@@ -313,7 +306,14 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 		setScale( scale );
 	}
 
-	public static class TileRenderHandler extends Handler {
+  @Override
+  public void onCleanDrawComplete( TileCanvasView tileCanvasView ) {
+    if( tileCanvasView == currentTileGroup ) {
+      Log.d( "Tiles", "current group is done rending including transitions" );
+    }
+  }
+
+  public static class TileRenderHandler extends Handler {
 
 		private final WeakReference<TileManager> mTileManagerWeakReference;
 		public TileRenderHandler( TileManager tileManager ) {
@@ -328,36 +328,6 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 			}
 		}
 	}
-
-  public static class TileTransitionListener implements Animation.AnimationListener {
-
-    private WeakReference<TileManager> reference;
-
-    public TileTransitionListener( TileManager tm ) {
-      reference = new WeakReference<TileManager>( tm );
-    }
-
-    @Override
-    public void onAnimationStart( Animation animation ) {
-
-    }
-
-    @Override
-    public void onAnimationRepeat( Animation animation ) {
-
-    }
-
-    @Override
-    public void onAnimationEnd( Animation animation ) {
-      TileManager tileManager = reference.get();
-      if( tileManager != null) {
-        // why both?  no clue...  omit either one and abuse it,  you'll get incomplete draws...
-        tileManager.invalidate();
-        tileManager.postInvalidate();
-      }
-    }
-
-  }
 
 
   public interface TileRenderListener {

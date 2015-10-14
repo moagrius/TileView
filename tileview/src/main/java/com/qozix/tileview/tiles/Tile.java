@@ -36,6 +36,8 @@ public class Tile {
 
 	public double renderTimestamp;
 
+  private boolean mTransitionsEnabled;
+
   private DetailLevel mDetailLevel;
 
   public Tile() {
@@ -56,21 +58,32 @@ public class Tile {
 		renderTimestamp = AnimationUtils.currentAnimationTimeMillis();
 	}
 
+  public void setTransitionsEnabled( boolean enabled ) {
+    mTransitionsEnabled = enabled;
+    // TODO: notify?
+  }
+
   public DetailLevel getDetailLevel(){
     return mDetailLevel;
   }
 
 	public float getRendered(){
+    if( !mTransitionsEnabled ) {
+      return 1;
+    }
 		double now = AnimationUtils.currentAnimationTimeMillis();
 		double ellapsed = now - renderTimestamp;
 		return (float) Math.min(1, ellapsed / duration);
 	}
 
 	public boolean getIsDirty(){
-		return getRendered() < 1f;
+		return mTransitionsEnabled && getRendered() < 1f;
 	}
 
 	public Paint getPaint(){
+    if( !mTransitionsEnabled ) {
+      return null;
+    }
 		float rendered = getRendered();
 		int opacity = (int) (rendered * 255);
 		mPaint.setAlpha( opacity );

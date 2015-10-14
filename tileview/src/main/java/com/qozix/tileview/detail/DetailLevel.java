@@ -110,6 +110,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
 		return ( ( (int) bits ) ^ ( (int) ( bits >> 32 ) ) );
 	}
 
+  // TODO: huh
 	@Override
 	public String toString(){
 		String value = "scale=" + mScale;

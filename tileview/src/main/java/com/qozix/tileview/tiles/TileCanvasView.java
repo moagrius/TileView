@@ -71,4 +71,9 @@ public class TileCanvasView extends View {
     canvas.restore();
     handleDrawState( dirty );
   }
+
+  public interface TileCanvasDrawListener {
+    void onCleanDrawComplete( TileCanvasView tileCanvasView );
+  }
+
 }
