@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 
@@ -173,6 +174,7 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 
 	// access omitted deliberately - need package level access for the TileRenderHandler
 	void renderTiles() {
+    Log.d( "Tiles", "TileManager.renderTiles" );
 		// has it been canceled since it was requested?
 		if ( renderIsCancelled ) {
 			return;
@@ -190,6 +192,7 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 	}
 
 	private void beginRenderTask() {
+    Log.d( "Tiles", "TileManager.beginRenderTask" );
 		// find all matching tiles
 		LinkedList<Tile> intersections = detailLevelToRender.getIntersections();
 		// if it's the same list, don't bother
