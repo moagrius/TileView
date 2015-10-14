@@ -1,7 +1,6 @@
 package com.qozix.tileview.tiles;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.Log;
 import android.view.View;
@@ -48,26 +47,28 @@ public class TileCanvasView extends View {
     return mScale;
   }
 
+  private boolean drawTiles( Canvas canvas ) {
+    boolean dirty = false;
+    for( Tile tile : mTiles ) {
+      dirty = tile.draw( canvas ) || dirty;
+    }
+    return dirty;
+  }
+
+  private void handleDrawState( boolean dirty ){
+    if(dirty){
+      Log.d( "TileView", "dirty, calling invalidate again" );
+      invalidate();
+    }
+  }
 
   @Override
   public void onDraw( Canvas canvas ) {
     super.onDraw( canvas );
     canvas.save();
     canvas.scale( mScale, mScale );
-    boolean dirty = false;
-    for( Tile tile : mTiles ) {
-      Bitmap bitmap = tile.getBitmap();
-      if( bitmap != null ) {
-        canvas.drawBitmap( bitmap, tile.getLeft(), tile.getTop(), tile.getPaint() );
-        if(!dirty){
-          dirty = tile.getIsDirty();
-        }
-      }
-    }
+    boolean dirty = drawTiles( canvas );
     canvas.restore();
-    if(dirty){
-      Log.d( "TileView", "dirty, calling invalidate again" );
-      invalidate();
-    }
+    handleDrawState( dirty );
   }
 }

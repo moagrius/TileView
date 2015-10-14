@@ -2,10 +2,12 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.view.animation.AnimationUtils;
 
+import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.graphics.BitmapDecoder;
 
 import java.util.List;
@@ -34,10 +36,29 @@ public class Tile {
 
 	public double renderTimestamp;
 
+  private DetailLevel mDetailLevel;
+
+  public Tile() {
+
+  }
+
+  public Tile( int column, int row, int width, int height, Object data, DetailLevel detailLevel ) {
+    mRow = row;
+    mColumn = column;
+    mWidth = width;
+    mHeight = height;
+    mData = data;
+    mDetailLevel = detailLevel;
+  }
+
 	public void stampTime(){
 		// TODO: set a flag when completely rendered, and unset here, so we dont' have to recompute if we don't need to
 		renderTimestamp = AnimationUtils.currentAnimationTimeMillis();
 	}
+
+  public DetailLevel getDetailLevel(){
+    return mDetailLevel;
+  }
 
 	public float getRendered(){
 		double now = AnimationUtils.currentAnimationTimeMillis();
@@ -106,17 +127,7 @@ public class Tile {
     }
   }
 
-	public Tile() {
 
-	}
-
-	public Tile( int column, int row, int width, int height, Object data ) {
-		mRow = row;
-		mColumn = column;
-		mWidth = width;
-		mHeight = height;
-		mData = data;
-	}
 
 	public void decode( Context context, BitmapDecoder decoder ) {
 		if (hasBitmap()) {
@@ -154,16 +165,17 @@ public class Tile {
 		return mOutputRect;
 	}
 
-	public Rect getInputRect(){
-		if( mInputRect == null){
-			mInputRect = new Rect();
-			mInputRect.top = 0;
-			mInputRect.left = 0;
-			mInputRect.bottom = mInputRect.top + getHeight();
-			mInputRect.right = mInputRect.left + getWidth();
-		}
-		return mInputRect;
-	}
+  /**
+   *
+   * @param canvas The canvas the tile's bitmap should be drawn into
+   * @return True if the tile is dirty (drawing output has changed and needs parent validation)
+   */
+	public boolean draw( Canvas canvas ) {
+    if( mBitmap != null ) {
+      canvas.drawBitmap( mBitmap, getLeft(), getTop(), getPaint() );
+    }
+    return getIsDirty();
+  }
 
 	@Override
 	public boolean equals( Object o ) {
@@ -173,7 +185,7 @@ public class Tile {
 					&& ( m.getColumn() == getColumn() )
 					&& ( m.getWidth() == getWidth() )
 					&& ( m.getHeight() == getHeight() )
-					&& ( m.getData().equals( getData() ) );
+					&& ( m.getDetailLevel() == getDetailLevel() );
 		}
 		return false;
 	}

@@ -61,7 +61,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
 
 		for ( int iterationRow = startingRow; iterationRow < endingRow; iterationRow++ ) {
 			for ( int iterationColumn = startingColumn; iterationColumn < endingColumn; iterationColumn++ ) {
-				Tile tile = new Tile( iterationColumn, iterationRow, mTileWidth, mTileHeight, mData );
+				Tile tile = new Tile( iterationColumn, iterationRow, mTileWidth, mTileHeight, mData, this );
 				intersections.add( tile );
 			}
 		}
