@@ -1,19 +1,22 @@
 #Version 2 Goals
-1.  Eliminate strings from detail levels
-1.  Eliminate ImageViews as Tiles
-1.  Single package
-1.  Eliminate hacked core classes
-1.  Better thread management
+X1.  Eliminate strings from detail levels
+X1.  Eliminate ImageViews as Tiles
+X1.  Single package
+X1.  Eliminate hacked core classes
+X1.  Better thread management
 1.  Issues
 1.  Allow layer insertion and scaling layer insertion
-1.  Eliminate downsample paradigm
-1.  Remove LRU cache dependency
-1.  Use more framework-provided functionality, like GestureListener
-1.  Use FlingRunner from AbsListView
-1.  End fling (test for change)
+X1.  Eliminate downsample paradigm
+X1.  Include a sample downsample
+X1.  Remove LRU cache dependency
+X1.  Use more framework-provided functionality, like GestureListener
+X1.  End fling (test for change)
 1.  Make most private into protected for extensibility
 1.  Other Issues
     a.  when detail levels change with no downsample, there's a moment when the old one dies before the new one is done.
+1.  Don't use detail manager as intermediary anymore
+1.  BitmapDecoder to TileProvider or Adapter paradigm
+1.  Remove TileSetSelector
 
 #TileView
 

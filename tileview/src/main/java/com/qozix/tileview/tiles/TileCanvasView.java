@@ -5,8 +5,7 @@ import android.graphics.Canvas;
 import android.util.Log;
 import android.view.View;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
 
 /**
  * Created by q on 10/2/15.
@@ -14,7 +13,7 @@ import java.util.List;
 public class TileCanvasView extends View {
 
   private float mScale = 1;
-  private LinkedList<Tile> mTiles = new LinkedList<Tile>();
+  private HashSet<Tile> mTiles = new HashSet<Tile>();
   private TileCanvasDrawListener mTileCanvasDrawListener;
 
   public TileCanvasView( Context context ) {
@@ -22,18 +21,24 @@ public class TileCanvasView extends View {
   }
 
   public void addTile(Tile tile){
-    tile.setParentList( mTiles );
+    if( !mTiles.contains( tile ) ) {
+      mTiles.add( tile );
+      tile.setParentTileCanvasView( this );
+      invalidate();
+    }
     Log.d( "Tiles", "tile count=" + mTiles.size() );
-    postInvalidate();
   }
 
   public void removeTile(Tile tile){
-    tile.setParentList( null );
-    postInvalidate();
+    if( mTiles.contains( tile ) ) {
+      mTiles.remove( tile );
+      tile.setParentTileCanvasView( null );
+      invalidate();
+    }
   }
 
   public void clearTiles(){
-    List<Tile> condemned = (List<Tile>) mTiles.clone();
+    HashSet<Tile> condemned = (HashSet<Tile>) mTiles.clone();
     for( Tile tile : condemned ) {
       tile.destroy();
     }

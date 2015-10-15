@@ -114,6 +114,10 @@ public class RealMapTileViewActivity extends Activity {
 
     //tileView.setTransitionsEnabled( false );
 
+    ImageView downsample = new ImageView( this );
+    downsample.setImageResource(R.drawable.downsample );
+    tileView.addView( downsample, 0 );
+
     setContentView( tileView );
     /*
 		LinearLayout linearLayout = new LinearLayout( this );

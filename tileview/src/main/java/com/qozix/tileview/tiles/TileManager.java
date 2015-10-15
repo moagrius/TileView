@@ -211,10 +211,6 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
     lastRunRenderTask.executeOnExecutor( AsyncTask.THREAD_POOL_EXECUTOR );
   }
 
-  public boolean isTileStillInView( Tile tile ) {
-    return detailLevelToRender.isTileInViewport( tile );
-  }
-
   private void cleanup() {
     // start with all rendered tiles...
     LinkedList<Tile> condemned = new LinkedList<Tile>( alreadyRendered );

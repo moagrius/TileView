@@ -24,6 +24,7 @@ import com.qozix.tileview.hotspots.HotSpot;
 import com.qozix.tileview.hotspots.HotSpotEventListener;
 import com.qozix.tileview.hotspots.HotSpotManager;
 import com.qozix.tileview.layouts.AnchorLayout;
+import com.qozix.tileview.layouts.ScalingLayout;
 import com.qozix.tileview.layouts.ZoomPanLayout;
 import com.qozix.tileview.markers.CalloutManager;
 import com.qozix.tileview.markers.MarkerEventListener;
@@ -82,6 +83,8 @@ DetailLevelEventListener {
 	private MarkerManager markerManager;
 	private CalloutManager calloutManager;
 
+  private ScalingLayout mScalingLayout;
+
   private RenderThrottleHandler mRenderThrottleHandler;
 
 	private boolean mIsUsingRelativePositioning;
@@ -107,6 +110,9 @@ DetailLevelEventListener {
 		pathManager = new PathManager( context, detailManager );
 		addView( pathManager );
 
+    mScalingLayout = new ScalingLayout( context );
+    addView( mScalingLayout );
+
 		markerManager = new MarkerManager( context, detailManager );
 		addView( markerManager );
 
@@ -122,6 +128,16 @@ DetailLevelEventListener {
 		requestRender();
 
 	}
+
+  //------------------------------------------------------------------------------------
+  // Layers API
+  //------------------------------------------------------------------------------------
+
+  public void addScalingView( View view, int index, int x, int y ) {
+    ScalingLayout.LayoutParams layoutParams = new ScalingLayout.LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y );
+    mScalingLayout.addView( view, index, layoutParams );
+  }
+
 
 	//------------------------------------------------------------------------------------
 	// Rendering API
@@ -843,6 +859,7 @@ DetailLevelEventListener {
   public void onScaleChanged( float scale, float previous ) {
     super.onScaleChanged( scale, previous );
     detailManager.setScale( scale );
+    mScalingLayout.setScale( scale );
   }
   // end ZoomPanLayout
 
@@ -958,8 +975,22 @@ DetailLevelEventListener {
     return calloutManager;
   }
 
+  public ScalingLayout getScalingLayout(){
+    return mScalingLayout;
+  }
+
   //------------------------------------------------------------------------------------
   // end high-level accessors
+  //------------------------------------------------------------------------------------
+
+  //------------------------------------------------------------------------------------
+  // private internal listeners
+  //------------------------------------------------------------------------------------
+
+
+
+  //------------------------------------------------------------------------------------
+  // end internal listeners
   //------------------------------------------------------------------------------------
 
   //------------------------------------------------------------------------------------
@@ -993,5 +1024,7 @@ DetailLevelEventListener {
   //------------------------------------------------------------------------------------
   // end internal classes
   //------------------------------------------------------------------------------------
+
+
 
 }
