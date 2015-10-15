@@ -14,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailLevelPatternParser;
 import com.qozix.tileview.detail.DetailManager;
@@ -32,7 +33,7 @@ import com.qozix.tileview.markers.MarkerManager;
 import com.qozix.tileview.paths.DrawablePath;
 import com.qozix.tileview.paths.PathHelper;
 import com.qozix.tileview.paths.PathManager;
-import com.qozix.tileview.tiles.TileManager;
+import com.qozix.tileview.tiles.TileCanvasViewGroup;
 import com.qozix.tileview.tiles.selector.TileSetSelector;
 import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
 
@@ -70,7 +71,7 @@ import java.util.List;
  *
  */
 public class TileView extends ZoomPanLayout implements ZoomPanLayout.ZoomPanListener,
-TileManager.TileRenderListener,
+TileCanvasViewGroup.TileRenderListener,
 DetailLevelEventListener {
 
 	private DetailManager detailManager = new DetailManager();
@@ -78,7 +79,7 @@ DetailLevelEventListener {
 
 	private HotSpotManager hotSpotManager = new HotSpotManager( detailManager );
 
-	private TileManager tileManager;
+	private TileCanvasViewGroup mTileCanvasViewGroup;
 	private PathManager pathManager;
 	private MarkerManager markerManager;
 	private CalloutManager calloutManager;
@@ -104,8 +105,8 @@ DetailLevelEventListener {
 	public TileView( Context context, AttributeSet attrs, int defStyleAttr ) {
 		super(context, attrs, defStyleAttr);
 
-		tileManager = new TileManager( context, detailManager );
-		addView( tileManager );
+		mTileCanvasViewGroup = new TileCanvasViewGroup( context );
+		addView( mTileCanvasViewGroup );
 
 		pathManager = new PathManager( context, detailManager );
 		addView( pathManager );
@@ -120,7 +121,7 @@ DetailLevelEventListener {
 		addView( calloutManager );
 
 		detailManager.addDetailLevelEventListener( this );
-    tileManager.setTileRenderListener( this );
+    mTileCanvasViewGroup.setTileRenderListener( this );
 		addZoomPanListener( this );
 
     mRenderThrottleHandler = new RenderThrottleHandler( this );  // TODO: cleanup
@@ -149,7 +150,7 @@ DetailLevelEventListener {
 	 * time, and will never be handled immediately.
 	 */
 	public void requestRender(){
-		tileManager.requestRender();
+		mTileCanvasViewGroup.requestRender();
 	}
 
   /**
@@ -180,7 +181,7 @@ DetailLevelEventListener {
    * sent an interrupt request, but no guarantee is provided when the request will be responded to.
    */
   public void cancelRender() {
-    tileManager.cancelRender();
+    mTileCanvasViewGroup.cancelRender();
   }
 
   /**
@@ -188,7 +189,7 @@ DetailLevelEventListener {
    * accept new render tasks.
    */
   public void suppressRender() {
-    tileManager.suppressRender();
+    mTileCanvasViewGroup.suppressRender();
   }
 
 	/**
@@ -199,7 +200,7 @@ DetailLevelEventListener {
 	 * @param decoder (BitmapDecoder) A class instance that implements BitmapDecoder, and must define a decode method, which accepts a String file name and a Context object, and returns a Bitmap
 	 */
 	public void setTileDecoder( BitmapDecoder decoder ) {
-		tileManager.setDecoder( decoder );
+		mTileCanvasViewGroup.setDecoder( decoder );
 	}
 
 	/**
@@ -224,7 +225,7 @@ DetailLevelEventListener {
 	 * @param enabled (boolean) true if the TileView should render tiles with fade transitions
 	 */
 	public void setTransitionsEnabled( boolean enabled ) {
-		tileManager.setTransitionsEnabled( enabled );
+		mTileCanvasViewGroup.setTransitionsEnabled( enabled );
 	}
 
 	/**
@@ -232,7 +233,7 @@ DetailLevelEventListener {
 	 * @param duration (int) the duration of the transition in milliseconds.
 	 */
 	public void setTransitionDuration( int duration ) {
-		tileManager.setTransitionDuration( duration );
+		mTileCanvasViewGroup.setTransitionDuration( duration );
 	}
 
 	//------------------------------------------------------------------------------------
@@ -776,7 +777,7 @@ DetailLevelEventListener {
 	 * Clear bitmap image files, appropriate for Activity.onPause
 	 */
 	public void clear() {
-		tileManager.clear();
+		mTileCanvasViewGroup.clear();
 		pathManager.setShouldDraw( false );
 	}
 
@@ -792,7 +793,7 @@ DetailLevelEventListener {
 	 * References to TileView should be set to null following invocations of this method.
 	 */
 	public void destroy() {
-		tileManager.clear();
+		mTileCanvasViewGroup.clear();
 		pathManager.clear();
 	}
 
@@ -802,7 +803,7 @@ DetailLevelEventListener {
 	 */
 	public void resume(){
 		updateViewport();
-		tileManager.requestRender();
+		mTileCanvasViewGroup.requestRender();
 		pathManager.setShouldDraw( true );
 	}
 
@@ -811,8 +812,8 @@ DetailLevelEventListener {
 	 */
 	public void refresh() {
 		updateViewport();
-		tileManager.updateTileSet();
-		tileManager.requestRender();
+		mTileCanvasViewGroup.updateTileSet( detailManager.getCurrentDetailLevel() );
+		mTileCanvasViewGroup.requestRender();
 		redraw();
 	}
 
@@ -860,6 +861,7 @@ DetailLevelEventListener {
     super.onScaleChanged( scale, previous );
     detailManager.setScale( scale );
     mScalingLayout.setScale( scale );
+    mTileCanvasViewGroup.setScale( scale );
   }
   // end ZoomPanLayout
 
@@ -900,8 +902,9 @@ DetailLevelEventListener {
 
   // start DetailLevelListener
   @Override
-  public void onDetailLevelChanged() {
+  public void onDetailLevelChanged( DetailLevel detailLevel ) {
     requestRender();
+    mTileCanvasViewGroup.updateTileSet( detailLevel );
   }
   @Override
   public void onDetailScaleChanged( float scale ) {
@@ -963,8 +966,8 @@ DetailLevelEventListener {
 		return pathManager;
 	}
 
-  public TileManager getTileManager(){
-    return tileManager;
+  public TileCanvasViewGroup getTileCanvasViewGroup(){
+    return mTileCanvasViewGroup;
   }
 
   public MarkerManager getMarkerManager(){

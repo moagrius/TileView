@@ -2,6 +2,7 @@ package com.qozix.tileview.hotspots;
 
 import android.graphics.Point;
 
+import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailManager;
 
@@ -67,7 +68,7 @@ public class HotSpotManager implements DetailLevelEventListener {
 	}
 
 	@Override
-	public void onDetailLevelChanged() {
+	public void onDetailLevelChanged( DetailLevel detailLevel ) {
 		
 	}
 

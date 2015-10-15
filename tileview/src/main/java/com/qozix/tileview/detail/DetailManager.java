@@ -149,7 +149,7 @@ public class DetailManager {
 		if ( detailLevelChanged ) {			
 			// notify all interested parties
 			for ( DetailLevelEventListener listener : detailLevelEventListeners ) {
-				listener.onDetailLevelChanged();
+				listener.onDetailLevelChanged( currentDetailLevel );
 			}
 		}
 	}

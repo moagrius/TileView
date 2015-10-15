@@ -7,9 +7,8 @@ import android.os.Message;
 import android.util.Log;
 import android.view.View;
 
+import com.qozix.tileview.TileView;
 import com.qozix.tileview.detail.DetailLevel;
-import com.qozix.tileview.detail.DetailLevelEventListener;
-import com.qozix.tileview.detail.DetailManager;
 import com.qozix.tileview.graphics.BitmapDecoder;
 import com.qozix.tileview.graphics.BitmapDecoderAssets;
 import com.qozix.tileview.layouts.FixedLayout;
@@ -19,7 +18,7 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class TileManager extends ScalingLayout implements DetailLevelEventListener, TileCanvasView.TileCanvasDrawListener {
+public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView.TileCanvasDrawListener {
 
   private static final int RENDER_FLAG = 1;
   private static final int RENDER_BUFFER = 250;
@@ -37,7 +36,6 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
   private DetailLevel detailLevelToRender;
   private DetailLevel lastRenderedDetailLevel;
   private TileCanvasView currentTileGroup;
-  private DetailManager detailManager;
 
   private boolean renderIsCancelled = false;
   private boolean renderIsSuppressed = false;
@@ -49,10 +47,23 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
   private TileRenderHandler handler;
   private TileRenderListener renderListener;
 
-  public TileManager( Context context, DetailManager zm ) {
+  /*
+  @Override
+  public float getScale() {
+    return mScale;
+  }
+
+  @Override
+  public void setScale( float scale ) {
+    mScale = scale;
+    invalidate();
+  }
+
+  private float mScale = 1;
+  */
+
+  public TileCanvasViewGroup( Context context ) {
     super( context );
-    detailManager = zm;
-    detailManager.addDetailLevelEventListener( this );
     handler = new TileRenderHandler( this );
   }
 
@@ -107,9 +118,9 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
     renderIsSuppressed = true;
   }
 
-  public void updateTileSet() {
+  public void updateTileSet( DetailLevel detailLevel ) {
     // grab reference to this detail level, so we can get it's tile set for comparison to viewport
-    detailLevelToRender = detailManager.getCurrentDetailLevel();
+    detailLevelToRender = detailLevel;
     // fast-fail if it's null
     if( detailLevelToRender == null ) {
       return;
@@ -147,9 +158,16 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
     alreadyRendered.clear();
   }
 
+  private float getCurrentDetailLevelScale(){
+    if( detailLevelToRender != null ) {
+      return detailLevelToRender.getScale();
+    }
+    return 1;
+  }
+
   private TileCanvasView getCurrentTileGroup() {
     // get the registered scale for the active detail level
-    float levelScale = detailManager.getCurrentDetailLevelScale();
+    float levelScale = getCurrentDetailLevelScale();
     // if a tile group has already been created and registered...
     if( tileGroups.containsKey( levelScale ) ) {
       // ... we're done.  return cached level.
@@ -166,7 +184,9 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
     tileGroups.put( levelScale, tileGroup );
     // MATCH_PARENT should work here but doesn't, roll back if reverting to FrameLayout
     // TODO: all children should match parent
-    addView( tileGroup, new FixedLayout.LayoutParams( detailManager.getWidth(), detailManager.getHeight() ) );
+    // TODO: debug
+    TileView tileView = (TileView) getParent();
+    addView( tileGroup, new FixedLayout.LayoutParams( tileView.getBaseWidth(), tileView.getBaseHeight() ) );
     // send it off
     return tileGroup;
   }
@@ -299,17 +319,6 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
     return renderIsCancelled;
   }
 
-  // TODO: instead of implements, use a member?
-  @Override
-  public void onDetailLevelChanged() {
-    updateTileSet();
-  }
-
-  @Override
-  public void onDetailScaleChanged( float scale ) {
-    setScale( scale );
-  }
-
   @Override
   public void onCleanDrawComplete( TileCanvasView tileCanvasView ) {
     if( transitionsEnabled && tileCanvasView == currentTileGroup ) {
@@ -320,18 +329,18 @@ public class TileManager extends ScalingLayout implements DetailLevelEventListen
 
   public static class TileRenderHandler extends Handler {
 
-    private final WeakReference<TileManager> mTileManagerWeakReference;
+    private final WeakReference<TileCanvasViewGroup> mTileManagerWeakReference;
 
-    public TileRenderHandler( TileManager tileManager ) {
+    public TileRenderHandler( TileCanvasViewGroup tileCanvasViewGroup ) {
       super();
-      mTileManagerWeakReference = new WeakReference<TileManager>( tileManager );
+      mTileManagerWeakReference = new WeakReference<TileCanvasViewGroup>( tileCanvasViewGroup );
     }
 
     @Override
     public final void handleMessage( Message message ) {
-      final TileManager tileManager = mTileManagerWeakReference.get();
-      if( tileManager != null ) {
-        tileManager.renderTiles();
+      final TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
+      if( tileCanvasViewGroup != null ) {
+        tileCanvasViewGroup.renderTiles();
       }
     }
   }
