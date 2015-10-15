@@ -26,7 +26,7 @@ public class TileCanvasView extends View {
       tile.setParentTileCanvasView( this );
       invalidate();
     }
-    Log.d( "Tiles", "tile count=" + mTiles.size() );
+    //Log.d( "Tiles", "tile count=" + mTiles.size() );
   }
 
   public void removeTile(Tile tile){

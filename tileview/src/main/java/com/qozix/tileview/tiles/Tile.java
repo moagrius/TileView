@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.util.Log;
 import android.view.animation.AnimationUtils;
 
 import com.qozix.tileview.detail.DetailLevel;
@@ -138,7 +137,7 @@ public class Tile {
     if( mParentTileCanvasView != null ) {
       mParentTileCanvasView.removeTile( this );
     }
-    Log.d( "Tiles", "destroying tile at " + getLeft() + ", " + getTop() );
+    //Log.d( "Tiles", "destroying tile at " + getLeft() + ", " + getTop() );
   }
 
   /**

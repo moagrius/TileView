@@ -47,16 +47,10 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   private TileRenderHandler handler;
   private TileRenderListener renderListener;
 
-  public float getScale() {
-    return mScale;
-  }
-
-  public void setScale( float scale ) {
-    mScale = scale;
-    invalidate();
-  }
-
   private float mScale = 1;
+  private int mBaseWidth;
+  private int mBaseHeight;
+
 
 
   public TileCanvasViewGroup( Context context ) {
@@ -65,17 +59,19 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     handler = new TileRenderHandler( this );
   }
 
-  @Override
-  protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
-    measureChildren( widthMeasureSpec, heightMeasureSpec );
-    int width = MeasureSpec.getSize( widthMeasureSpec );
-    int height = MeasureSpec.getSize( heightMeasureSpec );
-    width = Math.max( width, getSuggestedMinimumWidth() );
-    height = Math.max( height, getSuggestedMinimumHeight() );
-    width = resolveSize( width, widthMeasureSpec );
-    height = resolveSize( height, heightMeasureSpec );
-    Log.d( "Tiles", "tcvg, width=" + width );
-    setMeasuredDimension( width, height );
+  public float getScale() {
+    return mScale;
+  }
+
+  public void setScale( float scale ) {
+    mScale = scale;
+    Log.d( "Tiles", "TCVG.setScale=" + scale + ", gw=" + getWidth() );
+    invalidate();
+  }
+
+  public void setSize( int width, int height ) {
+    mBaseWidth = width;
+    mBaseHeight = height;
   }
 
   @Override
@@ -83,7 +79,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, getWidth(), getHeight() );
+        child.layout( 0, 0, mBaseWidth, mBaseHeight );
       }
     }
   }
@@ -352,10 +348,8 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   @Override
   public void onDraw( Canvas canvas ) {
-    super.onDraw( canvas );
-    canvas.save();
     canvas.scale( mScale, mScale );
-    canvas.restore();
+    super.onDraw( canvas );
   }
 
   public static class TileRenderHandler extends Handler {

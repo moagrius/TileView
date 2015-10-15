@@ -108,6 +108,7 @@ DetailLevelEventListener {
 		super(context, attrs, defStyleAttr);
 
 		mTileCanvasViewGroup = new TileCanvasViewGroup( context );
+    mTileCanvasViewGroup.setBackgroundColor( 0xff00ff00 );
 		addView( mTileCanvasViewGroup );
 
 		pathManager = new PathManager( context, detailManager );
@@ -253,10 +254,12 @@ DetailLevelEventListener {
 	public void setSize( int width, int height ) {
 		// super (define clip area)
 		super.setSize( width, height );
-		// coordinate with other components
+		// coordinate with other components  TODO: this?
 		detailManager.setSize( width, height );
 		// notify manager for relative positioning
 		positionManager.setSize( width, height );
+    // notify tile groups
+    mTileCanvasViewGroup.setSize( width, height );
 	}
 
 	/**
