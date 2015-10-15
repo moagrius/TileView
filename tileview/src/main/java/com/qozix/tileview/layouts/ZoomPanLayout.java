@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -144,6 +145,7 @@ public class ZoomPanLayout extends ViewGroup implements
     mBaseWidth = width;
     mBaseHeight = height;
     updateScaledDimensions();
+    requestLayout();
   }
 
   /**
@@ -397,8 +399,20 @@ public class ZoomPanLayout extends ViewGroup implements
   @Override
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     measureChildren( widthMeasureSpec, heightMeasureSpec );
+    int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+      View child = getChildAt( i );
+      if( child.getVisibility() != GONE ) {
+        LayoutParams lp = child.getLayoutParams();
+        lp.width = mBaseWidth;
+        lp.height = mBaseHeight;
+        Log.d( "Tiles", "zpl child.glp.width=" + child.getLayoutParams().width );
+      }
+    }
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
+    //Log.d("Tiles", "mode=" + MeasureSpec.getMode( widthMeasureSpec ) + ", size=" + width );
+
     width = Math.max( width, getSuggestedMinimumWidth() );
     height = Math.max( height, getSuggestedMinimumHeight() );
     width = resolveSize( width, widthMeasureSpec );
@@ -410,7 +424,10 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
-      child.layout( 0, 0, mScaledWidth, mScaledHeight );
+      if( child.getVisibility() != GONE ) {
+        LayoutParams layoutParams = child.getLayoutParams();
+        child.layout( 0, 0, (int) (layoutParams.width * mScale), (int) (layoutParams.height * mScale) );
+      }
     }
     if( changed ) {
       calculateMinimumScaleToFit();

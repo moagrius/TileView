@@ -110,13 +110,13 @@ public class RealMapTileViewActivity extends Activity {
 		*/
 
 		// start small and allow zoom
-		tileView.setScale( 0.3f );
+		//tileView.setScale( 0.3f );
 
     //tileView.setTransitionsEnabled( false );
 
     ImageView downsample = new ImageView( this );
     downsample.setImageResource(R.drawable.downsample );
-    tileView.addView( downsample, 0 );
+    //tileView.addView( downsample, 0 );
 
     setContentView( tileView );
     /*

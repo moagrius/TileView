@@ -90,7 +90,8 @@ DetailLevelEventListener {
 
 	private boolean mIsUsingRelativePositioning;
 
-	/**
+
+  /**
 	 * Constructor to use when creating a TileView from code.
 	 * @param context (Context) The Context the TileView is running in, through which it can access the current theme, resources, etc.
 	 */

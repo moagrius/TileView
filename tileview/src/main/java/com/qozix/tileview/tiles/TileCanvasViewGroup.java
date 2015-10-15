@@ -6,19 +6,18 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 
 import com.qozix.tileview.TileView;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.graphics.BitmapDecoder;
 import com.qozix.tileview.graphics.BitmapDecoderAssets;
-import com.qozix.tileview.layouts.FixedLayout;
-import com.qozix.tileview.layouts.ScalingLayout;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView.TileCanvasDrawListener {
+public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.TileCanvasDrawListener {
 
   private static final int RENDER_FLAG = 1;
   private static final int RENDER_BUFFER = 250;
@@ -47,24 +46,44 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   private TileRenderHandler handler;
   private TileRenderListener renderListener;
 
-  /*
-  @Override
   public float getScale() {
     return mScale;
   }
 
-  @Override
   public void setScale( float scale ) {
     mScale = scale;
     invalidate();
   }
 
   private float mScale = 1;
-  */
+
 
   public TileCanvasViewGroup( Context context ) {
     super( context );
     handler = new TileRenderHandler( this );
+  }
+
+  @Override
+  protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
+    measureChildren( widthMeasureSpec, heightMeasureSpec );
+    int width = MeasureSpec.getSize( widthMeasureSpec );
+    int height = MeasureSpec.getSize( heightMeasureSpec );
+    width = Math.max( width, getSuggestedMinimumWidth() );
+    height = Math.max( height, getSuggestedMinimumHeight() );
+    width = resolveSize( width, widthMeasureSpec );
+    height = resolveSize( height, heightMeasureSpec );
+    Log.d( "Tiles", "tcvg, width=" + width );
+    setMeasuredDimension( width, height );
+  }
+
+  @Override
+  protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+    for( int i = 0; i < getChildCount(); i++ ) {
+      View child = getChildAt( i );
+      if( child.getVisibility() != GONE ) {
+        child.layout( 0, 0, getWidth(), getHeight() );
+      }
+    }
   }
 
   public void setTransitionsEnabled( boolean enabled ) {
@@ -186,7 +205,9 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     // TODO: all children should match parent
     // TODO: debug
     TileView tileView = (TileView) getParent();
-    addView( tileGroup, new FixedLayout.LayoutParams( tileView.getBaseWidth(), tileView.getBaseHeight() ) );
+    Log.d( "Tiles", "tv.gbw=" + tileView.getBaseWidth() + ", gmw=" + getMeasuredWidth() + ", gw=" + getWidth() + ", lp.width=" + getLayoutParams().width );
+    //addView( tileGroup, new FixedLayout.LayoutParams( tileView.getBaseWidth(), tileView.getBaseHeight() ) );
+    addView( tileGroup );
     // send it off
     return tileGroup;
   }
