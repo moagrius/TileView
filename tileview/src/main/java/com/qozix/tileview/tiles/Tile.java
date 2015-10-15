@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.animation.AnimationUtils;
 
 import com.qozix.tileview.detail.DetailLevel;
@@ -73,7 +74,12 @@ public class Tile {
     }
 		double now = AnimationUtils.currentAnimationTimeMillis();
 		double ellapsed = now - renderTimestamp;
-		return (float) Math.min(1, ellapsed / duration);
+    float progress = (float) Math.min(1, ellapsed / duration);
+    // if it's transitioned in full, there won't be subsequent animations so stop computing
+    if( progress == 1) {
+      mTransitionsEnabled = false;
+    }
+		return progress;
 	}
 
 	public boolean getIsDirty(){
@@ -164,6 +170,7 @@ public class Tile {
 	public void destroy() {
 		mBitmap = null;
     setParentList( null );
+    Log.d( "Tiles", "destroying tile at " + getLeft() + ", " + getTop() );
 	}
 
 	// TODO: measure bitmap here?

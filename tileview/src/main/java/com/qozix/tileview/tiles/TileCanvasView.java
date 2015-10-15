@@ -64,12 +64,18 @@ public class TileCanvasView extends View {
     if(dirty){
       Log.d( "TileView", "dirty, calling invalidate again" );
       invalidate();
+      mHasBeenDirtySinceLastCleanDraw = true;
     } else {
       if( mTileCanvasDrawListener != null ) {
-        mTileCanvasDrawListener.onCleanDrawComplete( this );
+        if( mHasBeenDirtySinceLastCleanDraw ) {
+          mTileCanvasDrawListener.onCleanDrawComplete( this );
+          mHasBeenDirtySinceLastCleanDraw = false;
+        }
       }
     }
   }
+
+  private boolean mHasBeenDirtySinceLastCleanDraw;
 
   @Override
   public void onDraw( Canvas canvas ) {
@@ -81,6 +87,9 @@ public class TileCanvasView extends View {
     handleDrawState( dirty );
   }
 
+  /**
+   * will only fire if transitions are enabled, the first time a "clean" draw is complete after a dirty draw
+   */
   public interface TileCanvasDrawListener {
     void onCleanDrawComplete( TileCanvasView tileCanvasView );
   }
