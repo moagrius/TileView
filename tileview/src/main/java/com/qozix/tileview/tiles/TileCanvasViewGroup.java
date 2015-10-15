@@ -1,6 +1,7 @@
 package com.qozix.tileview.tiles;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
@@ -60,6 +61,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   public TileCanvasViewGroup( Context context ) {
     super( context );
+    setWillNotDraw( false );
     handler = new TileRenderHandler( this );
   }
 
@@ -346,6 +348,14 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
       cleanup();
       Log.d( "Tiles", "current group is done rendering including transitions, do cleanup" );
     }
+  }
+
+  @Override
+  public void onDraw( Canvas canvas ) {
+    super.onDraw( canvas );
+    canvas.save();
+    canvas.scale( mScale, mScale );
+    canvas.restore();
   }
 
   public static class TileRenderHandler extends Handler {

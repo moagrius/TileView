@@ -10,6 +10,7 @@ import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -837,6 +838,7 @@ DetailLevelEventListener {
 		int top = getScrollY();
 		int right = left + getWidth();
 		int bottom = top + getHeight();
+    Log.d( "Tiles", "tv.uvp=" + getWidth() + " (should be screen size, not map size" );
 		detailManager.updateViewport( left, top, right, bottom );
 	}
 
