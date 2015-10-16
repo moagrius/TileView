@@ -56,8 +56,8 @@ public class TranslationLayout extends AnchorLayout {
       if( child.getVisibility() != GONE ) {
         LayoutParams lp = (LayoutParams) child.getLayoutParams();
         // get anchor offsets
-        float aX = (lp.anchorX == null) ? anchorX : lp.anchorX;
-        float aY = (lp.anchorY == null) ? anchorY : lp.anchorY;
+        float aX = (lp.anchorX == null) ? mAnchorX : lp.anchorX;
+        float aY = (lp.anchorY == null) ? mAnchorY : lp.anchorY;
         // offset dimensions by anchor values
         int computedWidth = (int) (child.getMeasuredWidth() * aX);
         int computedHeight = (int) (child.getMeasuredHeight() * aY);
@@ -96,8 +96,8 @@ public class TranslationLayout extends AnchorLayout {
         int scaledX = (int) (0.5 + (lp.x * mScale));
         int scaledY = (int) (0.5 + (lp.y * mScale));
         // user child's layout params anchor position if set, otherwise default to anchor position of layout
-        float aX = (lp.anchorX == null) ? anchorX : lp.anchorX;
-        float aY = (lp.anchorY == null) ? anchorY : lp.anchorY;
+        float aX = (lp.anchorX == null) ? mAnchorX : lp.anchorX;
+        float aY = (lp.anchorY == null) ? mAnchorY : lp.anchorY;
         // apply anchor offset to position
         int x = scaledX + (int) (w * aX);
         int y = scaledY + (int) (h * aY);

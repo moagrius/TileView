@@ -12,25 +12,25 @@ public class DetailLevelManager {
 	private static final float PRECISION = 6;
 	private static final double DECIMAL = Math.pow( 10, PRECISION );
 	
-	private DetailLevelSet detailLevels = new DetailLevelSet();
-	private HashSet<DetailLevelEventListener> detailLevelEventListeners = new HashSet<DetailLevelEventListener>();
-	private HashSet<DetailLevelSetupListener> detailLevelSetupListeners = new HashSet<DetailLevelSetupListener>();
+	private DetailLevelSet mDetailLevels = new DetailLevelSet();
+	private HashSet<DetailLevelEventListener> mDetailLevelEventListeners = new HashSet<DetailLevelEventListener>();
+	private HashSet<DetailLevelSetupListener> mDetailLevelSetupListeners = new HashSet<DetailLevelSetupListener>();
 
-	private float scale = 1;
-	private float historicalScale;
+	private float mScale = 1;
+	private float mHistoricalScale;
 	
-	private DetailLevel currentDetailLevel;
+	private DetailLevel mCurrentDetailLevel;
 	
-	private int width;
-	private int height;
-	private int scaledWidth;
-	private int scaledHeight;
+	private int mWidth;
+	private int mHeight;
+	private int mScaledWidth;
+	private int mScaledHeight;
 	
-	private boolean detailLevelLocked = false;
+	private boolean mDetailLevelLocked = false;
 	
-	private int padding = 0;
-	private Rect viewport = new Rect();
-	private Rect computedViewport = new Rect();
+	private int mPadding = 0;
+	private Rect mViewport = new Rect();
+	private Rect mComputedViewport = new Rect();
 
 
 	private static float getAtPrecision( float s ) {
@@ -42,7 +42,7 @@ public class DetailLevelManager {
 	}
 
 	public float getScale() {
-		return scale;
+		return mScale;
 	}
 
 	public void setScale( float s ) {
@@ -50,129 +50,129 @@ public class DetailLevelManager {
 		// DEBUG: why are we rounding still?
 		s = getAtPrecision( s );
 		// is it changed?
-		boolean changed = ( scale != s );
+		boolean changed = ( mScale != s );
 		// set it
-		scale = s;
+		mScale = s;
 		// update computed values
 		update( changed );		
 	}
 	
 	public int getWidth(){
-		return width;
+		return mWidth;
 	}
 	
 	public int getHeight(){
-		return height;
+		return mHeight;
 	}
 	
-	// DEBUG: needed?  maybe use ZPL's width and height...?
+	// DEBUG: needed?  maybe use ZPL's mWidth and mHeight...?
 	public int getScaledWidth(){
-		return scaledWidth;
+		return mScaledWidth;
 	}
 	
 	public int getScaledHeight(){
-		return scaledHeight;
+		return mScaledHeight;
 	}
 	
 	public void setSize( int w, int h ) {
-		width = w;
-		height = h;
+		mWidth = w;
+		mHeight = h;
 		update( true );
 	}
 	
 	/**
-	 *  "pads" the viewport by the number of pixels passed.  e.g., setPadding( 100 ) instructs the
-	 *  DetailManager to interpret it's actual viewport offset by 100 pixels in each direction (top, left,
+	 *  "pads" the mViewport by the number of pixels passed.  e.g., setPadding( 100 ) instructs the
+	 *  DetailManager to interpret it's actual mViewport offset by 100 pixels in each direction (top, left,
 	 *  right, bottom), so more tiles will qualify for "visible" status when intersections are calculated.
-	 * @param pixels (int) the number of pixels to pad the viewport by
+	 * @param pixels (int) the number of pixels to pad the mViewport by
 	 */
 	public void setPadding( int pixels ) {
-		padding = pixels;
+		mPadding = pixels;
 		updateComputedViewport();
 	}
 	
 	public void updateViewport( int left, int top, int right, int bottom ) {
-		viewport.set( left, top, right, bottom );
+		mViewport.set( left, top, right, bottom );
 		updateComputedViewport();
 	}
 	
 	private void updateComputedViewport() {
-		computedViewport.set( viewport );
-		computedViewport.top -= padding;
-		computedViewport.left -= padding;
-		computedViewport.bottom += padding;
-		computedViewport.right += padding;
+		mComputedViewport.set( mViewport );
+		mComputedViewport.top -= mPadding;
+		mComputedViewport.left -= mPadding;
+		mComputedViewport.bottom += mPadding;
+		mComputedViewport.right += mPadding;
 	}
 	
 	public Rect getViewport() {
-		return viewport;
+		return mViewport;
 	}
 	
 	public Rect getComputedViewport() {
-		return computedViewport;
+		return mComputedViewport;
 	}
 	
 	private void update( boolean changed ){
 		// has there been a change in tile sets?
 		boolean detailLevelChanged = false;		
 		// if detail level is locked, do not change tile sets
-		if(!detailLevelLocked){			
+		if(!mDetailLevelLocked ){
 			// get the most appropriate detail level for the current mScale
-			DetailLevel matchingLevel = detailLevels.find( getScale() );
+			DetailLevel matchingLevel = mDetailLevels.find( getScale() );
 			// if one is found (if any tile sets are registered)
 			if(matchingLevel != null){
 				// is it the same as the one being used?
-				detailLevelChanged = !matchingLevel.equals( currentDetailLevel );				
+				detailLevelChanged = !matchingLevel.equals( mCurrentDetailLevel );
 				// update current detail level
-				currentDetailLevel = matchingLevel; 
+				mCurrentDetailLevel = matchingLevel;
 			}			
 		}		
 		// update scaled values
-		scaledWidth = (int) ( getWidth() * getScale() );
-		scaledHeight = (int) ( getHeight() * getScale() );
+		mScaledWidth = (int) ( getWidth() * getScale() );
+		mScaledHeight = (int) ( getHeight() * getScale() );
 		// broadcast mScale change
 		if( changed ) {
-			for ( DetailLevelEventListener listener : detailLevelEventListeners ) {
+			for ( DetailLevelEventListener listener : mDetailLevelEventListeners ) {
 				listener.onDetailScaleChanged( getScale() );
 			}			
 		}
 		// if there's a change in detail, update appropriate values
 		if ( detailLevelChanged ) {			
 			// notify all interested parties
-			for ( DetailLevelEventListener listener : detailLevelEventListeners ) {
-				listener.onDetailLevelChanged( currentDetailLevel );
+			for ( DetailLevelEventListener listener : mDetailLevelEventListeners ) {
+				listener.onDetailLevelChanged( mCurrentDetailLevel );
 			}
 		}
 	}
 
 	public void lockDetailLevel(){
-		detailLevelLocked = true;
+		mDetailLevelLocked = true;
 	}
 	
 	public void unlockDetailLevel(){
-		detailLevelLocked = false;
+		mDetailLevelLocked = false;
 	}
 
 	public void addDetailLevelEventListener( DetailLevelEventListener l ) {
-		detailLevelEventListeners.add( l );
+		mDetailLevelEventListeners.add( l );
 	}
 
 	public void removeDetailLevelEventListener( DetailLevelEventListener l ) {
-		detailLevelEventListeners.remove( l );
+		mDetailLevelEventListeners.remove( l );
 	}
 	
 	public void addDetailLevelSetupListener( DetailLevelSetupListener l ) {
-		detailLevelSetupListeners.add( l );
+		mDetailLevelSetupListeners.add( l );
 	}
 
 	public void removeDetailLevelSetupListener( DetailLevelSetupListener l ) {
-		detailLevelSetupListeners.remove( l );
+		mDetailLevelSetupListeners.remove( l );
 	}
 	
 	private void addDetailLevel( DetailLevel detailLevel ) {
-		detailLevels.addDetailLevel( detailLevel );
+		mDetailLevels.addDetailLevel( detailLevel );
 		update( false );
-		for ( DetailLevelSetupListener listener : detailLevelSetupListeners ) {
+		for ( DetailLevelSetupListener listener : mDetailLevelSetupListeners ) {
 			listener.onDetailLevelAdded();
 		}
 	}
@@ -188,31 +188,31 @@ public class DetailLevelManager {
 	}
 	
 	public void resetDetailLevels(){
-		detailLevels.clear();
+		mDetailLevels.clear();
 		update( false );
 	}
 
 	public DetailLevel getCurrentDetailLevel() {
-		return currentDetailLevel;
+		return mCurrentDetailLevel;
 	}
 	
 	public float getCurrentDetailLevelScale(){
-		if(currentDetailLevel != null ) {
-			return currentDetailLevel.getScale();
+		if( mCurrentDetailLevel != null ) {
+			return mCurrentDetailLevel.getScale();
 		}
 		return 1;
 	}
 	
 	public double getHistoricalScale(){
-		return historicalScale;
+		return mHistoricalScale;
 	}
 	
 	public void saveHistoricalScale(){
-		historicalScale = scale;
+		mHistoricalScale = mScale;
 	}
 
 	public TileSetSelector getTileSetSelector() {
-	    return this.detailLevels.getTileSetSelector();
+	    return this.mDetailLevels.getTileSetSelector();
 	}
 
 	/**
@@ -221,7 +221,7 @@ public class DetailLevelManager {
 	 * @param selector
 	 */
 	public void setTileSetSelector(TileSetSelector selector) {
-	    this.detailLevels.setTileSetSelector(selector);
+	    this.mDetailLevels.setTileSetSelector( selector );
 	}
 
 }

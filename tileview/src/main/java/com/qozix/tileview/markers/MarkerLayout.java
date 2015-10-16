@@ -107,8 +107,8 @@ public class MarkerLayout extends TranslationLayout {
         int scaledX = (int) (0.5 + (layoutParams.x * mScale));
         int scaledY = (int) (0.5 + (layoutParams.y * mScale));
         // user child's layout params anchor position if set, otherwise default to anchor position of layout
-        float aX = (layoutParams.anchorX == null) ? anchorX : layoutParams.anchorX;
-        float aY = (layoutParams.anchorY == null) ? anchorY : layoutParams.anchorY;
+        float aX = (layoutParams.anchorX == null) ? mAnchorX : layoutParams.anchorX;
+        float aY = (layoutParams.anchorY == null) ? mAnchorY : layoutParams.anchorY;
         // apply anchor offset to position
         int x = scaledX + (int) (w * aX);
         int y = scaledY + (int) (h * aY);
