@@ -183,7 +183,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   }
 
   private TileCanvasView getCurrentTileGroup() {
-    // get the registered scale for the active detail level
+    // get the registered mScale for the active detail level
     float levelScale = getCurrentDetailLevelScale();
     // if a tile group has already been created and registered...
     if( tileGroups.containsKey( levelScale ) ) {
@@ -194,10 +194,10 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     TileCanvasView tileGroup = new TileCanvasView( getContext() );
     // listener for clean draws
     tileGroup.setTileCanvasDrawListener( this );
-    // scale it to the inverse of the levels scale (so 0.25 levels are shown at 400%)
+    // mScale it to the inverse of the levels mScale (so 0.25 levels are shown at 400%)
     // TODO: use this for inSampleSize in decoder
     tileGroup.setScale( 1 / levelScale );
-    // register it scale (key) for re-use
+    // register it mScale (key) for re-use
     tileGroups.put( levelScale, tileGroup );
     // MATCH_PARENT should work here but doesn't, roll back if reverting to FrameLayout
     // TODO: all children should match parent

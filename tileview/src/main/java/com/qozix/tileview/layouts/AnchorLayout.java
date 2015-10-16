@@ -81,6 +81,7 @@ public class AnchorLayout extends ViewGroup {
 
 	@Override
 	protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+		// TODO: can any of this be moved to onMeasure?
 		int count = getChildCount();
 		for ( int i = 0; i < count; i++ ) {
 			View child = getChildAt( i );

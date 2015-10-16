@@ -18,7 +18,7 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		// multiple references
 		TileView tileView = getTileView();
 		
-		// size of original image at 100% scale
+		// size of original image at 100% mScale
 		tileView.setSize( 2736, 2880 );
 		
 		// detail levels
@@ -43,7 +43,7 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		addPin( 0.75, 0.75 );
 		addPin( 0.50, 0.50 );
 		
-		// scale it down to manageable size
+		// mScale it down to manageable size
 		tileView.setScale( 0.5f );
 		
 		// center the frame

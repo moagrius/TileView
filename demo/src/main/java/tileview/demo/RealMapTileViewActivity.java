@@ -60,8 +60,8 @@ public class RealMapTileViewActivity extends Activity {
     // get metrics for programmatic DP
     DisplayMetrics metrics = getResources().getDisplayMetrics();
 
-    /* TODO: debug
-		// get the default paint and style it.  the same effect could be achieved by passing a custom Paint instnace
+    /*
+    // get the default paint and style it.  the same effect could be achieved by passing a custom Paint instnace
 		Paint paint = tileView.getPathPaint();
 
 		// dress up the path effects and draw it between some points
@@ -78,6 +78,7 @@ public class RealMapTileViewActivity extends Activity {
     );
 		tileView.drawPath( points.subList( 1, 5 ) );
 		*/
+
 
 		// add markers for all the points
 		for (double[] point : points) {

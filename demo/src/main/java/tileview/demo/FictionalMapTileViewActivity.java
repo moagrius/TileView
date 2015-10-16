@@ -15,7 +15,7 @@ public class FictionalMapTileViewActivity extends TileViewActivity {
 		// multiple references
 		TileView tileView = getTileView();
 		
-		// size of original image at 100% scale
+		// size of original image at 100% mScale
 		tileView.setSize( 4015, 4057 );
 		
 		// detail levels
@@ -40,7 +40,7 @@ public class FictionalMapTileViewActivity extends TileViewActivity {
 		// frame the troll
 		frameTo( 3267, 1896 );
 
-		// scale down a little
+		// mScale down a little
 		tileView.setScale( 0.5f );
 				
 	}

@@ -26,11 +26,11 @@ public class TileSetSelectorByRange implements TileSetSelector {
 			return null;
 		}
 
-		// loop through and find a set where this scale fits
+		// loop through and find a set where this mScale fits
 		for ( int index = 0; index < totalSwitches; index++ ) {
 			double thisSwitchPoint = this.switchPoint.get( index );
 
-			// when we exceed the scale we take the previous
+			// when we exceed the mScale we take the previous
 			if ( scale < thisSwitchPoint ) {
 				return levels.get( index );
 			}

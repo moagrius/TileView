@@ -23,9 +23,9 @@ public class TileSetSelectorMinimalUpScale implements TileSetSelector {
 		for ( int i = index; i >= 0; i-- ) {
 			// store the iteration level in the return product for now
 			match = levels.get( i );
-			// if the iteration scale is less than the desired scale...
+			// if the iteration mScale is less than the desired mScale...
 			if ( match.getScale() < scale ) {
-				// and there's a level registered with a larger scale
+				// and there's a level registered with a larger mScale
 				if ( i < index ) {
 					// ... try to get the next largest
 					match = levels.get( i + 1 );
