@@ -17,7 +17,7 @@ import android.view.View;
 
 public class TranslationLayout extends AnchorLayout {
 
-  protected double mScale = 1;
+  protected float mScale = 1;
 
   public TranslationLayout( Context context ) {
     super( context );
@@ -26,10 +26,10 @@ public class TranslationLayout extends AnchorLayout {
   /**
    * Sets the scale (0-1) of the TranslationLayout
    *
-   * @param scale (double) The new value of the ZoomPanLayout mScale
+   * @param scale The new value of the ZoomPanLayout mScale
    */
-  public void setScale( double d ) {
-    mScale = d;
+  public void setScale( float scale ) {
+    mScale = scale;
     requestLayout();
   }
 
@@ -38,7 +38,7 @@ public class TranslationLayout extends AnchorLayout {
    *
    * @return (double) the current mScale of the ZoomPanLayout
    */
-  public double getScale() {
+  public float getScale() {
     return mScale;
   }
 
