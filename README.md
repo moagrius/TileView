@@ -7,13 +7,16 @@ X1.  Better thread management
 1.  Issues
 1.  Allow layer insertion and scaling layer insertion
 X1.  Eliminate downsample paradigm
-1.  Include a sample downsample
+X1.  Include a sample downsample
 X1.  Remove LRU cache dependency
 X1.  Use more framework-provided functionality, like GestureListener
 X1.  End fling (test for change)
 1.  Make most private into protected for extensibility
 1.  Other Issues
     a.  when detail levels change with no downsample, there's a moment when the old one dies before the new one is done.
+1.  Don't use detail manager as intermediary anymore
+1.  BitmapDecoder to TileProvider or Adapter paradigm
+1.  Remove TileSetSelector
 
 #TileView
 

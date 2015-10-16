@@ -106,10 +106,10 @@ public class ZoomPanLayout extends ViewGroup implements
   //------------------------------------------------------------------------------------
 
   /**
-   * Determines whether the ZoomPanLayout should limit it's minimum scale to no less than what
+   * Determines whether the ZoomPanLayout should limit it's minimum mScale to no less than what
    * would be required to fill it's container.
    *
-   * @param shouldScaleToFit True to limit minimum scale, false to allow arbitrary minimum scale.
+   * @param shouldScaleToFit True to limit minimum mScale, false to allow arbitrary minimum mScale.
    */
   public void setShouldScaleToFit( boolean shouldScaleToFit ) {
     mShouldScaleToFit = shouldScaleToFit;
@@ -121,8 +121,8 @@ public class ZoomPanLayout extends ViewGroup implements
    * Note that if shouldScaleToFit is set to true, the minimum value set here will be ignored
    * Default values are 0 and 1.
    *
-   * @param min Minimum scale the ZoomPanLayout should accept.
-   * @param max Maximum scale the ZoomPanLayout should accept.
+   * @param min Minimum mScale the ZoomPanLayout should accept.
+   * @param max Maximum mScale the ZoomPanLayout should accept.
    */
   public void setScaleLimits( float min, float max ) {
     // if mShouldScaleToFit is set, don't allow overwrite
@@ -135,7 +135,7 @@ public class ZoomPanLayout extends ViewGroup implements
 
   /**
    * Sets the size (width and height) of the ZoomPanLayout
-   * as it should be rendered at a scale of 1f (100%).
+   * as it should be rendered at a mScale of 1f (100%).
    *
    * @param width  Width of the underlying image, not the view or viewport.
    * @param height Height of the underlying image, not the view or viewport.
@@ -144,6 +144,7 @@ public class ZoomPanLayout extends ViewGroup implements
     mBaseWidth = width;
     mBaseHeight = height;
     updateScaledDimensions();
+    requestLayout();
   }
 
   /**
@@ -183,9 +184,9 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   /**
-   * Sets the scale (0-1) of the ZoomPanLayout.
+   * Sets the mScale (0-1) of the ZoomPanLayout.
    *
-   * @param scale The new value of the ZoomPanLayout scale.
+   * @param scale The new value of the ZoomPanLayout mScale.
    */
   public void setScale( float scale ) {
     scale = Math.max( scale, mMinScale );
@@ -256,7 +257,7 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   /**
-   * Returns whether the ZoomPanLayout is currently being scale tweened.
+   * Returns whether the ZoomPanLayout is currently being mScale tweened.
    *
    * @return true if the ZoomPanLayout is currently tweening, false otherwise.
    */
@@ -332,7 +333,7 @@ public class ZoomPanLayout extends ViewGroup implements
 
   /**
    * <i>This method is experimental</i>
-   * Scroll and scale to match passed Rect as closely as possible.
+   * Scroll and mScale to match passed Rect as closely as possible.
    * The widget will attempt to frame the Rectangle, so that it's contained
    * within the viewport, if possible.
    *
@@ -349,9 +350,9 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   /**
-   * Set the scale of the ZoomPanLayout while maintaining the current center point
+   * Set the mScale of the ZoomPanLayout while maintaining the current center point
    *
-   * @param scale The new value of the ZoomPanLayout scale.
+   * @param scale The new value of the ZoomPanLayout mScale.
    */
   public void setScaleFromCenter( float scale ) {
     scale = Math.max( scale, mMinScale );
@@ -410,7 +411,9 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
-      child.layout( 0, 0, mScaledWidth, mScaledHeight );
+      if( child.getVisibility() != GONE ) {
+        child.layout( 0, 0, mScaledWidth, mScaledHeight );
+      }
     }
     if( changed ) {
       calculateMinimumScaleToFit();

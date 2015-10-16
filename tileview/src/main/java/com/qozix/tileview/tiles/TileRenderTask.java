@@ -7,19 +7,19 @@ import java.util.LinkedList;
 
 class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 
-	private final WeakReference<TileManager> mTileManagerWeakReference;
+	private final WeakReference<TileCanvasViewGroup> mTileManagerWeakReference;
 
 	// package level access
-	TileRenderTask( TileManager tileManager ) {
+	TileRenderTask( TileCanvasViewGroup tileCanvasViewGroup ) {
 		super();
-		mTileManagerWeakReference = new WeakReference<TileManager>( tileManager );
+		mTileManagerWeakReference = new WeakReference<TileCanvasViewGroup>( tileCanvasViewGroup );
 	}
 	
 	@Override
 	protected void onPreExecute() {
-		final TileManager tileManager = mTileManagerWeakReference.get();
-		if ( tileManager != null ) {
-			tileManager.onRenderTaskPreExecute();
+		final TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
+		if ( tileCanvasViewGroup != null ) {
+			tileCanvasViewGroup.onRenderTaskPreExecute();
 		}		
 	}
 
@@ -35,20 +35,20 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 	@Override
 	protected Void doInBackground( Void... params ) {
 		// have we been stopped or dereffed?
-		TileManager tileManager = mTileManagerWeakReference.get();
+		TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
 		// if not go ahead, but check again in each iteration
-		if ( tileManager != null ) {
+		if ( tileCanvasViewGroup != null ) {
 			// avoid concurrent modification exceptions by duplicating
-			LinkedList<Tile> renderList = tileManager.getRenderList();
+			LinkedList<Tile> renderList = tileCanvasViewGroup.getRenderList();
 			// start rendering, checking each iteration if we need to break out
 			for ( Tile tile : renderList ) {
 				// check again if we've been stopped or gc'ed
-				tileManager = mTileManagerWeakReference.get();
-				if ( tileManager == null ) {
+				tileCanvasViewGroup = mTileManagerWeakReference.get();
+				if ( tileCanvasViewGroup == null ) {
 					return null;
 				}
 				// quit if we've been forcibly stopped
-				if ( tileManager.getRenderIsCancelled() ) {
+				if ( tileCanvasViewGroup.getRenderIsCancelled() ) {
 					return null;
 				}
 				// quit if task has been cancelled or replaced
@@ -56,7 +56,7 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 					return null;
 				}
 				// once the bitmap is decoded, the heavy lift is done
-				tileManager.decodeIndividualTile( tile );
+				tileCanvasViewGroup.decodeIndividualTile( tile );
 				// pass it to the UI thread for insertion into the view tree
 				publishProgress( tile );
 			}
@@ -68,11 +68,11 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 	@Override
 	protected void onProgressUpdate( Tile... params ) {
 		// have we been stopped or dereffed?
-		TileManager tileManager = mTileManagerWeakReference.get();
+		TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
 		// if not go ahead but check other cancel states
-		if ( tileManager != null ) {
+		if ( tileCanvasViewGroup != null ) {
 			// quit if it's been force-stopped
-			if ( tileManager.getRenderIsCancelled() ) {
+			if ( tileCanvasViewGroup.getRenderIsCancelled() ) {
 				return;
 			}
 			// quit if it's been stopped or replaced by a new task
@@ -82,7 +82,7 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 			// tile should already have bitmap decoded
 			Tile tile = params[0];
 			// add the bitmap to it's view, add the view to the current detail level layout
-			tileManager.renderIndividualTile( tile );
+			tileCanvasViewGroup.renderIndividualTile( tile );
 		}
 		
 	}
@@ -90,20 +90,20 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 	@Override
 	protected void onPostExecute( Void param ) {
 		// have we been stopped or dereffed?
-		TileManager tileManager = mTileManagerWeakReference.get();
+		TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
 		// if not go ahead but check other cancel states
-		if ( tileManager != null ) {
-			tileManager.onRenderTaskPostExecute();
+		if ( tileCanvasViewGroup != null ) {
+			tileCanvasViewGroup.onRenderTaskPostExecute();
 		}
 	}
 
 	@Override
 	protected void onCancelled() {
 		// have we been stopped or dereffed?
-		TileManager tileManager = mTileManagerWeakReference.get();
+		TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
 		// if not go ahead but check other cancel states
-		if ( tileManager != null ) {
-			tileManager.onRenderTaskCancelled();
+		if ( tileCanvasViewGroup != null ) {
+			tileCanvasViewGroup.onRenderTaskCancelled();
 		}
 	}
 

@@ -17,7 +17,7 @@ public class LargeImageTileViewActivity extends TileViewActivity {
 		// by disabling transitions, we won't see a flicker of background color when moving between tile sets
 		tileView.setTransitionsEnabled( false );
 		
-		// size of original image at 100% scale
+		// size of original image at 100% mScale
 		tileView.setSize( 2835, 4289 );
 		
 		// detail levels
@@ -26,7 +26,7 @@ public class LargeImageTileViewActivity extends TileViewActivity {
 		tileView.addDetailLevel( 0.250f, "tiles/painting/250/%1_%2.jpg");
 		tileView.addDetailLevel( 0.125f, "tiles/painting/125/%1_%2.jpg");
 		
-		// set scale to 0, but keep scaleToFit true, so it'll be as small as possible but still match the container
+		// set mScale to 0, but keep scaleToFit true, so it'll be as small as possible but still match the container
 		tileView.setScale( 0 );
 		
 		// let's use 0-1 positioning...

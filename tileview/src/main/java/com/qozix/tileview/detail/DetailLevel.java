@@ -17,35 +17,31 @@ public class DetailLevel implements Comparable<DetailLevel> {
 
 	private Object mData;
 
-	private DetailManager mDetailManager;
+	private DetailLevelManager mDetailLevelManager;
 	private Rect mViewport = new Rect();
 
-	public DetailLevel( DetailManager detailManager, float scale, Object data, int tileWidth, int tileHeight ) {
-		mDetailManager = detailManager;
+	public DetailLevel( DetailLevelManager detailLevelManager, float scale, Object data, int tileWidth, int tileHeight ) {
+		mDetailLevelManager = detailLevelManager;
 		mScale = scale;
 		mData = data;
 		mTileWidth = tileWidth;
 		mTileHeight = tileHeight;
 	}
 	
-	public DetailLevel( DetailManager detailManager, float scale, Object data ) {
-		this( detailManager, scale, data, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE );
+	public DetailLevel( DetailLevelManager detailLevelManager, float scale, Object data ) {
+		this( detailLevelManager, scale, data, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE );
 	}
-
-  public boolean isTileInViewport( Tile tile ) {
-    return mViewport.contains( tile.getOutputRect() );
-  }
 
 	public LinkedList<Tile> getIntersections() {
 		
 		double relativeScale = getRelativeScale();
 		
-		int drawableWidth = (int) ( mDetailManager.getWidth() * getScale() * relativeScale );
-		int drawableHeight = (int) ( mDetailManager.getHeight() * getScale() * relativeScale );
+		int drawableWidth = (int) ( mDetailLevelManager.getWidth() * getScale() * relativeScale );
+		int drawableHeight = (int) ( mDetailLevelManager.getHeight() * getScale() * relativeScale );
 		double offsetWidth = ( mTileWidth * relativeScale );
 		double offsetHeight = ( mTileHeight * relativeScale );
 
-		mViewport.set( mDetailManager.getComputedViewport() );
+		mViewport.set( mDetailLevelManager.getComputedViewport() );
 		
 		mViewport.top = Math.max( mViewport.top, 0 );
 		mViewport.left = Math.max( mViewport.left, 0 );
@@ -75,7 +71,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
 	}
 	
 	public float getRelativeScale(){
-		return mDetailManager.getScale() / mScale;
+		return mDetailLevelManager.getScale() / mScale;
 	}
 	
 	public int getTileWidth() {
@@ -113,7 +109,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
   // TODO: huh
 	@Override
 	public String toString(){
-		String value = "scale=" + mScale;
+		String value = "mScale=" + mScale;
 		if(mData != null){
 			value = value + ", data=" + mData;
 		}

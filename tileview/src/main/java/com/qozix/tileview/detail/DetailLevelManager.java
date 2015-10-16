@@ -7,7 +7,7 @@ import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
 
 import java.util.HashSet;
 
-public class DetailManager {
+public class DetailLevelManager {
 
 	private static final float PRECISION = 6;
 	private static final double DECIMAL = Math.pow( 10, PRECISION );
@@ -31,14 +31,13 @@ public class DetailManager {
 	private int padding = 0;
 	private Rect viewport = new Rect();
 	private Rect computedViewport = new Rect();
-	
-	private DetailLevelPatternParser detailLevelPatternParser = new DetailLevelPatternParserDefault();
+
 
 	private static float getAtPrecision( float s ) {
 		return (float) (Math.round( s * DECIMAL ) / DECIMAL);
 	}
 
-	public DetailManager(){
+	public DetailLevelManager(){
 		update( true );
 	}
 
@@ -113,20 +112,12 @@ public class DetailManager {
 		return computedViewport;
 	}
 	
-	public DetailLevelPatternParser getDetailLevelPatternParser() {
-		return detailLevelPatternParser;
-	}
-	
-	public void setDetailLevelPatternParser( DetailLevelPatternParser parser ) {
-		detailLevelPatternParser = parser;
-	}
-	
 	private void update( boolean changed ){
 		// has there been a change in tile sets?
 		boolean detailLevelChanged = false;		
 		// if detail level is locked, do not change tile sets
 		if(!detailLevelLocked){			
-			// get the most appropriate detail level for the current scale
+			// get the most appropriate detail level for the current mScale
 			DetailLevel matchingLevel = detailLevels.find( getScale() );
 			// if one is found (if any tile sets are registered)
 			if(matchingLevel != null){
@@ -139,7 +130,7 @@ public class DetailManager {
 		// update scaled values
 		scaledWidth = (int) ( getWidth() * getScale() );
 		scaledHeight = (int) ( getHeight() * getScale() );
-		// broadcast scale change
+		// broadcast mScale change
 		if( changed ) {
 			for ( DetailLevelEventListener listener : detailLevelEventListeners ) {
 				listener.onDetailScaleChanged( getScale() );
@@ -149,7 +140,7 @@ public class DetailManager {
 		if ( detailLevelChanged ) {			
 			// notify all interested parties
 			for ( DetailLevelEventListener listener : detailLevelEventListeners ) {
-				listener.onDetailLevelChanged();
+				listener.onDetailLevelChanged( currentDetailLevel );
 			}
 		}
 	}

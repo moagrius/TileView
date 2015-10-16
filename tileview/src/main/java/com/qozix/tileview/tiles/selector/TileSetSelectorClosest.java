@@ -25,7 +25,7 @@ public class TileSetSelectorClosest implements TileSetSelector {
 				continue;
 			}
 
-			// calculate the diff from current level to requested scale
+			// calculate the diff from current level to requested mScale
 			final double diffToCurrent = Math.abs( scale - thisLevel.getScale() );
 			if ( diffToCurrent < diffToMatch ) {
 				match = thisLevel;
