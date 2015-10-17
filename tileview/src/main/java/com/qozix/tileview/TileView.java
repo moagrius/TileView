@@ -16,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.qozix.tileview.detail.DetailLevel;
-import com.qozix.tileview.detail.DetailLevelEventListener;
 import com.qozix.tileview.detail.DetailLevelManager;
 import com.qozix.tileview.geom.PositionManager;
 import com.qozix.tileview.graphics.BitmapDecoder;
@@ -34,8 +33,6 @@ import com.qozix.tileview.paths.CompositePathView;
 import com.qozix.tileview.paths.DrawablePath;
 import com.qozix.tileview.paths.PathHelper;
 import com.qozix.tileview.tiles.TileCanvasViewGroup;
-import com.qozix.tileview.tiles.selector.TileSetSelector;
-import com.qozix.tileview.tiles.selector.TileSetSelectorMinimalUpScale;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -72,7 +69,9 @@ import java.util.List;
 public class TileView extends ZoomPanLayout implements
   ZoomPanLayout.ZoomPanListener,
   TileCanvasViewGroup.TileRenderListener,
-  DetailLevelEventListener {
+  DetailLevelManager.DetailLevelChangeListener {
+
+  private static final int DEFAULT_TILE_SIZE = 256;
 
   private DetailLevelManager mDetailLevelManager = new DetailLevelManager();
   private PositionManager positionManager = new PositionManager();
@@ -122,7 +121,7 @@ public class TileView extends ZoomPanLayout implements
     mCalloutLayout = new CalloutLayout( context );
     addView( mCalloutLayout );
 
-    mDetailLevelManager.addDetailLevelEventListener( this );
+    mDetailLevelManager.setDetailLevelChangeListener( this );
     mTileCanvasViewGroup.setTileRenderListener( this );
     addZoomPanListener( this );
 
@@ -208,25 +207,6 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
-   * Get the {@link TileSetSelector} implementation currently used to select tile sets.
-   *
-   * @return TileSetSelector implementation currently in use.
-   */
-  public TileSetSelector getTileSetSelector() {
-    return mDetailLevelManager.getTileSetSelector();
-  }
-
-  /**
-   * Set the tile selection method, defaults to {@link TileSetSelectorMinimalUpScale}
-   * Implement the {@link TileSetSelector} interface to customize how tile sets are selected.
-   *
-   * @param selector (TileSetSelector) implementation that handles tile set selection as mScale is changed.
-   */
-  public void setTileSetSelector( TileSetSelector selector ) {
-    mDetailLevelManager.setTileSetSelector( selector );
-  }
-
-  /**
    * Defines whether tile bitmaps should be rendered using an AlphaAnimation
    *
    * @param enabled (boolean) true if the TileView should render tiles with fade transitions
@@ -273,22 +253,11 @@ public class TileView extends ZoomPanLayout implements
    * Each tile set to be used must be registered using this method,
    * and at least one tile set must be registered for the TileView to render any tiles.
    *
-   * @param detailScale (float) mScale at which the TileView should use the tiles in this set.
-   */
-  public void addDetailLevel( float detailScale ) {
-    mDetailLevelManager.addDetailLevel( detailScale, null );
-  }
-
-  /**
-   * Register a tile set to be used for a particular detail level.
-   * Each tile set to be used must be registered using this method,
-   * and at least one tile set must be registered for the TileView to render any tiles.
-   *
    * @param detailScale Scale at which the TileView should use the tiles in this set.
    * @param data        An arbitrary object of any type that is passed to the (Adapter|Decoder) for each tile on this level.
    */
   public void addDetailLevel( float detailScale, Object data ) {
-    mDetailLevelManager.addDetailLevel( detailScale, data );
+    addDetailLevel( detailScale, data, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE );
   }
 
   /**
@@ -301,7 +270,6 @@ public class TileView extends ZoomPanLayout implements
    * @param tileWidth   (int) size of each tiled column
    * @param tileHeight  (int) size of each tiled row
    */
-  // TODO: one signature in detailManager, multiple sigs in TileView just rerout.  int to Integer for null
   public void addDetailLevel( float detailScale, Object data, int tileWidth, int tileHeight ) {
     mDetailLevelManager.addDetailLevel( detailScale, data, tileWidth, tileHeight );
   }
@@ -339,7 +307,7 @@ public class TileView extends ZoomPanLayout implements
    * @param padding (int) the number of pixels to pad the viewport by
    */
   public void setViewportPadding( int padding ) {
-    mDetailLevelManager.setPadding( padding );
+    mDetailLevelManager.setViewportPadding( padding );
   }
 
   //------------------------------------------------------------------------------------
@@ -943,18 +911,13 @@ public class TileView extends ZoomPanLayout implements
   }
   // end ZoomPanListener
 
-  // start DetailLevelListener
+  // start DetailLevelChangeListener
   @Override
   public void onDetailLevelChanged( DetailLevel detailLevel ) {
     requestRender();
     mTileCanvasViewGroup.updateTileSet( detailLevel );
   }
-
-  @Override
-  public void onDetailScaleChanged( float scale ) {
-
-  }
-  // end DetailLevelListener
+  // end DetailLevelChangeListener
 
   // start OnDoubleTapListener
   @Override

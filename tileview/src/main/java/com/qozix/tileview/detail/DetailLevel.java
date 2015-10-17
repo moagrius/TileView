@@ -1,6 +1,7 @@
 package com.qozix.tileview.detail;
 
 import android.graphics.Rect;
+import android.support.annotation.NonNull;
 
 import com.qozix.tileview.tiles.Tile;
 
@@ -8,112 +9,94 @@ import java.util.LinkedList;
 
 public class DetailLevel implements Comparable<DetailLevel> {
 
-	private static final int DEFAULT_TILE_SIZE = 256;
+  private float mScale;
+  private Object mData;
+  private int mTileWidth;
+  private int mTileHeight;
 
-	private float mScale;
-	
-	private int mTileWidth = DEFAULT_TILE_SIZE;
-	private int mTileHeight = DEFAULT_TILE_SIZE;
+  private DetailLevelManager mDetailLevelManager;
+  private Rect mViewport = new Rect();
 
-	private Object mData;
+  public DetailLevel( DetailLevelManager detailLevelManager, float scale, Object data, int tileWidth, int tileHeight ) {
+    mDetailLevelManager = detailLevelManager;
+    mScale = scale;
+    mData = data;
+    mTileWidth = tileWidth;
+    mTileHeight = tileHeight;
+  }
 
-	private DetailLevelManager mDetailLevelManager;
-	private Rect mViewport = new Rect();
+  public LinkedList<Tile> calculateIntersections() {
 
-	public DetailLevel( DetailLevelManager detailLevelManager, float scale, Object data, int tileWidth, int tileHeight ) {
-		mDetailLevelManager = detailLevelManager;
-		mScale = scale;
-		mData = data;
-		mTileWidth = tileWidth;
-		mTileHeight = tileHeight;
-	}
-	
-	public DetailLevel( DetailLevelManager detailLevelManager, float scale, Object data ) {
-		this( detailLevelManager, scale, data, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE );
-	}
+    double relativeScale = getRelativeScale();
 
-	public LinkedList<Tile> getIntersections() {
-		
-		double relativeScale = getRelativeScale();
-		
-		int drawableWidth = (int) ( mDetailLevelManager.getWidth() * getScale() * relativeScale );
-		int drawableHeight = (int) ( mDetailLevelManager.getHeight() * getScale() * relativeScale );
-		double offsetWidth = ( mTileWidth * relativeScale );
-		double offsetHeight = ( mTileHeight * relativeScale );
+    int drawableWidth = mDetailLevelManager.getScaledWidth();
+    int drawableHeight = mDetailLevelManager.getScaledHeight();
+    double offsetWidth = mTileWidth * relativeScale;
+    double offsetHeight = mTileHeight * relativeScale;
 
-		mViewport.set( mDetailLevelManager.getComputedViewport() );
-		
-		mViewport.top = Math.max( mViewport.top, 0 );
-		mViewport.left = Math.max( mViewport.left, 0 );
-		mViewport.right = Math.min( mViewport.right, drawableWidth );
-		mViewport.bottom = Math.min( mViewport.bottom, drawableHeight );
+    mViewport.set( mDetailLevelManager.getComputedViewport() );
 
-		int startingRow = (int) Math.floor( mViewport.top / offsetHeight );
-		int endingRow = (int) Math.ceil( mViewport.bottom / offsetHeight );
-		int startingColumn = (int) Math.floor( mViewport.left / offsetWidth );
-		int endingColumn = (int) Math.ceil( mViewport.right / offsetWidth );
+    mViewport.top = Math.max( mViewport.top, 0 );
+    mViewport.left = Math.max( mViewport.left, 0 );
+    mViewport.right = Math.min( mViewport.right, drawableWidth );
+    mViewport.bottom = Math.min( mViewport.bottom, drawableHeight );
 
-		LinkedList<Tile> intersections = new LinkedList<Tile>();
+    int startingRow = (int) Math.floor( mViewport.top / offsetHeight );
+    int endingRow = (int) Math.ceil( mViewport.bottom / offsetHeight );
+    int startingColumn = (int) Math.floor( mViewport.left / offsetWidth );
+    int endingColumn = (int) Math.ceil( mViewport.right / offsetWidth );
 
-		for ( int iterationRow = startingRow; iterationRow < endingRow; iterationRow++ ) {
-			for ( int iterationColumn = startingColumn; iterationColumn < endingColumn; iterationColumn++ ) {
-				Tile tile = new Tile( iterationColumn, iterationRow, mTileWidth, mTileHeight, mData, this );
-				intersections.add( tile );
-			}
-		}
-		
-		return intersections;
-		
-	}
+    LinkedList<Tile> intersections = new LinkedList<Tile>();
 
-	public float getScale(){
-		return mScale;
-	}
-	
-	public float getRelativeScale(){
-		return mDetailLevelManager.getScale() / mScale;
-	}
-	
-	public int getTileWidth() {
-		return mTileWidth;
-	}
+    for( int iterationRow = startingRow; iterationRow < endingRow; iterationRow++ ) {
+      for( int iterationColumn = startingColumn; iterationColumn < endingColumn; iterationColumn++ ) {
+        Tile tile = new Tile( iterationColumn, iterationRow, mTileWidth, mTileHeight, mData, this );
+        intersections.add( tile );
+      }
+    }
 
-	public int getTileHeight() {
-		return mTileHeight;
-	}
+    return intersections;
 
-	public Object getData(){
-		return mData;
-	}
+  }
 
-	@Override
-	public int compareTo( DetailLevel o ) {
-		return (int) Math.signum( getScale() - o.getScale() );
-	}
+  public float getScale() {
+    return mScale;
+  }
 
-	@Override
-	public boolean equals( Object o ) {
-		if ( o instanceof DetailLevel) {
-			DetailLevel zl = (DetailLevel) o;
-			return ( zl.getScale() == getScale() );
-		}
-		return false;
-	}
+  public float getRelativeScale() {
+    return mDetailLevelManager.getScale() / mScale;
+  }
 
-	@Override
-	public int hashCode() {
-		long bits = ( Double.doubleToLongBits( getScale() ) * 43 );
-		return ( ( (int) bits ) ^ ( (int) ( bits >> 32 ) ) );
-	}
+  public int getTileWidth() {
+    return mTileWidth;
+  }
 
-  // TODO: huh
-	@Override
-	public String toString(){
-		String value = "mScale=" + mScale;
-		if(mData != null){
-			value = value + ", data=" + mData;
-		}
-		return value;
-	}
-	
+  public int getTileHeight() {
+    return mTileHeight;
+  }
+
+  public Object getData() {
+    return mData;
+  }
+
+  @Override
+  public int compareTo( @NonNull DetailLevel detailLevel ) {
+    return (int) Math.signum( getScale() - detailLevel.getScale() );
+  }
+
+  @Override
+  public boolean equals( Object object ) {
+    if( object instanceof DetailLevel ) {
+      DetailLevel detailLevel = (DetailLevel) object;
+      return (getScale() == detailLevel.getScale());
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    long bits = (Double.doubleToLongBits( getScale() ) * 43);
+    return (((int) bits) ^ ((int) (bits >> 32)));
+  }
+
 }

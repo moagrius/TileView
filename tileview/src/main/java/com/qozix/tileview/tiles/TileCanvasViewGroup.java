@@ -232,7 +232,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   private void beginRenderTask() {
     Log.d( "Tiles", "TileManager.beginRenderTask" );
     // find all matching tiles
-    LinkedList<Tile> intersections = detailLevelToRender.getIntersections();
+    LinkedList<Tile> intersections = detailLevelToRender.calculateIntersections();
     // if it's the same list, don't bother
     if( scheduledToRender.equals( intersections ) ) {
       return;
