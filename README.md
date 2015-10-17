@@ -17,6 +17,7 @@ X1.  End fling (test for change)
 1.  Don't use detail manager as intermediary anymore
 1.  BitmapDecoder to TileProvider or Adapter paradigm
 1.  Remove TileSetSelector
+1.  consider generics in the arbitrary data Object for detail levels
 
 #TileView
 

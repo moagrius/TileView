@@ -3,7 +3,7 @@ package com.qozix.tileview.tiles;
 import android.os.AsyncTask;
 
 import java.lang.ref.WeakReference;
-import java.util.LinkedList;
+import java.util.HashSet;
 
 class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 
@@ -39,7 +39,7 @@ class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 		// if not go ahead, but check again in each iteration
 		if ( tileCanvasViewGroup != null ) {
 			// avoid concurrent modification exceptions by duplicating
-			LinkedList<Tile> renderList = tileCanvasViewGroup.getRenderList();
+			HashSet<Tile> renderList = tileCanvasViewGroup.getRenderList();
 			// start rendering, checking each iteration if we need to break out
 			for ( Tile tile : renderList ) {
 				// check again if we've been stopped or gc'ed

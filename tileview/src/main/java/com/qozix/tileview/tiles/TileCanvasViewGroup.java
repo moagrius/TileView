@@ -16,7 +16,7 @@ import com.qozix.tileview.graphics.BitmapDecoderAssets;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.HashSet;
 
 public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.TileCanvasDrawListener {
 
@@ -25,8 +25,8 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   private static final int TRANSITION_DURATION = 200;
 
-  private LinkedList<Tile> scheduledToRender = new LinkedList<Tile>();
-  private LinkedList<Tile> alreadyRendered = new LinkedList<Tile>();
+  private HashSet<Tile> scheduledToRender;  // instantiate in constructor to synchronize on instance
+  private HashSet<Tile> alreadyRendered = new HashSet<Tile>();
 
   private BitmapDecoder decoder = new BitmapDecoderAssets();
   private HashMap<Float, TileCanvasView> tileGroups = new HashMap<Float, TileCanvasView>();
@@ -56,6 +56,9 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   public TileCanvasViewGroup( Context context ) {
     super( context );
     setWillNotDraw( false );
+    synchronized( this ){
+      scheduledToRender = new HashSet<Tile>();
+    }
     handler = new TileRenderHandler( this );
   }
 
@@ -229,16 +232,23 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     beginRenderTask();
   }
 
+  private DetailLevel.StateSnapshot lastDetailLevelStateSnapshot;
+
+
+
   private void beginRenderTask() {
     Log.d( "Tiles", "TileManager.beginRenderTask" );
-    // find all matching tiles
-    LinkedList<Tile> intersections = detailLevelToRender.calculateIntersections();
-    // if it's the same list, don't bother
-    if( scheduledToRender.equals( intersections ) ) {
+    // TODO: is this foolproof?
+    // if we're in the same state, don't bother
+    DetailLevel.StateSnapshot currentDetailLevelStateSnapshot = detailLevelToRender.computeState();
+    if( currentDetailLevelStateSnapshot != null && currentDetailLevelStateSnapshot.equals( lastDetailLevelStateSnapshot )){
+      Log.d( "Tiles", "same state, quit.  " + currentDetailLevelStateSnapshot + " vs " + lastDetailLevelStateSnapshot );
       return;
     }
+    Log.d( "Tiles", "different state, continue" );
+    lastDetailLevelStateSnapshot = currentDetailLevelStateSnapshot;
     // if we made it here, then replace the old list with the new list
-    scheduledToRender = intersections;
+    scheduledToRender = detailLevelToRender.calculateIntersections();;
     // cancel task if it's already running
     if( lastRunRenderTask != null ) {
       if( lastRunRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
@@ -252,7 +262,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   private void cleanup() {
     // start with all rendered tiles...
-    LinkedList<Tile> condemned = new LinkedList<Tile>( alreadyRendered );
+    HashSet<Tile> condemned = new HashSet<Tile>( alreadyRendered );
     // now remove all those that were just qualified
     condemned.removeAll( scheduledToRender );
     // for whatever's left, destroy
@@ -309,8 +319,8 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     }
   }
 
-  LinkedList<Tile> getRenderList() {
-    return (LinkedList<Tile>) scheduledToRender.clone();
+  HashSet<Tile> getRenderList() {
+    return (HashSet<Tile>) scheduledToRender.clone();
   }
 
   // package level access so it can be invoked by the render task

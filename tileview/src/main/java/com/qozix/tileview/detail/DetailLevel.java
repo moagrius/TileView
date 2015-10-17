@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 
 import com.qozix.tileview.tiles.Tile;
 
-import java.util.LinkedList;
+import java.util.HashSet;
 
 public class DetailLevel implements Comparable<DetailLevel> {
 
@@ -17,6 +17,8 @@ public class DetailLevel implements Comparable<DetailLevel> {
   private DetailLevelManager mDetailLevelManager;
   private Rect mViewport = new Rect();
 
+  private StateSnapshot mLastStateSnapshot;
+
   public DetailLevel( DetailLevelManager detailLevelManager, float scale, Object data, int tileWidth, int tileHeight ) {
     mDetailLevelManager = detailLevelManager;
     mScale = scale;
@@ -25,7 +27,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
     mTileHeight = tileHeight;
   }
 
-  public LinkedList<Tile> calculateIntersections() {
+  public StateSnapshot computeState(){  // TODO: maybe re-compute state?
 
     double relativeScale = getRelativeScale();
 
@@ -41,22 +43,40 @@ public class DetailLevel implements Comparable<DetailLevel> {
     mViewport.right = Math.min( mViewport.right, drawableWidth );
     mViewport.bottom = Math.min( mViewport.bottom, drawableHeight );
 
-    int startingRow = (int) Math.floor( mViewport.top / offsetHeight );
-    int endingRow = (int) Math.ceil( mViewport.bottom / offsetHeight );
-    int startingColumn = (int) Math.floor( mViewport.left / offsetWidth );
-    int endingColumn = (int) Math.ceil( mViewport.right / offsetWidth );
+    int startRow = (int) Math.floor( mViewport.top / offsetHeight );
+    int endRow = (int) Math.ceil( mViewport.bottom / offsetHeight );
+    int startColumn = (int) Math.floor( mViewport.left / offsetWidth );
+    int endColumn = (int) Math.ceil( mViewport.right / offsetWidth );
 
-    LinkedList<Tile> intersections = new LinkedList<Tile>();
+    mLastStateSnapshot = new StateSnapshot( this, startRow, endRow, startColumn, endColumn );
 
-    for( int iterationRow = startingRow; iterationRow < endingRow; iterationRow++ ) {
-      for( int iterationColumn = startingColumn; iterationColumn < endingColumn; iterationColumn++ ) {
-        Tile tile = new Tile( iterationColumn, iterationRow, mTileWidth, mTileHeight, mData, this );
+    return mLastStateSnapshot;
+
+  }
+
+  public HashSet<Tile> calculateIntersections() {
+
+    // must call computeState prior
+
+    HashSet<Tile> intersections;
+    // TODO: this?
+    synchronized( this ){
+      intersections = new HashSet<Tile>();
+    }
+
+    for( int currentRow = mLastStateSnapshot.startRow; currentRow < mLastStateSnapshot.endRow; currentRow++ ) {
+      for( int currentColumn = mLastStateSnapshot.startColumn; currentColumn < mLastStateSnapshot.endColumn; currentColumn++ ) {
+        Tile tile = new Tile( currentColumn, currentRow, mTileWidth, mTileHeight, mData, this );
         intersections.add( tile );
       }
     }
 
     return intersections;
 
+  }
+
+  public StateSnapshot getLastStateSnapshot(){
+    return mLastStateSnapshot;
   }
 
   public float getScale() {
@@ -79,6 +99,10 @@ public class DetailLevel implements Comparable<DetailLevel> {
     return mData;
   }
 
+  public Rect getViewport(){
+    return mViewport;
+  }
+
   @Override
   public int compareTo( @NonNull DetailLevel detailLevel ) {
     return (int) Math.signum( getScale() - detailLevel.getScale() );
@@ -86,6 +110,9 @@ public class DetailLevel implements Comparable<DetailLevel> {
 
   @Override
   public boolean equals( Object object ) {
+    if( this == object ) {
+      return true;
+    }
     if( object instanceof DetailLevel ) {
       DetailLevel detailLevel = (DetailLevel) object;
       return (getScale() == detailLevel.getScale());
@@ -98,5 +125,40 @@ public class DetailLevel implements Comparable<DetailLevel> {
     long bits = (Double.doubleToLongBits( getScale() ) * 43);
     return (((int) bits) ^ ((int) (bits >> 32)));
   }
+
+  public static class StateSnapshot {
+    public int startRow;
+    public int endRow;
+    public int startColumn;
+    public int endColumn;
+    public DetailLevel detailLevel;
+    public StateSnapshot( DetailLevel dl, int sr, int er, int sc, int ec ) {
+      detailLevel = dl;
+      startRow = sr;
+      endRow = er;
+      startColumn = sc;
+      endColumn = ec;
+    }
+    public boolean equals( Object o ) {
+      if( o == this ) {
+        return true;
+      }
+      if( o instanceof StateSnapshot ) {
+        StateSnapshot stateSnapshot = (StateSnapshot) o;
+        return detailLevel.equals( stateSnapshot.detailLevel )
+          && startRow == stateSnapshot.startRow
+          && startColumn == stateSnapshot.startColumn
+          && endRow == stateSnapshot.endRow
+          && endColumn == stateSnapshot.endColumn;
+      }
+      return false;
+    }
+    public String toString(){
+      return startRow + ", " + endRow + ", " + startColumn + ", " + endColumn;
+    }
+    // TODO: maybe need to add DetailLevel instance to this?
+  }
+
+
 
 }
