@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.qozix.tileview.TileView;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.graphics.BitmapProviderAssets;
@@ -25,38 +24,38 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   private static final int TRANSITION_DURATION = 200;
 
-  private LinkedList<Tile> scheduledToRender = new LinkedList<Tile>();
-  private LinkedList<Tile> alreadyRendered = new LinkedList<Tile>();
+  private LinkedList<Tile> mScheduledToRender = new LinkedList<Tile>();
+  private LinkedList<Tile> mAlreadyRendered = new LinkedList<Tile>();
 
-  private BitmapProvider decoder = new BitmapProviderAssets();
-  private HashMap<Float, TileCanvasView> tileGroups = new HashMap<Float, TileCanvasView>();
+  private BitmapProvider mBitmapProvider = new BitmapProviderAssets();
+  private HashMap<Float, TileCanvasView> mTileCanvasViewHashMap = new HashMap<Float, TileCanvasView>();
 
-  private TileRenderTask lastRunRenderTask;
+  private TileRenderTask mLastRunTileRenderTask;
 
-  private DetailLevel detailLevelToRender;
-  private DetailLevel lastRenderedDetailLevel;
-  private TileCanvasView currentTileGroup;
+  private DetailLevel mDetailLevelToRender;
+  private DetailLevel mLastRenderedDetailLevel;
+  private TileCanvasView mCurrentTileCanvasView;
 
-  private boolean renderIsCancelled = false;
-  private boolean renderIsSuppressed = false;
-  private boolean isRendering = false;
+  private boolean mRenderIsCancelled = false;
+  private boolean mRenderIsSuppressed = false;
+  private boolean mIsRendering = false;
 
-  private boolean transitionsEnabled = true;
-  private int transitionDuration = TRANSITION_DURATION;
+  private boolean mTransitionsEnabled = true;
 
-  private TileRenderHandler handler;
-  private TileRenderListener renderListener;
+  private int mTransitionDuration = TRANSITION_DURATION;
+
+  private TileRenderHandler mTileRenderHandler;
+  private TileRenderListener mTileRenderListener;
 
   private float mScale = 1;
+
   private int mBaseWidth;
   private int mBaseHeight;
-
-
 
   public TileCanvasViewGroup( Context context ) {
     super( context );
     setWillNotDraw( false );
-    handler = new TileRenderHandler( this );
+    mTileRenderHandler = new TileRenderHandler( this );
   }
 
   public float getScale() {
@@ -65,7 +64,6 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   public void setScale( float scale ) {
     mScale = scale;
-    Log.d( "Tiles", "TCVG.setScale=" + scale + ", gw=" + getWidth() );
     invalidate();
   }
 
@@ -79,85 +77,93 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mBaseWidth, mBaseHeight );
+        child.layout( 0, 0, mBaseWidth, mBaseHeight );  // TODO: r-l,b-t
       }
     }
   }
 
+  public boolean getTransitionsEnabled(){
+    return mTransitionsEnabled;
+  }
+
   public void setTransitionsEnabled( boolean enabled ) {
-    transitionsEnabled = enabled;
+    mTransitionsEnabled = enabled;
+  }
+
+  public int getTransitionDuration() {
+    return mTransitionDuration;
   }
 
   public void setTransitionDuration( int duration ) {
-    transitionDuration = duration;
+    mTransitionDuration = duration;
   }
 
-  public void setDecoder( BitmapProvider d ) {
-    decoder = d;
+  public void setBitmapProvider( BitmapProvider d ) {
+    mBitmapProvider = d;
   }
 
   public void setTileRenderListener( TileRenderListener listener ) {
-    renderListener = listener;
+    mTileRenderListener = listener;
   }
 
   public void requestRender() {
     // if we're requesting it, we must really want one
-    renderIsCancelled = false;
-    renderIsSuppressed = false;
+    mRenderIsCancelled = false;
+    mRenderIsSuppressed = false;
     // if there's no data about the current detail level, don't bother
-    if( detailLevelToRender == null ) {
+    if( mDetailLevelToRender == null ) {
       return;
     }
     // throttle requests
-    if( !handler.hasMessages( RENDER_FLAG ) ) {
+    if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {
       // give it enough buffer that (generally) successive calls will be captured
-      handler.sendEmptyMessageDelayed( RENDER_FLAG, RENDER_BUFFER );
+      mTileRenderHandler.sendEmptyMessageDelayed( RENDER_FLAG, RENDER_BUFFER );
     }
   }
 
   public void cancelRender() {
     // hard cancel - further render tasks won't start, and we'll attempt to interrupt the currently executing task
-    renderIsCancelled = true;
+    mRenderIsCancelled = true;
     // if the currently executing task isn't null...
-    if( lastRunRenderTask != null ) {
+    if( mLastRunTileRenderTask != null ) {
       // ... and it's in a cancellable state
-      if( lastRunRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
+      if( mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
         // ... then squash it
-        lastRunRenderTask.cancel( true );
+        mLastRunTileRenderTask.cancel( true );
       }
     }
     // give it to gc
-    lastRunRenderTask = null;
+    mLastRunTileRenderTask = null;
   }
 
   public void suppressRender() {
     // this will prevent new tasks from starting, but won't actually cancel the currently executing task
-    renderIsSuppressed = true;
+    mRenderIsSuppressed = true;
   }
 
   public void updateTileSet( DetailLevel detailLevel ) {
     // grab reference to this detail level, so we can get it's tile set for comparison to viewport
-    detailLevelToRender = detailLevel;
+    mDetailLevelToRender = detailLevel;
     // fast-fail if it's null
-    if( detailLevelToRender == null ) {
+    if( mDetailLevelToRender == null ) {
       return;
     }
     // fast-fail if there's no change (same tile set)
-    if( detailLevelToRender.equals( lastRenderedDetailLevel ) ) {
+    if( mDetailLevelToRender.equals( mLastRenderedDetailLevel ) ) {
       return;
     }
     // we made it this far, cache the new level to test for changes on next invocation
-    lastRenderedDetailLevel = detailLevelToRender;
+    mLastRenderedDetailLevel = mDetailLevelToRender;
     // fetch appropriate child
-    currentTileGroup = getCurrentTileGroup();
+    mCurrentTileCanvasView = getCurrentTileCanvasView();
     // show it
-    currentTileGroup.setVisibility( View.VISIBLE );
+    mCurrentTileCanvasView.setVisibility( View.VISIBLE );
     // bring it to top of stack
-    currentTileGroup.bringToFront();
+    mCurrentTileCanvasView.bringToFront();
   }
 
   public boolean getIsRendering() {
-    return isRendering;
+    return mIsRendering;
   }
 
   public void clear() {
@@ -165,48 +171,33 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     suppressRender();
     cancelRender();
     // destroy all tiles
-    for( Tile m : scheduledToRender ) {
+    for( Tile m : mScheduledToRender ) {
       m.destroy();
     }
-    scheduledToRender.clear();
-    for( Tile m : alreadyRendered ) {
+    mScheduledToRender.clear();
+    for( Tile m : mAlreadyRendered ) {
       m.destroy();
     }
-    alreadyRendered.clear();
+    mAlreadyRendered.clear();
   }
 
   private float getCurrentDetailLevelScale(){
-    if( detailLevelToRender != null ) {
-      return detailLevelToRender.getScale();
+    if( mDetailLevelToRender != null ) {
+      return mDetailLevelToRender.getScale();
     }
     return 1;
   }
 
-  private TileCanvasView getCurrentTileGroup() {
-    // get the registered mScale for the active detail level
+  private TileCanvasView getCurrentTileCanvasView() {
     float levelScale = getCurrentDetailLevelScale();
-    // if a tile group has already been created and registered...
-    if( tileGroups.containsKey( levelScale ) ) {
-      // ... we're done.  return cached level.
-      return tileGroups.get( levelScale );
+    if( mTileCanvasViewHashMap.containsKey( levelScale ) ) {
+      return mTileCanvasViewHashMap.get( levelScale );
     }
-    // otherwise create one
     TileCanvasView tileGroup = new TileCanvasView( getContext() );
-    // listener for clean draws
     tileGroup.setTileCanvasDrawListener( this );
-    // mScale it to the inverse of the levels mScale (so 0.25 levels are shown at 400%)
-    // TODO: use this for inSampleSize in decoder
     tileGroup.setScale( 1 / levelScale );
-    // register it mScale (key) for re-use
-    tileGroups.put( levelScale, tileGroup );
-    // MATCH_PARENT should work here but doesn't, roll back if reverting to FrameLayout
-    // TODO: all children should match parent
-    // TODO: debug
-    TileView tileView = (TileView) getParent();
-    Log.d( "Tiles", "tv.gbw=" + tileView.getBaseWidth() + ", gmw=" + getMeasuredWidth() + ", gw=" + getWidth() + ", lp.width=" + getLayoutParams().width );
-    //addView( tileGroup, new FixedLayout.LayoutParams( tileView.getBaseWidth(), tileView.getBaseHeight() ) );
+    mTileCanvasViewHashMap.put( levelScale, tileGroup );
     addView( tileGroup );
-    // send it off
     return tileGroup;
   }
 
@@ -214,15 +205,15 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   void renderTiles() {
     Log.d( "Tiles", "TileManager.renderTiles" );
     // has it been canceled since it was requested?
-    if( renderIsCancelled ) {
+    if( mRenderIsCancelled ) {
       return;
     }
     // can we keep rending existing tasks, but not start new ones?
-    if( renderIsSuppressed ) {  // TODO: makes this naming scheme clearer
+    if( mRenderIsSuppressed ) {  // TODO: makes this naming scheme clearer
       return;
     }
     // fast-fail if there's no available data
-    if( detailLevelToRender == null ) {
+    if( mDetailLevelToRender == null ) {
       return;
     }
     // getBitmap and render the bitmaps asynchronously
@@ -230,34 +221,34 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   }
 
   private void beginRenderTask() {
-    boolean changed = detailLevelToRender.computeCurrentState();
+    boolean changed = mDetailLevelToRender.computeCurrentState();
     if( !changed ){
       return;
     }
-    scheduledToRender = detailLevelToRender.getVisibleTilesFromLastViewportComputation();
-    if( lastRunRenderTask != null && lastRunRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
-      lastRunRenderTask.cancel( true );
+    mScheduledToRender = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
+    if( mLastRunTileRenderTask != null && mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
+      mLastRunTileRenderTask.cancel( true );
     }
-    lastRunRenderTask = new TileRenderTask( this );
-    lastRunRenderTask.executeOnExecutor( AsyncTask.THREAD_POOL_EXECUTOR );
+    mLastRunTileRenderTask = new TileRenderTask( this );
+    mLastRunTileRenderTask.executeOnExecutor( AsyncTask.THREAD_POOL_EXECUTOR );
   }
 
   private void cleanup() {
     // start with all rendered tiles...
-    LinkedList<Tile> condemned = new LinkedList<Tile>( alreadyRendered );
+    LinkedList<Tile> condemned = new LinkedList<Tile>( mAlreadyRendered );
     // now remove all those that were just qualified
-    condemned.removeAll( scheduledToRender );
+    condemned.removeAll( mScheduledToRender );
     // for whatever's left, destroy
     Log.d( "Tiles", "about to destroy " + condemned.size() + " tiles." );
     for( Tile m : condemned ) {
       m.destroy();
     }
-    currentTileGroup.invalidate();
+    mCurrentTileCanvasView.invalidate();
     //  and remove from list of rendered tiles
-    alreadyRendered.removeAll( condemned );
+    mAlreadyRendered.removeAll( condemned );
     // hide all other groups
-    for( TileCanvasView tileGroup : tileGroups.values() ) {
-      if( currentTileGroup != tileGroup ) {
+    for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
+      if( mCurrentTileCanvasView != tileGroup ) {
         tileGroup.setVisibility( View.GONE );
         tileGroup.clearTiles();
       }
@@ -272,67 +263,69 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   void onRenderTaskPreExecute() {
     // set a flag that we're working
-    isRendering = true;
+    mIsRendering = true;
     // notify anybody interested
-    if( renderListener != null ) {
-      renderListener.onRenderStart();
+    if( mTileRenderListener != null ) {
+      mTileRenderListener.onRenderStart();
     }
   }
 
   void onRenderTaskCancelled() {
-    if( renderListener != null ) {
-      renderListener.onRenderCancelled();
+    if( mTileRenderListener != null ) {
+      mTileRenderListener.onRenderCancelled();
     }
-    isRendering = false;
+    mIsRendering = false;
   }
 
   void onRenderTaskPostExecute() {
     // set flag that we're done
-    isRendering = false;
+    mIsRendering = false;
     // everything's been rendered, so if we don't have to wait for transitions, clean up now
-    if( !transitionsEnabled ) {
+    if( !mTransitionsEnabled ) {
       cleanup();
     }
     // recurse - request another round of render - if the same intersections are discovered, recursion will end anyways
     requestRender();
     // notify anybody interested
-    if( renderListener != null ) {
-      renderListener.onRenderComplete();
+    if( mTileRenderListener != null ) {
+      mTileRenderListener.onRenderComplete();
     }
   }
 
   LinkedList<Tile> getRenderList() {
-    return (LinkedList<Tile>) scheduledToRender.clone();
+    return (LinkedList<Tile>) mScheduledToRender.clone();
   }
 
   // package level access so it can be invoked by the render task
   void decodeIndividualTile( Tile m ) {
-    m.decode( getContext(), decoder );
+    m.decode( getContext(), mBitmapProvider );
   }
 
   // package level access so it can be invoked by the render task
   void renderIndividualTile( Tile tile ) {
     // if it's already rendered, quit now
-    if( alreadyRendered.contains( tile ) ) {
+    if( mAlreadyRendered.contains( tile ) ) {
       return;
     }
     // do we animate?
-    tile.setTransitionsEnabled( transitionsEnabled );
+    tile.setTransitionsEnabled( mTransitionsEnabled );
+    // set duration in either case, they may be enabled later
+    tile.setDuration( mTransitionDuration );
     // stamp no matter what, transitions might be enabled later
     tile.stampTime();
     // add it to the list of those rendered
-    alreadyRendered.add( tile );
+    mAlreadyRendered.add( tile );
     // add it to the appropriate set (which is already scaled)
-    currentTileGroup.addTile( tile );
+    mCurrentTileCanvasView.addTile( tile );
   }
 
   boolean getRenderIsCancelled() {
-    return renderIsCancelled;
+    return mRenderIsCancelled;
   }
 
   @Override
   public void onCleanDrawComplete( TileCanvasView tileCanvasView ) {
-    if( transitionsEnabled && tileCanvasView == currentTileGroup ) {
+    if( mTransitionsEnabled && tileCanvasView == mCurrentTileCanvasView ) {
       cleanup();
       Log.d( "Tiles", "current group is done rendering including transitions, do cleanup" );
     }

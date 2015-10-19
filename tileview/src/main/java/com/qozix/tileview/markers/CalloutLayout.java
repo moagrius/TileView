@@ -12,7 +12,7 @@ public class CalloutLayout extends MarkerLayout {
   @Override
   public boolean onTouchEvent( MotionEvent event ) {
     removeAllViews();
-    return false;
+    return super.onTouchEvent( event );
   }
 
 }

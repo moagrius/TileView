@@ -5,11 +5,9 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.Point;
 import android.view.View;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 
 public class CompositePathView extends View {
 
@@ -20,6 +18,11 @@ public class CompositePathView extends View {
 
   private boolean mShouldDraw = true;
 
+  private Path mRecyclerPath = new Path();
+  private Matrix mMatrix = new Matrix();
+
+  private HashSet<DrawablePath> mDrawablePaths = new HashSet<DrawablePath>();
+
   private Paint mDefaultPaint = new Paint();
 
   {
@@ -28,12 +31,6 @@ public class CompositePathView extends View {
     mDefaultPaint.setStrokeWidth( DEFAULT_STROKE_WIDTH );
     mDefaultPaint.setAntiAlias( true );
   }
-
-
-  private Path mRecyclerPath = new Path();
-  private Matrix mMatrix = new Matrix();
-
-  private ArrayList<DrawablePath> mDrawablePaths = new ArrayList<DrawablePath>();
 
   public CompositePathView( Context context ) {
     super( context );
@@ -49,48 +46,18 @@ public class CompositePathView extends View {
     invalidate();
   }
 
-  public Paint getPaint() {
+  public Paint getDefaultPaint() {
     return mDefaultPaint;
   }
 
-  // TODO: huh?
-  public Path getPathFromPoints( List<Point> points ) {
-    Path path = new Path();
-    Point start = points.get( 0 );
-    path.moveTo( (float) start.x, (float) start.y );
-    int l = points.size();
-    for( int i = 1; i < l; i++ ) {
-      Point point = points.get( i );
-      path.lineTo( (float) point.x, (float) point.y );
-    }
-    return path;
-  }
-
-  public DrawablePath addPath( List<Point> points ) {
-    return addPath( points, mDefaultPaint );
-  }
-
-  public DrawablePath addPath( List<Point> points, Paint paint ) {
-    Path path = new Path();
-    Point start = points.get( 0 );
-    path.moveTo( (float) start.x, (float) start.y );
-    int l = points.size();
-    for( int i = 1; i < l; i++ ) {
-      Point point = points.get( i );
-      path.lineTo( (float) point.x, (float) point.y );
-    }
-    return addPath( path, paint );
-  }
-
   public DrawablePath addPath( Path path, Paint paint ) {
+    if( paint == null ) {
+      paint = mDefaultPaint;
+    }
     DrawablePath DrawablePath = new DrawablePath();
     DrawablePath.path = path;
     DrawablePath.paint = paint;
     return addPath( DrawablePath );
-  }
-
-  public DrawablePath addPath( Path path ) {
-    return addPath( path, mDefaultPaint );
   }
 
   public DrawablePath addPath( DrawablePath DrawablePath ) {
@@ -109,8 +76,8 @@ public class CompositePathView extends View {
     invalidate();
   }
 
-  public void setShouldDraw( boolean should ) {
-    mShouldDraw = should;
+  public void setShouldDraw( boolean shouldDraw ) {
+    mShouldDraw = shouldDraw;
     invalidate();
   }
 
@@ -127,4 +94,17 @@ public class CompositePathView extends View {
     super.onDraw( canvas );
   }
 
+  public static class DrawablePath {
+
+    /**
+     * The path that this drawable will follow.
+     */
+    public Path path;
+
+    /**
+     * The paint to be used for this path.
+     */
+    public Paint paint;
+
+  }
 }

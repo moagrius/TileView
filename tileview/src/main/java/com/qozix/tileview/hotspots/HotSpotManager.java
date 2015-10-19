@@ -1,6 +1,5 @@
 package com.qozix.tileview.hotspots;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -8,7 +7,7 @@ public class HotSpotManager {
 
   private float mScale = 1;
 
-  private HashSet<HotSpot.HotSpotTapListener> mHotSpotTapListeners = new HashSet<HotSpot.HotSpotTapListener>();
+  private HotSpot.HotSpotTapListener mHotSpotTapListener;
   private LinkedList<HotSpot> mHotSpots = new LinkedList<HotSpot>();
 
   public HotSpotManager() {
@@ -30,12 +29,8 @@ public class HotSpotManager {
     mHotSpots.remove( hotSpot );
   }
 
-  public void addHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
-    mHotSpotTapListeners.add( listener );
-  }
-
-  public void removeHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
-    mHotSpotTapListeners.remove( listener );
+  public void setHotSpotTapListener( HotSpot.HotSpotTapListener hotSpotTapListener ) {
+    mHotSpotTapListener = hotSpotTapListener;
   }
 
   public void clear() {
@@ -56,15 +51,14 @@ public class HotSpotManager {
   }
 
   public void processHit( int x, int y ) {
-    // is there a match?
     HotSpot hotSpot = getMatch( x, y );
     if( hotSpot != null ) {
       HotSpot.HotSpotTapListener spotListener = hotSpot.getHotSpotTapListener();
       if( spotListener != null ) {
         spotListener.onHotSpotTap( hotSpot, x, y );
       }
-      for( HotSpot.HotSpotTapListener listener : mHotSpotTapListeners ) {
-        listener.onHotSpotTap( hotSpot, x, y );
+      if( mHotSpotTapListener != null ) {
+        mHotSpotTapListener.onHotSpotTap( hotSpot, x, y );
       }
     }
   }

@@ -4,25 +4,53 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.view.View;
+import android.view.ViewGroup;
 
-import com.qozix.tileview.widgets.TranslationLayout;
-
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
-public class MarkerLayout extends TranslationLayout {
+public class MarkerLayout extends ViewGroup {
 
-  private HashMap<View, Rect> mMarkerMap = new HashMap<View, Rect>();
-  private HashSet<MarkerTapListener> mListeners = new HashSet<MarkerTapListener>();
+  private float mScale = 1;
+
+  private float mAnchorX;
+  private float mAnchorY;
+
+  private HashSet<MarkerTapListener> mMarkerTapListeners = new HashSet<MarkerTapListener>();
 
   public MarkerLayout( Context context ) {
     super( context );
   }
 
-  public View addMarker( View view, int x, int y ) {
-    return addMarker( view, x, y, null, null );
+  /**
+   * Sets the anchor values used by this ViewGroup if it's children do not
+   * have anchor values supplied directly (via individual LayoutParams).
+   *
+   * @param aX x-axis anchor value (offset computed by multiplying this value by the child's width
+   * @param aY y-axis anchor value (offset computed by multiplying this value by the child's height
+   */
+  public void setAnchors( float aX, float aY ) {
+    mAnchorX = aX;
+    mAnchorY = aY;
+    requestLayout();
+  }
+
+  /**
+   * Sets the scale (0-1) of the MarkerLayout
+   *
+   * @param scale The new value of the MarkerLayout scale
+   */
+  public void setScale( float scale ) {
+    mScale = scale;
+    requestLayout();
+  }
+
+  /**
+   * Retrieves the current scale of the MarkerLayout
+   *
+   * @return The current scale of the MarkerLayout
+   */
+  public float getScale() {
+    return mScale;
   }
 
   public View addMarker( View view, int x, int y, Float aX, Float aY ) {
@@ -32,8 +60,6 @@ public class MarkerLayout extends TranslationLayout {
 
   public View addMarker( View view, LayoutParams params ) {
     addView( view, params );
-    mMarkerMap.put( view, new Rect() );
-    requestLayout();
     return view;
   }
 
@@ -47,7 +73,7 @@ public class MarkerLayout extends TranslationLayout {
   }
 
   public void moveMarker( View view, LayoutParams params ) {
-    if( mMarkerMap.containsKey( view ) ) {
+    if( indexOfChild( view ) > -1 ) {
       view.setLayoutParams( params );
       requestLayout();
     }
@@ -55,68 +81,203 @@ public class MarkerLayout extends TranslationLayout {
 
   public void removeMarker( View view ) {
     removeView( view );
-    mMarkerMap.remove( view );
   }
 
-  public void addMarkerEventListener( MarkerTapListener listener ) {
-    mListeners.add( listener );
+  public void addMarketTapListener( MarkerTapListener listener ) {
+    mMarkerTapListeners.add( listener );
   }
 
-  public void removeMarkerEventListener( MarkerTapListener listener ) {
-    mListeners.remove( listener );
+  public void removeMarkerTapListener( MarkerTapListener listener ) {
+    mMarkerTapListeners.remove( listener );
   }
 
   private View getViewFromTap( int x, int y ) {
-    Iterator<Entry<View, Rect>> iterator = mMarkerMap.entrySet().iterator();
-    while( iterator.hasNext() ) {
-      Entry<View, Rect> pairs = iterator.next();
-      Rect rect = pairs.getValue();
-      if( rect.contains( x, y ) ) {
-        return pairs.getKey();
+    for( int i = 0; i < getChildCount(); i++){
+      View child = getChildAt( i );
+      LayoutParams layoutParams = (LayoutParams) child.getLayoutParams();
+      Rect hitRect = layoutParams.getHitRect();
+      if( hitRect.contains( x, y ) ){
+        return child;
       }
     }
     return null;
   }
 
   public void processHit( Point point ) {
-    if( mListeners.isEmpty() ) {
+    if( mMarkerTapListeners.isEmpty() ) {
       return;
     }
     View view = getViewFromTap( point.x, point.y );
     if( view != null ) {
-      for( MarkerTapListener listener : mListeners ) {
+      for( MarkerTapListener listener : mMarkerTapListeners ) {  // TODO: single listener?
         listener.onMarkerTap( view, point.x, point.y );
       }
     }
   }
 
-  // TODO: zindex should be y based, so marker bottoms don't show
   @Override
-  protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    super.onLayout( changed, l, t, r, b );  // TODO: don't run through everything twice
-    for( int i = getChildCount() - 1; i >= 0; i-- ) {
+  protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
+
+    measureChildren( widthMeasureSpec, heightMeasureSpec );
+
+    int currentGreatestWidth = getSuggestedMinimumWidth();
+    int currentGreatestHeight = getSuggestedMinimumHeight();
+
+    for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        LayoutParams layoutParams = (LayoutParams) child.getLayoutParams();
-        // get sizes
-        int w = child.getMeasuredWidth();
-        int h = child.getMeasuredHeight();
+        MarkerLayout.LayoutParams layoutParams = (MarkerLayout.LayoutParams) child.getLayoutParams();
+        // get anchor offsets
+        float widthMultiplier = (layoutParams.anchorX == null) ? mAnchorX : layoutParams.anchorX;
+        float heightMultiplier = (layoutParams.anchorY == null) ? mAnchorY : layoutParams.anchorY;
+        // actual sizes of children
+        int actualWidth = child.getMeasuredWidth();
+        int actualHeight = child.getMeasuredHeight();
+        // offset dimensions by anchor values
+        float widthOffset = actualWidth * widthMultiplier;
+        float heightOffset = actualHeight * heightMultiplier;
         // get offset position
         int scaledX = (int) (0.5 + (layoutParams.x * mScale));
         int scaledY = (int) (0.5 + (layoutParams.y * mScale));
-        // user child's layout params anchor position if set, otherwise default to anchor position of layout
-        float aX = (layoutParams.anchorX == null) ? mAnchorX : layoutParams.anchorX;
-        float aY = (layoutParams.anchorY == null) ? mAnchorY : layoutParams.anchorY;
-        // apply anchor offset to position
-        int x = scaledX + (int) (w * aX);
-        int y = scaledY + (int) (h * aY);
-        // get and set the rect for the child
-        Rect rect = mMarkerMap.get( child );
-        if( rect != null ) {
-          rect.set( x, y, x + w, y + h );
-        }
+        // save computed values
+        layoutParams.mLeft = (int) (scaledX + widthOffset);
+        layoutParams.mTop = (int) (scaledY + heightOffset);
+        layoutParams.mRight = layoutParams.mLeft + actualWidth;
+        layoutParams.mBottom = layoutParams.mTop + actualHeight;
+        // if it's larger, use that
+        currentGreatestWidth = Math.max( currentGreatestWidth, layoutParams.mRight );
+        currentGreatestHeight = Math.max( currentGreatestHeight, layoutParams.mBottom );
       }
     }
+
+    currentGreatestWidth = resolveSize( currentGreatestWidth, widthMeasureSpec );
+    currentGreatestHeight = resolveSize( currentGreatestHeight, heightMeasureSpec );
+
+    setMeasuredDimension( currentGreatestWidth, currentGreatestHeight );
+
+  }
+
+  @Override
+  protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+    for( int i = 0; i < getChildCount(); i++ ) {
+      View child = getChildAt( i );
+      if( child.getVisibility() != GONE ) {
+        LayoutParams layoutParams = (LayoutParams) child.getLayoutParams();
+        child.layout( layoutParams.mLeft, layoutParams.mTop, layoutParams.mRight, layoutParams.mBottom );
+      }
+    }
+
+  }
+
+  @Override
+  protected ViewGroup.LayoutParams generateDefaultLayoutParams() {
+    return new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 0, 0 );
+  }
+
+  @Override
+  protected boolean checkLayoutParams( ViewGroup.LayoutParams layoutParams ) {
+    return layoutParams instanceof LayoutParams;
+  }
+
+  @Override
+  protected ViewGroup.LayoutParams generateLayoutParams( ViewGroup.LayoutParams layoutParams ) {
+    return new LayoutParams( layoutParams );
+  }
+
+  /**
+   * Per-child layout information associated with AnchorLayout.
+   */
+  public static class LayoutParams extends ViewGroup.LayoutParams {
+
+    /**
+     * The absolute left position of the child in pixels.
+     */
+    public int x = 0;
+
+    /**
+     * The absolute right position of the child in pixels.
+     */
+    public int y = 0;
+
+    /**
+     * Float value to determine the child's horizontal offset.
+     * This float is multiplied by the child's width.
+     * If null, the containing AnchorLayout's anchor values will be used.
+     */
+    public Float anchorX = null;
+
+    /**
+     * Float value to determine the child's vertical offset.
+     * This float is multiplied by the child's height.
+     * If null, the containing AnchorLayout's anchor values will be used.
+     */
+    public Float anchorY = null;
+
+    private int mTop;
+    private int mLeft;
+    private int mBottom;
+    private int mRight;
+
+    private Rect getHitRect(){
+      Rect hitRect = new Rect();
+      hitRect.left = mLeft;
+      hitRect.top = mTop;
+      hitRect.right = mRight;
+      hitRect.bottom = mBottom;
+      return hitRect;
+    }
+
+    /**
+     * Copy constructor
+     *
+     * @param source LayoutParams instance to copy properties from.
+     */
+    public LayoutParams( ViewGroup.LayoutParams source ) {
+      super( source );
+    }
+
+    /**
+     * Creates a new set of layout parameters with the specified values.
+     *
+     * @param width  Information about how wide the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param height Information about how tall the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     */
+    public LayoutParams( int width, int height ) {
+      super( width, height );
+    }
+
+    /**
+     * Creates a new set of layout parameters with the specified values.
+     *
+     * @param width  Information about how wide the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param height Information about how tall the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param left   Sets the absolute x value of the view's position in pixels.
+     * @param top    Sets the absolute y value of the view's position in pixels.
+     */
+    public LayoutParams( int width, int height, int left, int top ) {
+      super( width, height );
+      x = left;
+      y = top;
+    }
+
+    /**
+     * Creates a new set of layout parameters with the specified values.
+     *
+     * @param width      Information about how wide the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param height     Information about how tall the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param left       Sets the absolute x value of the view's position in pixels.
+     * @param top        Sets the absolute y value of the view's position in pixels.
+     * @param anchorLeft Sets the relative horizontal offset of the view (multiplied by the view's width).
+     * @param anchorTop  Sets the relative vertical offset of the view (multiplied by the view's height).
+     */
+    public LayoutParams( int width, int height, int left, int top, Float anchorLeft, Float anchorTop ) {
+      super( width, height );
+      x = left;
+      y = top;
+      anchorX = anchorLeft;
+      anchorY = anchorTop;
+    }
+
   }
 
   public interface MarkerTapListener {

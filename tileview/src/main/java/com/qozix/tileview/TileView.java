@@ -21,14 +21,12 @@ import com.qozix.tileview.geom.CoordinateTranslater;
 import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.hotspots.HotSpot;
 import com.qozix.tileview.hotspots.HotSpotManager;
-import com.qozix.tileview.widgets.AnchorLayout;
-import com.qozix.tileview.widgets.ScalingLayout;
-import com.qozix.tileview.widgets.ZoomPanLayout;
 import com.qozix.tileview.markers.CalloutLayout;
 import com.qozix.tileview.markers.MarkerLayout;
 import com.qozix.tileview.paths.CompositePathView;
-import com.qozix.tileview.paths.DrawablePath;
 import com.qozix.tileview.tiles.TileCanvasViewGroup;
+import com.qozix.tileview.widgets.ScalingLayout;
+import com.qozix.tileview.widgets.ZoomPanLayout;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -59,7 +57,7 @@ import java.util.List;
  * tileView.addDetailLevel(0.125f, "tiles/boston-125-%col%_%row%.jpg", 128, 128);
  * tileView.addMarker(someView, 42.35848, -71.063736);
  * tileView.addMarker(anotherView, 42.3665, -71.05224);
- * tileView.addMarkerEventListener(someMarkerEventListener);
+ * tileView.addMarketTapListener(someMarkerEventListener);
  * }</pre>
  */
 public class TileView extends ZoomPanLayout implements
@@ -71,7 +69,7 @@ public class TileView extends ZoomPanLayout implements
 
   private DetailLevelManager mDetailLevelManager = new DetailLevelManager();
   private CoordinateTranslater mCoordinateTranslater = new CoordinateTranslater();
-  private HotSpotManager hotSpotManager = new HotSpotManager();
+  private HotSpotManager mHotSpotManager = new HotSpotManager();
 
   private TileCanvasViewGroup mTileCanvasViewGroup;
   private CompositePathView mCompositePathView;
@@ -107,7 +105,6 @@ public class TileView extends ZoomPanLayout implements
     addView( mScalingLayout );
 
     mMarkerLayout = new MarkerLayout( context );
-    // TODO: listen to markers here?
     addView( mMarkerLayout );
 
     mCalloutLayout = new CalloutLayout( context );
@@ -127,9 +124,8 @@ public class TileView extends ZoomPanLayout implements
   // Layers API
   //------------------------------------------------------------------------------------
 
-  public void addScalingView( View view, int index, int x, int y ) {
-    ScalingLayout.LayoutParams layoutParams = new ScalingLayout.LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y );
-    mScalingLayout.addView( view, index, layoutParams );
+  public void addScalingView( View view, int index ) {
+    mScalingLayout.addView( view, index );
   }
 
 
@@ -193,8 +189,8 @@ public class TileView extends ZoomPanLayout implements
    *
    * @param decoder (BitmapDecoder) A class instance that implements BitmapDecoder, and must define a getBitmap method, which accepts a String file name and a Context object, and returns a Bitmap
    */
-  public void setTileDecoder( BitmapProvider decoder ) {
-    mTileCanvasViewGroup.setDecoder( decoder );
+  public void setBitmapProvider( BitmapProvider decoder ) {
+    mTileCanvasViewGroup.setBitmapProvider( decoder );
   }
 
   /**
@@ -450,8 +446,8 @@ public class TileView extends ZoomPanLayout implements
   public void moveToMarker( View view, boolean animate ) {
     if( mMarkerLayout.indexOfChild( view ) > -1 ) {
       ViewGroup.LayoutParams params = view.getLayoutParams();
-      if( params instanceof AnchorLayout.LayoutParams ) {  // TODO: MarkerLayout.LayoutParams
-        AnchorLayout.LayoutParams anchorLayoutParams = (AnchorLayout.LayoutParams) params;
+      if( params instanceof MarkerLayout.LayoutParams ) {
+        MarkerLayout.LayoutParams anchorLayoutParams = (MarkerLayout.LayoutParams) params;
         int scaledX = (int) (anchorLayoutParams.x * getScale() + 0.5);
         int scaledY = (int) (anchorLayoutParams.y * getScale() + 0.5);
         if( animate ) {
@@ -471,7 +467,7 @@ public class TileView extends ZoomPanLayout implements
    * @param listener Listener to be added to the TileView's list of MarkerEventListeners
    */
   public void addMarkerEventListener( MarkerLayout.MarkerTapListener listener ) {
-    mMarkerLayout.addMarkerEventListener( listener );
+    mMarkerLayout.addMarketTapListener( listener );
   }
 
   /**
@@ -480,7 +476,7 @@ public class TileView extends ZoomPanLayout implements
    * @param listener Listener to be removed From the TileView's list of MarkerEventListeners
    */
   public void removeMarkerEventListener( MarkerLayout.MarkerTapListener listener ) {
-    mMarkerLayout.removeMarkerEventListener( listener );
+    mMarkerLayout.removeMarkerTapListener( listener );
   }
 
   /**
@@ -522,7 +518,7 @@ public class TileView extends ZoomPanLayout implements
    * @return The hotspot created with this method
    */
   public HotSpot addHotSpot( HotSpot hotSpot ) {
-    hotSpotManager.addHotSpot( hotSpot );
+    mHotSpotManager.addHotSpot( hotSpot );
     return hotSpot;
   }
 
@@ -552,7 +548,7 @@ public class TileView extends ZoomPanLayout implements
    * @param hotSpot (HotSpot) the hotspot to remove
    */
   public void removeHotSpot( HotSpot hotSpot ) {
-    hotSpotManager.removeHotSpot( hotSpot );
+    mHotSpotManager.removeHotSpot( hotSpot );
   }
 
   /**
@@ -560,17 +556,8 @@ public class TileView extends ZoomPanLayout implements
    *
    * @param listener (HotSpotTapListener) the listener to be added.
    */
-  public void addHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
-    hotSpotManager.addHotSpotTapListener( listener );
-  }
-
-  /**
-   * Remove a HotSpotEventListener from the TileView's registry.
-   *
-   * @param listener (HotSpotTapListener) the listener to be removed
-   */
-  public void removeHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
-    hotSpotManager.removeHotSpotTapListener( listener );
+  public void setHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
+    mHotSpotManager.setHotSpotTapListener( listener );
   }
 
   //------------------------------------------------------------------------------------
@@ -584,7 +571,7 @@ public class TileView extends ZoomPanLayout implements
    * @param drawablePath (DrawablePath) a DrawablePath instance to be drawn by the TileView
    * @return DrawablePath the DrawablePath instance passed to the TileView
    */
-  public DrawablePath drawPath( DrawablePath drawablePath ) {
+  public CompositePathView.DrawablePath drawPath( CompositePathView.DrawablePath drawablePath ) {
     return mCompositePathView.addPath( drawablePath );
   }
 
@@ -596,7 +583,7 @@ public class TileView extends ZoomPanLayout implements
    * @param paint     the Paint instance that defines the style of the drawn path.
    * @return the DrawablePath instance passed to the TileView
    */
-  public DrawablePath drawPath( List<double[]> positions, Paint paint ) {
+  public CompositePathView.DrawablePath drawPath( List<double[]> positions, Paint paint ) {
     Path path = mCoordinateTranslater.pathFromPositions( positions );
     return mCompositePathView.addPath( path, paint );
   }
@@ -606,7 +593,7 @@ public class TileView extends ZoomPanLayout implements
    *
    * @param drawablePath (DrawablePath) the DrawablePath instance to be removed.
    */
-  public void removePath( DrawablePath drawablePath ) {
+  public void removePath( CompositePathView.DrawablePath drawablePath ) {
     mCompositePathView.removePath( drawablePath );
   }
 
@@ -616,7 +603,7 @@ public class TileView extends ZoomPanLayout implements
    * @return Paint the Paint instance used by default.
    */
   public Paint getPathPaint() {
-    return mCompositePathView.getPaint();
+    return mCompositePathView.getDefaultPaint();
   }
 
   //------------------------------------------------------------------------------------
@@ -709,7 +696,7 @@ public class TileView extends ZoomPanLayout implements
   public void onScaleChanged( float scale, float previous ) {
     super.onScaleChanged( scale, previous );
     mDetailLevelManager.setScale( scale );
-    hotSpotManager.setScale( scale );
+    mHotSpotManager.setScale( scale );
     mTileCanvasViewGroup.setScale( scale );
     mScalingLayout.setScale( scale );
     mCompositePathView.setScale( scale );
@@ -769,7 +756,7 @@ public class TileView extends ZoomPanLayout implements
     int y = (int) (getScrollY() + event.getY());
     Point point = new Point( x, y );
     mMarkerLayout.processHit( point );
-    hotSpotManager.processHit( x, y );
+    mHotSpotManager.processHit( x, y );
     return super.onSingleTapConfirmed( event );
   }
   // end OnDoubleTapListener
@@ -808,7 +795,7 @@ public class TileView extends ZoomPanLayout implements
   }
 
   public HotSpotManager getHotSpotManager() {
-    return hotSpotManager;
+    return mHotSpotManager;
   }
 
   public CompositePathView getCompositePathView() {

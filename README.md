@@ -20,6 +20,7 @@ X1.  End fling (test for change)
 1.  consider generics in the arbitrary data Object for detail levels
 1.  optimize data structures
 1.  optimize tile set comparisons
+1.  set downsample (addView imageView)?
 
 #TileView
 

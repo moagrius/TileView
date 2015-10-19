@@ -45,6 +45,10 @@ public class Tile {
     mDetailLevel = detailLevel;
   }
 
+  public void setDuration( int duration ) {
+    mDuration = duration;
+  }
+
   public void stampTime() {
     renderTimestamp = AnimationUtils.currentAnimationTimeMillis();
   }
@@ -137,7 +141,6 @@ public class Tile {
     if( mParentTileCanvasView != null ) {
       mParentTileCanvasView.removeTile( this );
     }
-    //Log.d( "Tiles", "destroying tile at " + getLeft() + ", " + getTop() );
   }
 
   /**
@@ -160,11 +163,6 @@ public class Tile {
         && (m.getDetailLevel() == getDetailLevel());
     }
     return false;
-  }
-
-  @Override
-  public String toString() {
-    return "(row=" + mRow + ", column=" + mColumn + ", width=" + mWidth + ", height=" + mHeight + ", data=" + mData + ")";
   }
 
 }

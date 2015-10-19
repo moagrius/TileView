@@ -2,7 +2,6 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.util.Log;
 import android.view.View;
 
 import java.util.HashSet;
@@ -13,23 +12,26 @@ import java.util.HashSet;
 public class TileCanvasView extends View {
 
   private float mScale = 1;
+
   private HashSet<Tile> mTiles = new HashSet<Tile>();
+
   private TileCanvasDrawListener mTileCanvasDrawListener;
+
+  private boolean mHasBeenDirtySinceLastCleanDraw;
 
   public TileCanvasView( Context context ) {
     super( context );
   }
 
-  public void addTile(Tile tile){
+  public void addTile( Tile tile ) {
     if( !mTiles.contains( tile ) ) {
       mTiles.add( tile );
       tile.setParentTileCanvasView( this );
       invalidate();
     }
-    //Log.d( "Tiles", "tile count=" + mTiles.size() );
   }
 
-  public void removeTile(Tile tile){
+  public void removeTile( Tile tile ) {
     if( mTiles.contains( tile ) ) {
       mTiles.remove( tile );
       tile.setParentTileCanvasView( null );
@@ -37,7 +39,7 @@ public class TileCanvasView extends View {
     }
   }
 
-  public void clearTiles(){
+  public void clearTiles() {
     HashSet<Tile> condemned = (HashSet<Tile>) mTiles.clone();
     for( Tile tile : condemned ) {
       tile.destroy();
@@ -65,22 +67,20 @@ public class TileCanvasView extends View {
     return dirty;
   }
 
-  private void handleDrawState( boolean dirty ){
-    if(dirty){
-      Log.d( "TileView", "dirty, calling invalidate again" );
+  private void handleDrawState( boolean dirty ) {
+    if( dirty ) {
       invalidate();
       mHasBeenDirtySinceLastCleanDraw = true;
     } else {
-      if( mTileCanvasDrawListener != null ) {
-        if( mHasBeenDirtySinceLastCleanDraw ) {
+      if( mHasBeenDirtySinceLastCleanDraw ) {
+        mHasBeenDirtySinceLastCleanDraw = false;
+        if( mTileCanvasDrawListener != null ) {
           mTileCanvasDrawListener.onCleanDrawComplete( this );
-          mHasBeenDirtySinceLastCleanDraw = false;
         }
       }
     }
   }
 
-  private boolean mHasBeenDirtySinceLastCleanDraw;
 
   @Override
   public void onDraw( Canvas canvas ) {
