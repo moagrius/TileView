@@ -218,7 +218,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
       return;
     }
     // can we keep rending existing tasks, but not start new ones?
-    if( renderIsSuppressed ) {
+    if( renderIsSuppressed ) {  // TODO: makes this naming scheme clearer
       return;
     }
     // fast-fail if there's no available data
