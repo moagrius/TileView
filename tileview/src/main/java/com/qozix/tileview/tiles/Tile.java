@@ -7,7 +7,7 @@ import android.graphics.Paint;
 import android.view.animation.AnimationUtils;
 
 import com.qozix.tileview.detail.DetailLevel;
-import com.qozix.tileview.graphics.BitmapDecoder;
+import com.qozix.tileview.graphics.BitmapProvider;
 
 public class Tile {
 
@@ -125,11 +125,11 @@ public class Tile {
     mParentTileCanvasView = tileCanvasView;
   }
 
-  public void decode( Context context, BitmapDecoder decoder ) {
+  public void decode( Context context, BitmapProvider decoder ) {
     if( hasBitmap() ) {
       return;
     }
-    mBitmap = decoder.decode( this, context );
+    mBitmap = decoder.getBitmap( this, context );
   }
 
   public void destroy() {

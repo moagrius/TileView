@@ -32,9 +32,10 @@ public class DetailLevel implements Comparable<DetailLevel> {
 
   /**
    * Returns true if there has been a change, false otherwise.
+   *
    * @return True if there has been a change, false otherwise.
    */
-  public boolean computeCurrentState(){
+  public boolean computeCurrentState() {
 
     double relativeScale = getRelativeScale();
 
@@ -68,6 +69,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
 
   /**
    * Returns a list of Tile instances desribing the currently visible viewport.
+   *
    * @return List of Tile instances desribing the currently visible viewport.
    */
 
@@ -139,6 +141,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
     public int columnStart;
     public int columnEnd;
     public DetailLevel detailLevel;
+
     public StateSnapshot( DetailLevel level, int startRow, int endRow, int startColumn, int endColumn ) {
       detailLevel = level;
       rowStart = startRow;
@@ -146,6 +149,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
       columnStart = startColumn;
       columnEnd = endColumn;
     }
+
     public boolean equals( Object o ) {
       if( o == this ) {
         return true;
@@ -161,7 +165,6 @@ public class DetailLevel implements Comparable<DetailLevel> {
       return false;
     }
   }
-
 
 
 }

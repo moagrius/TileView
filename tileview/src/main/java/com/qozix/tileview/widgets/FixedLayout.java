@@ -1,4 +1,4 @@
-package com.qozix.tileview.layouts;
+package com.qozix.tileview.widgets;
 
 import android.content.Context;
 import android.view.View;

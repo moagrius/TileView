@@ -11,8 +11,8 @@ import android.view.ViewGroup;
 
 import com.qozix.tileview.TileView;
 import com.qozix.tileview.detail.DetailLevel;
-import com.qozix.tileview.graphics.BitmapDecoder;
-import com.qozix.tileview.graphics.BitmapDecoderAssets;
+import com.qozix.tileview.graphics.BitmapProvider;
+import com.qozix.tileview.graphics.BitmapProviderAssets;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   private LinkedList<Tile> scheduledToRender = new LinkedList<Tile>();
   private LinkedList<Tile> alreadyRendered = new LinkedList<Tile>();
 
-  private BitmapDecoder decoder = new BitmapDecoderAssets();
+  private BitmapProvider decoder = new BitmapProviderAssets();
   private HashMap<Float, TileCanvasView> tileGroups = new HashMap<Float, TileCanvasView>();
 
   private TileRenderTask lastRunRenderTask;
@@ -92,7 +92,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     transitionDuration = duration;
   }
 
-  public void setDecoder( BitmapDecoder d ) {
+  public void setDecoder( BitmapProvider d ) {
     decoder = d;
   }
 
@@ -225,7 +225,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     if( detailLevelToRender == null ) {
       return;
     }
-    // decode and render the bitmaps asynchronously
+    // getBitmap and render the bitmaps asynchronously
     beginRenderTask();
   }
 

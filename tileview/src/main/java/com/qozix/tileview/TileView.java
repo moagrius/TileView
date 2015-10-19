@@ -18,14 +18,13 @@ import android.view.ViewGroup;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelManager;
 import com.qozix.tileview.geom.CoordinateTranslater;
-import com.qozix.tileview.graphics.BitmapDecoder;
-import com.qozix.tileview.graphics.BitmapDecoderHttp;
+import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.hotspots.HotSpot;
 import com.qozix.tileview.hotspots.HotSpotEventListener;
 import com.qozix.tileview.hotspots.HotSpotManager;
-import com.qozix.tileview.layouts.AnchorLayout;
-import com.qozix.tileview.layouts.ScalingLayout;
-import com.qozix.tileview.layouts.ZoomPanLayout;
+import com.qozix.tileview.widgets.AnchorLayout;
+import com.qozix.tileview.widgets.ScalingLayout;
+import com.qozix.tileview.widgets.ZoomPanLayout;
 import com.qozix.tileview.markers.CalloutLayout;
 import com.qozix.tileview.markers.MarkerEventListener;
 import com.qozix.tileview.markers.MarkerLayout;
@@ -190,14 +189,13 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
-   * Sets a custom class to perform the decode operation when tile bitmaps are requested for tile images only.
+   * Sets a custom class to perform the getBitmap operation when tile bitmaps are requested for tile images only.
    * By default, a BitmapDecoder implementation is provided that renders bitmaps from the context's Assets,
    * but alternative implementations could be used that fetch images via HTTP, or from the SD card, or resources, SVG, etc.
-   * {@link BitmapDecoderHttp} is an example of such an implementation.
    *
-   * @param decoder (BitmapDecoder) A class instance that implements BitmapDecoder, and must define a decode method, which accepts a String file name and a Context object, and returns a Bitmap
+   * @param decoder (BitmapDecoder) A class instance that implements BitmapDecoder, and must define a getBitmap method, which accepts a String file name and a Context object, and returns a Bitmap
    */
-  public void setTileDecoder( BitmapDecoder decoder ) {
+  public void setTileDecoder( BitmapProvider decoder ) {
     mTileCanvasViewGroup.setDecoder( decoder );
   }
 

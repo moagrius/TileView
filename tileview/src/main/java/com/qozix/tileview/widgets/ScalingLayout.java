@@ -1,9 +1,9 @@
-package com.qozix.tileview.layouts;
+package com.qozix.tileview.widgets;
 
 import android.content.Context;
 import android.graphics.Canvas;
 
-public class ScalingLayout extends FixedLayout {
+public class ScalingLayout extends FixedLayout {  // TODO: this shouldn't extend FixedLayout
 
 	private float scale = 1;
 

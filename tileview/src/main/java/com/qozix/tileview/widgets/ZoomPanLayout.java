@@ -1,4 +1,4 @@
-package com.qozix.tileview.layouts;
+package com.qozix.tileview.widgets;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
