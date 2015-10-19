@@ -17,7 +17,7 @@ import android.view.ViewGroup;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelManager;
-import com.qozix.tileview.geom.PositionManager;
+import com.qozix.tileview.geom.CoordinateTranslater;
 import com.qozix.tileview.graphics.BitmapDecoder;
 import com.qozix.tileview.graphics.BitmapDecoderHttp;
 import com.qozix.tileview.hotspots.HotSpot;
@@ -31,7 +31,6 @@ import com.qozix.tileview.markers.MarkerEventListener;
 import com.qozix.tileview.markers.MarkerLayout;
 import com.qozix.tileview.paths.CompositePathView;
 import com.qozix.tileview.paths.DrawablePath;
-import com.qozix.tileview.paths.PathHelper;
 import com.qozix.tileview.tiles.TileCanvasViewGroup;
 
 import java.lang.ref.WeakReference;
@@ -56,7 +55,7 @@ import java.util.List;
  * TileView tileView = new TileView(this);
  * tileView.setSize(3000,5000);
  * tileView.addTileViewEventListener(someMapEventListener);
- * tileView.defineRelativeBounds(42.379676, -71.094919, 42.346550, -71.040280);
+ * tileView.defineBounds(42.379676, -71.094919, 42.346550, -71.040280);
  * tileView.addDetailLevel(1.000f, "tiles/boston-1000-%col%_%row%.jpg", 256, 256);
  * tileView.addDetailLevel(0.500f, "tiles/boston-500-%col%_%row%.jpg", 256, 256);
  * tileView.addDetailLevel(0.250f, "tiles/boston-250-%col%_%row%.jpg", 256, 256);
@@ -74,7 +73,7 @@ public class TileView extends ZoomPanLayout implements
   private static final int DEFAULT_TILE_SIZE = 256;
 
   private DetailLevelManager mDetailLevelManager = new DetailLevelManager();
-  private PositionManager positionManager = new PositionManager();
+  private CoordinateTranslater mCoordinateTranslater = new CoordinateTranslater();
   private HotSpotManager hotSpotManager = new HotSpotManager();
 
   private TileCanvasViewGroup mTileCanvasViewGroup;
@@ -83,11 +82,7 @@ public class TileView extends ZoomPanLayout implements
   private MarkerLayout mMarkerLayout;
   private CalloutLayout mCalloutLayout;
 
-
   private RenderThrottleHandler mRenderThrottleHandler;
-
-  private boolean mIsUsingRelativePositioning;
-
 
   /**
    * Constructor to use when creating a TileView from code.
@@ -238,13 +233,9 @@ public class TileView extends ZoomPanLayout implements
    */
   @Override
   public void setSize( int width, int height ) {
-    // super (define clip area)
     super.setSize( width, height );
-    // coordinate with other components  TODO: this?
     mDetailLevelManager.setSize( width, height );
-    // notify manager for relative positioning
-    positionManager.setSize( width, height );
-    // notify tile groups
+    mCoordinateTranslater.setSize( width, height );
     mTileCanvasViewGroup.setSize( width, height );
   }
 
@@ -319,146 +310,75 @@ public class TileView extends ZoomPanLayout implements
    * Any type of coordinate system can be used (any type of lat/lng, percentile-based, etc),
    * and all positioned are calculated relatively.  If relative bounds are defined, position parameters
    * received by TileView methods will be translated to the the appropriate pixel value.
-   * To remove this process, use undefineRelativeBounds
+   * To remove this process, use undefineBounds.
    *
-   * @param left   (double) the left edge of the rectangle used when calculating position
-   * @param top    (double) the top edge of the rectangle used when calculating position
-   * @param right  (double) the right edge of the rectangle used when calculating position
-   * @param bottom (double) the bottom edge of the rectangle used when calculating position
+   * @param left   the left edge of the rectangle used when calculating position.
+   * @param top    the top edge of the rectangle used when calculating position.
+   * @param right  the right edge of the rectangle used when calculating position.
+   * @param bottom the bottom edge of the rectangle used when calculating position.
    */
-  public void defineRelativeBounds( double left, double top, double right, double bottom ) {
-    positionManager.setBounds( left, top, right, bottom );
-    mIsUsingRelativePositioning = true;
+  public void defineBounds( double left, double top, double right, double bottom ) {
+    mCoordinateTranslater.setBounds( left, top, right, bottom );
   }
 
   /**
    * Unregisters arbitrary bounds and coordinate system.  After invoking this method, TileView methods that
    * receive position method parameters will use pixel values, relative to the TileView's registered size (at 1.0d mScale)
    */
-  public void undefineRelativeBounds() {
-    mIsUsingRelativePositioning = false;
-    positionManager.unsetBounds();
-  }
-
-  /**
-   * Translate a relative x and y position into a Point object with x and y values populated as pixel values, relative to the size of the TileView.
-   *
-   * @param x (int) relative x position to be translated to absolute pixel value
-   * @param y (int) relative y position to be translated to absolute pixel value
-   * @return Point a Point object with x and y values calculated from the relative Position x and y values
-   */
-  public Point translate( double x, double y ) {
-    return positionManager.translate( x, y );
-  }
-
-  /**
-   * Translate a List of relative x and y positions (double array... { x, y }
-   * into Point objects with x and y values populated as pixel values, relative to the size of the TileView.
-   *
-   * @param positions (List<double[]>) List of 2-element double arrays to be translated to Points (pixel values).  The first double should represent the relative x value, the second is y
-   * @return List<Point> List of Point objects with x and y values calculated from the corresponding x and y values
-   */
-  public List<Point> translate( List<double[]> positions ) {
-    return positionManager.translate( positions );
-  }
-
-  /**
-   * Divides a number by the current mScale value, effectively flipping scaled values.  This can be useful when
-   * determining a relative position or dimension from a real pixel value.
-   *
-   * @param value (double) The number to be inversely scaled.
-   * @return (double) The inversely scaled product.
-   */
-  public double unscale( double value ) {
-    return value / getScale();
+  public void undefineBounds() {
+    mCoordinateTranslater.unsetBounds();
   }
 
   /**
    * Scrolls (instantly) the TileView to the x and y positions provided.
    *
-   * @param x (double) the relative x position to move to
-   * @param y (double) the relative y position to move to
+   * @param x The relative x position to move to.
+   * @param y The relative y position to move to.
    */
-  public void moveTo( double x, double y ) {
-    Point point = positionManager.translate( x, y, getScale() );
-    scrollTo( point.x, point.y );
-    requestRender();
+  public void scrollTo( double x, double y ) {
+    scrollTo(
+      mCoordinateTranslater.translateAndScaleX( x, getScale() ),
+      mCoordinateTranslater.translateAndScaleY( y, getScale() )
+    );
   }
 
   /**
    * Scrolls (instantly) the TileView to the x and y positions provided, then centers the viewport to the position.
    *
-   * @param x (double) the relative x position to move to
-   * @param y (double) the relative y position to move to
+   * @param x The relative x position to move to.
+   * @param y The relative y position to move to.
    */
-  public void moveToAndCenter( double x, double y ) {
-    Point point = positionManager.translate( x, y, getScale() );
-    scrollToAndCenter( point.x, point.y );
-    requestRender();
+  public void scrollToAndCenter( double x, double y ) {
+    scrollToAndCenter(
+      mCoordinateTranslater.translateAndScaleX( x, getScale() ),
+      mCoordinateTranslater.translateAndScaleY( y, getScale() )
+    );
   }
 
   /**
-   * Scrolls (with animation) the TIelView to the relative x and y positions provided.
+   * Scrolls (with animation) the TileView to the relative x and y positions provided.
    *
-   * @param x (double) the relative x position to move to
-   * @param y (double) the relative y position to move to
+   * @param x The relative x position to move to.
+   * @param y The relative y position to move to.
    */
   public void slideTo( double x, double y ) {
-    Point point = positionManager.translate( x, y, getScale() );
-    slideTo( point.x, point.y );
+    slideTo(
+      mCoordinateTranslater.translateAndScaleX( x, getScale() ),
+      mCoordinateTranslater.translateAndScaleY( y, getScale() )
+    );
   }
 
   /**
    * Scrolls (with animation) the TileView to the x and y positions provided, then centers the viewport to the position.
    *
-   * @param x (double) the relative x position to move to
-   * @param y (double) the relative y position to move to
+   * @param x The relative x position to move to.
+   * @param y The relative y position to move to.
    */
   public void slideToAndCenter( double x, double y ) {
-    Point point = positionManager.translate( x, y, getScale() );
-    slideToAndCenter( point.x, point.y );
-  }
-
-  /**
-   * Scales and moves TileView so that each of the passed points is visible.
-   *
-   * @param points (List<double[]>) List of 2-element double arrays to be translated to Points (pixel values).  The first double should represent the relative x value, the second is y
-   */
-  public void framePoints( List<double[]> points ) {
-
-    double topMost = -Integer.MAX_VALUE;
-    double bottomMost = Integer.MAX_VALUE;
-    double leftMost = Integer.MAX_VALUE;
-    double rightMost = -Integer.MAX_VALUE;
-
-    for( double[] coordinate : points ) {
-      double x = coordinate[0];
-      double y = coordinate[1];
-      if( positionManager.contains( x, y ) ) {
-        topMost = Math.max( topMost, x );
-        bottomMost = Math.min( bottomMost, x );
-        leftMost = Math.min( leftMost, y );
-        rightMost = Math.max( rightMost, y );
-      }
-    }
-
-    Point topRight = translate( topMost, rightMost );
-    Point bottomLeft = translate( bottomMost, leftMost );
-
-    int width = bottomLeft.x - topRight.x;
-    int height = bottomLeft.y - topRight.y;
-
-    float scaleX = Math.abs( getWidth() / width );
-    float scaleY = Math.abs( getHeight() / height );
-
-    float destinationScale = Math.min( scaleX, scaleY );
-
-    double middleX = (rightMost + leftMost) * 0.5f;
-    double middleY = (topMost + bottomMost) * 0.5f;
-
-    moveToAndCenter( middleY, middleX );
-    setScaleFromCenter( destinationScale );
-
+    slideToAndCenter(
+      mCoordinateTranslater.translateAndScaleX( x, getScale() ),
+      mCoordinateTranslater.translateAndScaleY( y, getScale() )
+    );
   }
 
 
@@ -473,8 +393,8 @@ public class TileView extends ZoomPanLayout implements
    * Note that individual markers can be assigned specific anchors - this method applies a default
    * value to all markers added without specifying anchor values.
    *
-   * @param anchorX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-   * @param anchorY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+   * @param anchorX The x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
+   * @param anchorY The y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
    */
   public void setMarkerAnchorPoints( float anchorX, float anchorY ) {
     mMarkerLayout.setAnchors( anchorX, anchorY );
@@ -484,30 +404,20 @@ public class TileView extends ZoomPanLayout implements
    * Add a marker to the the TileView.  The marker can be any View.
    * No LayoutParams are required; the View will be laid out using WRAP_CONTENT for both width and height, and positioned based on the parameters
    *
-   * @param view (View) View instance to be added to the TileView
-   * @param x    (double) relative x position the View instance should be positioned at
-   * @param y    (double) relative y position the View instance should be positioned at
-   * @return (View) the View instance added to the TileView
+   * @param view    View instance to be added to the TileView
+   * @param x       relative x position the View instance should be positioned at
+   * @param y       relative y position the View instance should be positioned at
+   * @param anchorX the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
+   * @param anchorY the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+   * @return  the View instance added to the TileView
    */
-  public View addMarker( View view, double x, double y ) {
-    Point point = positionManager.translate( x, y );
-    return mMarkerLayout.addMarker( view, point.x, point.y );
-  }
-
-  /**
-   * Add a marker to the the TileView.  The marker can be any View.
-   * No LayoutParams are required; the View will be laid out using WRAP_CONTENT for both width and height, and positioned based on the parameters
-   *
-   * @param view    (View) View instance to be added to the TileView
-   * @param x       (double) relative x position the View instance should be positioned at
-   * @param y       (double) relative y position the View instance should be positioned at
-   * @param anchorX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-   * @param anchorY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
-   * @return (View) the View instance added to the TileView
-   */
-  public View addMarker( View view, double x, double y, float anchorX, float anchorY ) {
-    Point point = positionManager.translate( x, y );
-    return mMarkerLayout.addMarker( view, point.x, point.y, anchorX, anchorY );
+  public View addMarker( View view, double x, double y, Float anchorX, Float anchorY ) {
+    return mMarkerLayout.addMarker( view,
+      mCoordinateTranslater.translateX( x ),
+      mCoordinateTranslater.translateY( y ),
+      anchorX,
+      anchorY
+    );
   }
 
   /**
@@ -522,27 +432,17 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Moves an existing marker to another position.
    *
-   * @param view The marker View to be repositioned.
-   * @param x    (double) relative x position the View instance should be positioned at
-   * @param y    (double) relative y position the View instance should be positioned at
-   */
-  public void moveMarker( View view, double x, double y ) {
-    Point point = positionManager.translate( x, y );
-    mMarkerLayout.moveMarker( view, point.x, point.y );
-  }
-
-  /**
-   * Moves an existing marker to another position.
-   *
    * @param view    The marker View to be repositioned.
-   * @param x       (double) relative x position the View instance should be positioned at
-   * @param y       (double) relative y position the View instance should be positioned at
-   * @param anchorX (float) the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-   * @param anchorY (float) the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+   * @param x       relative x position the View instance should be positioned at
+   * @param y       relative y position the View instance should be positioned at
+   * @param anchorX the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
+   * @param anchorY the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
    */
-  public void moveMarker( View view, double x, double y, float anchorX, float anchorY ) {
-    Point point = positionManager.translate( x, y );
-    mMarkerLayout.moveMarker( view, point.x, point.y, anchorX, anchorY );
+  public void moveMarker( View view, double x, double y, Float anchorX, Float anchorY ) {
+    mMarkerLayout.moveMarker( view,
+      mCoordinateTranslater.translateX( x ),
+      mCoordinateTranslater.translateY( y ),
+      anchorX, anchorY );
   }
 
   /**
@@ -554,27 +454,17 @@ public class TileView extends ZoomPanLayout implements
   public void moveToMarker( View view, boolean animate ) {
     if( mMarkerLayout.indexOfChild( view ) > -1 ) {
       ViewGroup.LayoutParams params = view.getLayoutParams();
-      if( params instanceof AnchorLayout.LayoutParams ) {
+      if( params instanceof AnchorLayout.LayoutParams ) {  // TODO: MarkerLayout.LayoutParams
         AnchorLayout.LayoutParams anchorLayoutParams = (AnchorLayout.LayoutParams) params;
-        int scaledX = (int) (anchorLayoutParams.x * getScale());
-        int scaledY = (int) (anchorLayoutParams.y * getScale());
-        Point point = new Point( scaledX, scaledY );
+        int scaledX = (int) (anchorLayoutParams.x * getScale() + 0.5);
+        int scaledY = (int) (anchorLayoutParams.y * getScale() + 0.5);
         if( animate ) {
-          slideToAndCenter( point.x, point.y );
+          slideToAndCenter( scaledX, scaledY );
         } else {
-          scrollToAndCenter( point.x, point.y );
+          scrollToAndCenter( scaledX, scaledY );
         }
       }
     }
-  }
-
-  /**
-   * Scroll the TileView so that the View passed is centered in the viewport
-   *
-   * @param view (View) the View marker that the TileView should center on.
-   */
-  public void moveToMarker( View view ) {
-    moveToMarker( view, false );
   }
 
   /**
@@ -582,7 +472,7 @@ public class TileView extends ZoomPanLayout implements
    * MarkerEventListeners do not consume the touch event, so will not interfere with scrolling.  While the event is
    * dispatched from a Tap event, it's routed though a hit detection API to trigger the listener.
    *
-   * @param listener (MarkerEventListener) listener to be added to the TileView's list of MarkerEventListeners
+   * @param listener Listener to be added to the TileView's list of MarkerEventListeners
    */
   public void addMarkerEventListener( MarkerEventListener listener ) {
     mMarkerLayout.addMarkerEventListener( listener );
@@ -591,7 +481,7 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Removes a MarkerEventListener from the TileView's registry.
    *
-   * @param listener (MarkerEventListener) listener to be removed From the TileView's list of MarkerEventListeners
+   * @param listener Listener to be removed From the TileView's list of MarkerEventListeners
    */
   public void removeMarkerEventListener( MarkerEventListener listener ) {
     mMarkerLayout.removeMarkerEventListener( listener );
@@ -603,54 +493,37 @@ public class TileView extends ZoomPanLayout implements
    * Callout views will always be positioned at the top of the view tree (at the highest z-index), and will always be removed during any touch event
    * that is not consumed by the callout View.
    *
-   * @param view (View) View instance to be added to the TileView's
-   * @param x    (double) relative x position the View instance should be positioned at
-   * @param y    (double) relative y position the View instance should be positioned at
-   * @return (View) the View instance added to the TileView's
+   * @param view    View instance to be added to the TileView's
+   * @param x       relative x position the View instance should be positioned at
+   * @param y       relative y position the View instance should be positioned at
+   * @param anchorX the x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value
+   * @param anchorY the y-axis position of a callout view will be offset by a number equal to the height of the callout view multiplied by this value
+   * @return the View instance added to the TileView's
    */
-  public View addCallout( View view, double x, double y ) {
-    Point point = positionManager.translate( x, y );
-    return mCalloutLayout.addMarker( view, point.x, point.y );
-  }
-
-  /**
-   * Add a callout to the the TileView.  The callout can be any View.
-   * No LayoutParams are required; the View will be laid out using WRAP_CONTENT for both width and height, and positioned based on the parameters
-   * Callout views will always be positioned at the top of the view tree (at the highest z-index), and will always be removed during any touch event
-   * that is not consumed by the callout View.
-   *
-   * @param view    (View) View instance to be added to the TileView's
-   * @param x       (double) relative x position the View instance should be positioned at
-   * @param y       (double) relative y position the View instance should be positioned at
-   * @param anchorX (float) the x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value
-   * @param anchorY (float) the y-axis position of a callout view will be offset by a number equal to the height of the callout view multiplied by this value
-   * @return (View) the View instance added to the TileView's
-   */
-  public View addCallout( View view, double x, double y, float anchorX, float anchorY ) {
-    Point point = positionManager.translate( x, y );
-    return mCalloutLayout.addMarker( view, point.x, point.y, anchorX, anchorY );
+  public View addCallout( View view, double x, double y, Float anchorX, Float anchorY ) {
+    return mCalloutLayout.addMarker( view,
+      mCoordinateTranslater.translateX( x ),
+      mCoordinateTranslater.translateY( y ),
+      anchorX,
+      anchorY
+    );
   }
 
   /**
    * Removes a callout View from the TileView's view tree.
    *
    * @param view The callout View to be removed.
-   * @return (boolean) true if the view was in the view tree and was removed, false if it was not in the view tree
    */
-  public boolean removeCallout( View view ) {
-    if( mCalloutLayout.indexOfChild( view ) > -1 ) {
-      mCalloutLayout.removeView( view );
-      return true;
-    }
-    return false;
+  public void removeCallout( View view ) {
+    mCalloutLayout.removeMarker( view );
   }
 
   /**
    * Register a HotSpot that should fire an listener when a touch event occurs that intersects that rectangle.
    * The HotSpot moves and scales with the TileView.
    *
-   * @param hotSpot (HotSpot) the hotspot that is tested against touch events that occur on the TileView
-   * @return HotSpot the hotspot created with this method
+   * @param hotSpot The hotspot that is tested against touch events that occur on the TileView
+   * @return The hotspot created with this method
    */
   public HotSpot addHotSpot( HotSpot hotSpot ) {
     hotSpotManager.addHotSpot( hotSpot );
@@ -664,10 +537,8 @@ public class TileView extends ZoomPanLayout implements
    * @param positions (List<double[]>) List of paired doubles { x, y } that represents the points that make up the region.
    * @return HotSpot the hotspot created with this method
    */
-  public HotSpot addHotSpot( List<double[]> positions ) {
-    List<Point> points = positionManager.translate( positions );
-    Path path = PathHelper.pathFromPoints( points );
-    path.close();
+  public HotSpot addHotSpot( List<double[]> positions, HotSpotEventListener listener ) {
+    Path path = mCoordinateTranslater.pathFromPositions( positions );
     RectF bounds = new RectF();
     path.computeBounds( bounds, true );
     Rect rect = new Rect();
@@ -675,21 +546,8 @@ public class TileView extends ZoomPanLayout implements
     Region clip = new Region( rect );
     HotSpot hotSpot = new HotSpot();
     hotSpot.setPath( path, clip );
-    return addHotSpot( hotSpot );
-  }
-
-  /**
-   * Register a HotSpot that should fire an listener when a touch event occurs that intersects that rectangle.
-   * The HotSpot moves and scales with the TileView.
-   *
-   * @param positions (List<double[]>) List of paired doubles { x, y } that represents the points that make up the region.
-   * @param listener  (HotSpotEventListener) listener to attach to this hotspot, which will be invoked if a Tap event is fired that intersects the hotspot's Region
-   * @return HotSpot the hotspot created with this method
-   */
-  public HotSpot addHotSpot( List<double[]> positions, HotSpotEventListener listener ) {
-    HotSpot hotSpot = addHotSpot( positions );
     hotSpot.setHotSpotEventListener( listener );
-    return hotSpot;
+    return addHotSpot( hotSpot );
   }
 
   /**
@@ -738,25 +596,13 @@ public class TileView extends ZoomPanLayout implements
    * Register a Path and Paint that will be drawn on a layer above the tiles, but below markers.
    * This Path's will be scaled with the TileView, but will always be as wide as the stroke set for the Paint.
    *
-   * @param positions (List<double[]>) List of doubles { x, y } that represent the points of the Path.
-   * @return DrawablePath the DrawablePath instance passed to the TileView
-   */
-  public DrawablePath drawPath( List<double[]> positions ) {
-    List<Point> points = positionManager.translate( positions );
-    return mCompositePathView.addPath( points );
-  }
-
-  /**
-   * Register a Path and Paint that will be drawn on a layer above the tiles, but below markers.
-   * This Path's will be scaled with the TileView, but will always be as wide as the stroke set for the Paint.
-   *
-   * @param positions (List<double[]>) List of doubles { x, y } that represent the points of the Path.
-   * @param paint     (Paint) the Paint instance that defines the style of the drawn path.
-   * @return DrawablePath the DrawablePath instance passed to the TileView
+   * @param positions List of doubles { x, y } that represent the points of the Path.
+   * @param paint     the Paint instance that defines the style of the drawn path.
+   * @return the DrawablePath instance passed to the TileView
    */
   public DrawablePath drawPath( List<double[]> positions, Paint paint ) {
-    List<Point> points = positionManager.translate( positions );
-    return mCompositePathView.addPath( points, paint );
+    Path path = mCoordinateTranslater.pathFromPositions( positions );
+    return mCompositePathView.addPath( path, paint );
   }
 
   /**
@@ -961,8 +807,8 @@ public class TileView extends ZoomPanLayout implements
     return mDetailLevelManager;
   }
 
-  public PositionManager getPositionManager() {
-    return positionManager;
+  public CoordinateTranslater getCoordinateTranslater() {
+    return mCoordinateTranslater;
   }
 
   public HotSpotManager getHotSpotManager() {

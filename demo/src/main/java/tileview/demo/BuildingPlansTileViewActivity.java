@@ -28,7 +28,7 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		tileView.addDetailLevel( 0.125f, "tiles/plans/125/%1_%2.jpg");
 		
 		// let's use 0-1 positioning...
-		tileView.defineRelativeBounds( 0, 0, 1,  1 );
+		tileView.defineBounds( 0, 0, 1, 1 );
 		
 		// center markers along both axes
 		tileView.setMarkerAnchorPoints( -0.5f, -0.5f );
@@ -54,7 +54,7 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 	private void addPin( double x, double y ) {
 		ImageView imageView = new ImageView( this );
 		imageView.setImageResource( R.drawable.push_pin );
-		getTileView().addMarker( imageView, x, y );
+		getTileView().addMarker( imageView, x, y, null, null );
 	}
 	
 	private MarkerEventListener markerEventListener = new MarkerEventListener() {

@@ -47,7 +47,7 @@ public class TileViewActivity extends Activity {
 		getTileView().post( new Runnable() {
 			@Override
 			public void run() {
-				getTileView().moveToAndCenter( x, y );
+				getTileView().scrollToAndCenter( x, y );
 			}			
 		});		
 	}

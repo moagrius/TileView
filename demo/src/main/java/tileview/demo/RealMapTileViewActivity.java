@@ -50,12 +50,12 @@ public class RealMapTileViewActivity extends Activity {
 		tileView.setMarkerAnchorPoints( -0.5f, -1.0f );
 
 		// provide the corner coordinates for relative positioning
-		tileView.defineRelativeBounds(
-			NORTH_WEST_LONGITUDE,
-			NORTH_WEST_LATITUDE,
-			SOUTH_EAST_LONGITUDE,
-			SOUTH_EAST_LATITUDE
-		);
+		tileView.defineBounds(
+      NORTH_WEST_LONGITUDE,
+      NORTH_WEST_LATITUDE,
+      SOUTH_EAST_LONGITUDE,
+      SOUTH_EAST_LATITUDE
+    );
 
     // get metrics for programmatic DP
     DisplayMetrics metrics = getResources().getDisplayMetrics();
@@ -93,7 +93,7 @@ public class RealMapTileViewActivity extends Activity {
 			// event from being consumed and would not interrupt dragging
 			marker.setOnClickListener( markerClickListener );
 			// add it to the view tree
-			tileView.addMarker( marker, point[0], point[1] );
+			tileView.addMarker( marker, point[0], point[1], null, null );
 		}
 
 		// let's start off framed to the center of all points

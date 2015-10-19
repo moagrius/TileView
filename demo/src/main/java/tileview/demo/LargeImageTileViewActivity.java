@@ -30,7 +30,7 @@ public class LargeImageTileViewActivity extends TileViewActivity {
 		tileView.setScale( 0 );
 		
 		// let's use 0-1 positioning...
-		tileView.defineRelativeBounds( 0, 0, 1,  1 );
+		tileView.defineBounds( 0, 0, 1, 1 );
 		
 		// frame to center
 		frameTo( 0.5, 0.5 );

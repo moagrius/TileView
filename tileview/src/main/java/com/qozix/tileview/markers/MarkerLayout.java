@@ -22,11 +22,10 @@ public class MarkerLayout extends TranslationLayout {
   }
 
   public View addMarker( View view, int x, int y ) {
-    LayoutParams layoutParams = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y );
-    return addMarker( view, layoutParams );
+    return addMarker( view, x, y, null, null );
   }
 
-  public View addMarker( View view, int x, int y, float aX, float aY ) {
+  public View addMarker( View view, int x, int y, Float aX, Float aY ) {
     LayoutParams layoutParams = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y, aX, aY );
     return addMarker( view, layoutParams );
   }
@@ -39,11 +38,10 @@ public class MarkerLayout extends TranslationLayout {
   }
 
   public void moveMarker( View view, int x, int y ) {
-    LayoutParams layoutParams = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y );
-    moveMarker( view, layoutParams );
+    moveMarker( view, x, y, null, null );
   }
 
-  public void moveMarker( View view, int x, int y, float aX, float aY ) {
+  public void moveMarker( View view, int x, int y, Float aX, Float aY ) {
     LayoutParams layoutParams = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y, aX, aY );
     moveMarker( view, layoutParams );
   }

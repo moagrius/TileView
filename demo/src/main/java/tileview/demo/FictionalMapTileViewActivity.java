@@ -48,7 +48,7 @@ public class FictionalMapTileViewActivity extends TileViewActivity {
 	private void placeMarker( int resId, double x, double y ) {
 		ImageView imageView = new ImageView( this );
 		imageView.setImageResource( resId );
-		getTileView().addMarker( imageView, x, y );
+		getTileView().addMarker( imageView, x, y, null, null );
 	}
 	
 }
