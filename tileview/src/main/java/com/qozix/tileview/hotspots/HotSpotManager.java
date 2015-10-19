@@ -1,15 +1,15 @@
 package com.qozix.tileview.hotspots;
 
-import android.graphics.Point;
-
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 public class HotSpotManager {
 
   private float mScale = 1;
 
-  private ArrayList<HotSpotEventListener> mHotSpotEventListeners = new ArrayList<HotSpotEventListener>();
-  private ArrayList<HotSpot> mHotSpots = new ArrayList<HotSpot>();
+  private HashSet<HotSpot.HotSpotTapListener> mHotSpotTapListeners = new HashSet<HotSpot.HotSpotTapListener>();
+  private LinkedList<HotSpot> mHotSpots = new LinkedList<HotSpot>();
 
   public HotSpotManager() {
   }
@@ -30,42 +30,41 @@ public class HotSpotManager {
     mHotSpots.remove( hotSpot );
   }
 
-  public void addHotSpotEventListener( HotSpotEventListener listener ) {
-    mHotSpotEventListeners.add( listener );
+  public void addHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
+    mHotSpotTapListeners.add( listener );
   }
 
-  public void removeHotSpotEventListener( HotSpotEventListener listener ) {
-    mHotSpotEventListeners.remove( listener );
+  public void removeHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
+    mHotSpotTapListeners.remove( listener );
   }
 
   public void clear() {
     mHotSpots.clear();
   }
 
-  // work from end of list - match the last one added (equivalant to z-index)
-  private HotSpot getMatch( Point point ) {
-    Point scaledPoint = new Point();
-    scaledPoint.x = (int) (point.x / mScale);
-    scaledPoint.y = (int) (point.y / mScale);
-    for( int i = mHotSpots.size() - 1; i >= 0; i-- ) {
-      HotSpot hotSpot = mHotSpots.get( i );
-      if( hotSpot.contains( scaledPoint.x, scaledPoint.y ) ) {
+  private HotSpot getMatch( int x, int y ) {
+    int scaledX = (int) (x / mScale + 0.5);
+    int scaledY = (int) (y / mScale + 0.5);
+    Iterator<HotSpot> iterator = mHotSpots.descendingIterator();
+    while(iterator.hasNext()){
+      HotSpot hotSpot = iterator.next();
+      if( hotSpot.contains( scaledX, scaledY ) ) {
         return hotSpot;
       }
     }
     return null;
   }
 
-  public void processHit( Point point ) {  // TODO: no points?
+  public void processHit( int x, int y ) {
     // is there a match?
-    HotSpot hotSpot = getMatch( point );
+    HotSpot hotSpot = getMatch( x, y );
     if( hotSpot != null ) {
-      HotSpotEventListener spotListener = hotSpot.getHotSpotEventListener();
+      HotSpot.HotSpotTapListener spotListener = hotSpot.getHotSpotTapListener();
       if( spotListener != null ) {
-        spotListener.onHotSpotTap( hotSpot, point.x, point.y );
+        spotListener.onHotSpotTap( hotSpot, x, y );
       }
-      for( HotSpotEventListener listener : mHotSpotEventListeners ) {
-        listener.onHotSpotTap( hotSpot, point.x, point.y );
+      for( HotSpot.HotSpotTapListener listener : mHotSpotTapListeners ) {
+        listener.onHotSpotTap( hotSpot, x, y );
       }
     }
   }

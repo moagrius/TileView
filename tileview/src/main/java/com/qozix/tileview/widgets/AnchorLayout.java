@@ -178,12 +178,12 @@ public class AnchorLayout extends ViewGroup {
     /**
      * Creates a new set of layout parameters with the specified values.
      *
-     * @param width   Information about how wide the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
-     * @param height  Information about how tall the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
-     * @param left    Sets the absolute x value of the view's position in pixels.
-     * @param top     Sets the absolute y value of the view's position in pixels.
+     * @param width      Information about how wide the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param height     Information about how tall the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param left       Sets the absolute x value of the view's position in pixels.
+     * @param top        Sets the absolute y value of the view's position in pixels.
      * @param anchorLeft Sets the relative horizontal offset of the view (multiplied by the view's width).
-     * @param anchorTop Sets the relative vertical offset of the view (multiplied by the view's height).
+     * @param anchorTop  Sets the relative vertical offset of the view (multiplied by the view's height).
      */
     public LayoutParams( int width, int height, int left, int top, Float anchorLeft, Float anchorTop ) {
       super( width, height );

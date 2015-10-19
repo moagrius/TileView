@@ -1,29 +1,12 @@
 package com.qozix.tileview.hotspots;
 
-import android.graphics.Rect;
 import android.graphics.Region;
 
 public class HotSpot extends Region {
 	
 	private Object mTag;
-	private HotSpotEventListener mHotSpotEventListener;
-	
-	public HotSpot() {
-		super();
-	}
+	private HotSpotTapListener mHotSpotTapListener;
 
-	public HotSpot( int left, int top, int right, int bottom ) {
-		super( left, top, right, bottom );
-	}
-
-	public HotSpot( Rect rect ) {
-		super( rect );
-	}
-
-	public HotSpot( Region region ) {
-		super( region );
-	}
-	
 	public Object getTag(){
 		return mTag;
 	}
@@ -32,12 +15,16 @@ public class HotSpot extends Region {
 		mTag = object;
 	}
 	
-	public void setHotSpotEventListener( HotSpotEventListener hotSpotEventListener ) {
-		mHotSpotEventListener = hotSpotEventListener;
+	public void setHotSpotTapListener( HotSpotTapListener hotSpotTapListener ) {
+		mHotSpotTapListener = hotSpotTapListener;
 	}
 	
-	public HotSpotEventListener getHotSpotEventListener() { 
-		return mHotSpotEventListener;
+	public HotSpotTapListener getHotSpotTapListener() {
+		return mHotSpotTapListener;
+	}
+
+	public interface HotSpotTapListener {
+		void onHotSpotTap( HotSpot hotSpot, int x, int y );
 	}
 	
 }

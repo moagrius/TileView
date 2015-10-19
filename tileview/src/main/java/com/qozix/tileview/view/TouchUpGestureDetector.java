@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 public class TouchUpGestureDetector {
 
   private OnTouchUpListener mOnTouchUpListener;
+
   public TouchUpGestureDetector( OnTouchUpListener listener ) {
     mOnTouchUpListener = listener;
   }
@@ -20,6 +21,7 @@ public class TouchUpGestureDetector {
     }
     return true;
   }
+
   public interface OnTouchUpListener {
     boolean onTouchUp();
   }

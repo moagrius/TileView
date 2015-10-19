@@ -15,7 +15,7 @@ import java.util.Map.Entry;
 public class MarkerLayout extends TranslationLayout {
 
   private HashMap<View, Rect> mMarkerMap = new HashMap<View, Rect>();
-  private HashSet<MarkerEventListener> mListeners = new HashSet<MarkerEventListener>();
+  private HashSet<MarkerTapListener> mListeners = new HashSet<MarkerTapListener>();
 
   public MarkerLayout( Context context ) {
     super( context );
@@ -58,11 +58,11 @@ public class MarkerLayout extends TranslationLayout {
     mMarkerMap.remove( view );
   }
 
-  public void addMarkerEventListener( MarkerEventListener listener ) {
+  public void addMarkerEventListener( MarkerTapListener listener ) {
     mListeners.add( listener );
   }
 
-  public void removeMarkerEventListener( MarkerEventListener listener ) {
+  public void removeMarkerEventListener( MarkerTapListener listener ) {
     mListeners.remove( listener );
   }
 
@@ -84,7 +84,7 @@ public class MarkerLayout extends TranslationLayout {
     }
     View view = getViewFromTap( point.x, point.y );
     if( view != null ) {
-      for( MarkerEventListener listener : mListeners ) {
+      for( MarkerTapListener listener : mListeners ) {
         listener.onMarkerTap( view, point.x, point.y );
       }
     }
@@ -119,4 +119,7 @@ public class MarkerLayout extends TranslationLayout {
     }
   }
 
+  public interface MarkerTapListener {
+    void onMarkerTap( View view, int x, int y );
+  }
 }

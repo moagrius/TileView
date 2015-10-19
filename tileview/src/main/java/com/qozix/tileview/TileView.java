@@ -20,13 +20,11 @@ import com.qozix.tileview.detail.DetailLevelManager;
 import com.qozix.tileview.geom.CoordinateTranslater;
 import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.hotspots.HotSpot;
-import com.qozix.tileview.hotspots.HotSpotEventListener;
 import com.qozix.tileview.hotspots.HotSpotManager;
 import com.qozix.tileview.widgets.AnchorLayout;
 import com.qozix.tileview.widgets.ScalingLayout;
 import com.qozix.tileview.widgets.ZoomPanLayout;
 import com.qozix.tileview.markers.CalloutLayout;
-import com.qozix.tileview.markers.MarkerEventListener;
 import com.qozix.tileview.markers.MarkerLayout;
 import com.qozix.tileview.paths.CompositePathView;
 import com.qozix.tileview.paths.DrawablePath;
@@ -472,7 +470,7 @@ public class TileView extends ZoomPanLayout implements
    *
    * @param listener Listener to be added to the TileView's list of MarkerEventListeners
    */
-  public void addMarkerEventListener( MarkerEventListener listener ) {
+  public void addMarkerEventListener( MarkerLayout.MarkerTapListener listener ) {
     mMarkerLayout.addMarkerEventListener( listener );
   }
 
@@ -481,7 +479,7 @@ public class TileView extends ZoomPanLayout implements
    *
    * @param listener Listener to be removed From the TileView's list of MarkerEventListeners
    */
-  public void removeMarkerEventListener( MarkerEventListener listener ) {
+  public void removeMarkerEventListener( MarkerLayout.MarkerTapListener listener ) {
     mMarkerLayout.removeMarkerEventListener( listener );
   }
 
@@ -535,7 +533,7 @@ public class TileView extends ZoomPanLayout implements
    * @param positions (List<double[]>) List of paired doubles { x, y } that represents the points that make up the region.
    * @return HotSpot the hotspot created with this method
    */
-  public HotSpot addHotSpot( List<double[]> positions, HotSpotEventListener listener ) {
+  public HotSpot addHotSpot( List<double[]> positions, HotSpot.HotSpotTapListener listener ) {
     Path path = mCoordinateTranslater.pathFromPositions( positions );
     RectF bounds = new RectF();
     path.computeBounds( bounds, true );
@@ -544,7 +542,7 @@ public class TileView extends ZoomPanLayout implements
     Region clip = new Region( rect );
     HotSpot hotSpot = new HotSpot();
     hotSpot.setPath( path, clip );
-    hotSpot.setHotSpotEventListener( listener );
+    hotSpot.setHotSpotTapListener( listener );
     return addHotSpot( hotSpot );
   }
 
@@ -560,19 +558,19 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Register a HotSpotEventListener with the TileView.  This listener will fire if any hotspot's region intersects a Tap event.
    *
-   * @param listener (HotSpotEventListener) the listener to be added.
+   * @param listener (HotSpotTapListener) the listener to be added.
    */
-  public void addHotSpotEventListener( HotSpotEventListener listener ) {
-    hotSpotManager.addHotSpotEventListener( listener );
+  public void addHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
+    hotSpotManager.addHotSpotTapListener( listener );
   }
 
   /**
    * Remove a HotSpotEventListener from the TileView's registry.
    *
-   * @param listener (HotSpotEventListener) the listener to be removed
+   * @param listener (HotSpotTapListener) the listener to be removed
    */
-  public void removeHotSpotEventListener( HotSpotEventListener listener ) {
-    hotSpotManager.removeHotSpotEventListener( listener );
+  public void removeHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
+    hotSpotManager.removeHotSpotTapListener( listener );
   }
 
   //------------------------------------------------------------------------------------
@@ -771,7 +769,7 @@ public class TileView extends ZoomPanLayout implements
     int y = (int) (getScrollY() + event.getY());
     Point point = new Point( x, y );
     mMarkerLayout.processHit( point );
-    hotSpotManager.processHit( point );
+    hotSpotManager.processHit( x, y );
     return super.onSingleTapConfirmed( event );
   }
   // end OnDoubleTapListener

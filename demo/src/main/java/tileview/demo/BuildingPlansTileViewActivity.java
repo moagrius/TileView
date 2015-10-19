@@ -6,7 +6,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.qozix.tileview.TileView;
-import com.qozix.tileview.markers.MarkerEventListener;
+import com.qozix.tileview.markers.MarkerLayout;
 
 public class BuildingPlansTileViewActivity extends TileViewActivity {
 
@@ -34,7 +34,7 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		tileView.setMarkerAnchorPoints( -0.5f, -0.5f );
 		
 		// add a marker listener
-		tileView.addMarkerEventListener( markerEventListener );
+		tileView.addMarkerEventListener( mMarkerTapListener );
 		
 		// add some pins...
 		addPin( 0.25, 0.25 );
@@ -57,7 +57,7 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		getTileView().addMarker( imageView, x, y, null, null );
 	}
 	
-	private MarkerEventListener markerEventListener = new MarkerEventListener() {
+	private MarkerLayout.MarkerTapListener mMarkerTapListener = new MarkerLayout.MarkerTapListener() {
 		@Override
 		public void onMarkerTap( View v, int x, int y ) {
 			Toast.makeText( getApplicationContext(), "You tapped a pin", Toast.LENGTH_LONG ).show();
