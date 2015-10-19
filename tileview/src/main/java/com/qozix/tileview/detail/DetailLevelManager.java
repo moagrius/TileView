@@ -36,10 +36,8 @@ public class DetailLevelManager {
   }
 
   public void setScale( float scale ) {
-    if( mScale != scale ) {
-      mScale = scale;
-      update();
-    }
+    mScale = scale;
+    update();
   }
 
   public int getBaseWidth() {
@@ -127,8 +125,8 @@ public class DetailLevelManager {
         mCurrentDetailLevel = matchingLevel;
       }
     }
-    mScaledWidth = (int) (getBaseWidth() * getScale() + 0.5);
-    mScaledHeight = (int) (getBaseHeight() * getScale() + 0.5);
+    mScaledWidth = (int) (mBaseWidth * mScale + 0.5);
+    mScaledHeight = (int) (mBaseHeight * mScale + 0.5);
     if( detailLevelChanged ) {
       if( mDetailLevelChangeListener != null ) {
         mDetailLevelChangeListener.onDetailLevelChanged( mCurrentDetailLevel );
