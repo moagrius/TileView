@@ -16,7 +16,7 @@ import com.qozix.tileview.graphics.BitmapDecoderAssets;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 
 public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.TileCanvasDrawListener {
 
@@ -25,8 +25,8 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   private static final int TRANSITION_DURATION = 200;
 
-  private HashSet<Tile> scheduledToRender;  // instantiate in constructor to synchronize on instance
-  private HashSet<Tile> alreadyRendered = new HashSet<Tile>();
+  private LinkedList<Tile> scheduledToRender = new LinkedList<Tile>();
+  private LinkedList<Tile> alreadyRendered = new LinkedList<Tile>();
 
   private BitmapDecoder decoder = new BitmapDecoderAssets();
   private HashMap<Float, TileCanvasView> tileGroups = new HashMap<Float, TileCanvasView>();
@@ -56,9 +56,6 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   public TileCanvasViewGroup( Context context ) {
     super( context );
     setWillNotDraw( false );
-    synchronized( this ){
-      scheduledToRender = new HashSet<Tile>();
-    }
     handler = new TileRenderHandler( this );
   }
 
@@ -262,7 +259,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   private void cleanup() {
     // start with all rendered tiles...
-    HashSet<Tile> condemned = new HashSet<Tile>( alreadyRendered );
+    LinkedList<Tile> condemned = new LinkedList<Tile>( alreadyRendered );
     // now remove all those that were just qualified
     condemned.removeAll( scheduledToRender );
     // for whatever's left, destroy
@@ -319,8 +316,8 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     }
   }
 
-  HashSet<Tile> getRenderList() {
-    return (HashSet<Tile>) scheduledToRender.clone();
+  LinkedList<Tile> getRenderList() {
+    return (LinkedList<Tile>) scheduledToRender.clone();
   }
 
   // package level access so it can be invoked by the render task

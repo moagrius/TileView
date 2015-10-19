@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 
 import com.qozix.tileview.tiles.Tile;
 
-import java.util.HashSet;
+import java.util.LinkedList;
 
 public class DetailLevel implements Comparable<DetailLevel> {
 
@@ -54,15 +54,11 @@ public class DetailLevel implements Comparable<DetailLevel> {
 
   }
 
-  public HashSet<Tile> calculateIntersections() {
+  public LinkedList<Tile> calculateIntersections() {
 
     // must call computeState prior
 
-    HashSet<Tile> intersections;
-    // TODO: this?
-    synchronized( this ){
-      intersections = new HashSet<Tile>();
-    }
+    LinkedList<Tile> intersections = new LinkedList<Tile>();
 
     for( int currentRow = mLastStateSnapshot.startRow; currentRow < mLastStateSnapshot.endRow; currentRow++ ) {
       for( int currentColumn = mLastStateSnapshot.startColumn; currentColumn < mLastStateSnapshot.endColumn; currentColumn++ ) {
