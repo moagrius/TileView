@@ -229,23 +229,18 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     beginRenderTask();
   }
 
-  private DetailLevel.StateSnapshot lastDetailLevelStateSnapshot;
-
-
-
   private void beginRenderTask() {
     Log.d( "Tiles", "TileManager.beginRenderTask" );
     // TODO: is this foolproof?
     // if we're in the same state, don't bother
-    DetailLevel.StateSnapshot currentDetailLevelStateSnapshot = detailLevelToRender.computeState();
-    if( currentDetailLevelStateSnapshot != null && currentDetailLevelStateSnapshot.equals( lastDetailLevelStateSnapshot )){
-      Log.d( "Tiles", "same state, quit.  " + currentDetailLevelStateSnapshot + " vs " + lastDetailLevelStateSnapshot );
+    boolean changed = detailLevelToRender.computeCurrentState();
+    if( !changed ){
+      Log.d( "Tiles", "same state, quit." );
       return;
     }
     Log.d( "Tiles", "different state, continue" );
-    lastDetailLevelStateSnapshot = currentDetailLevelStateSnapshot;
     // if we made it here, then replace the old list with the new list
-    scheduledToRender = detailLevelToRender.calculateIntersections();;
+    scheduledToRender = detailLevelToRender.getVisibleTilesFromLastViewportComputation();
     // cancel task if it's already running
     if( lastRunRenderTask != null ) {
       if( lastRunRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {

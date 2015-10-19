@@ -9,13 +9,16 @@ import java.util.LinkedList;
 
 public class DetailLevel implements Comparable<DetailLevel> {
 
+  private static final String ILLEGAL_STATE_EXCEPTION_MESSAGE = "Grid has not been computed; " +
+    "you must call computeCurrentState at some point priot to calling " +
+    "getVisibleTilesFromLastViewportComputation.";
+
   private float mScale;
-  private Object mData;
   private int mTileWidth;
   private int mTileHeight;
+  private Object mData;
 
   private DetailLevelManager mDetailLevelManager;
-  private Rect mViewport = new Rect();
 
   private StateSnapshot mLastStateSnapshot;
 
@@ -27,52 +30,64 @@ public class DetailLevel implements Comparable<DetailLevel> {
     mTileHeight = tileHeight;
   }
 
-  public StateSnapshot computeState(){  // TODO: maybe re-compute state?
+  /**
+   * Returns true if there has been a change, false otherwise.
+   * @return True if there has been a change, false otherwise.
+   */
+  public boolean computeCurrentState(){
 
     double relativeScale = getRelativeScale();
 
     int drawableWidth = mDetailLevelManager.getScaledWidth();
     int drawableHeight = mDetailLevelManager.getScaledHeight();
+
     double offsetWidth = mTileWidth * relativeScale;
     double offsetHeight = mTileHeight * relativeScale;
 
-    mViewport.set( mDetailLevelManager.getComputedViewport() );
+    Rect viewport = new Rect( mDetailLevelManager.getComputedViewport() );
 
-    mViewport.top = Math.max( mViewport.top, 0 );
-    mViewport.left = Math.max( mViewport.left, 0 );
-    mViewport.right = Math.min( mViewport.right, drawableWidth );
-    mViewport.bottom = Math.min( mViewport.bottom, drawableHeight );
+    viewport.top = Math.max( viewport.top, 0 );
+    viewport.left = Math.max( viewport.left, 0 );
+    viewport.right = Math.min( viewport.right, drawableWidth );
+    viewport.bottom = Math.min( viewport.bottom, drawableHeight );
 
-    int startRow = (int) Math.floor( mViewport.top / offsetHeight );
-    int endRow = (int) Math.ceil( mViewport.bottom / offsetHeight );
-    int startColumn = (int) Math.floor( mViewport.left / offsetWidth );
-    int endColumn = (int) Math.ceil( mViewport.right / offsetWidth );
+    int rowStart = (int) Math.floor( viewport.top / offsetHeight );
+    int rowEnd = (int) Math.ceil( viewport.bottom / offsetHeight );
+    int columnStart = (int) Math.floor( viewport.left / offsetWidth );
+    int columnEnd = (int) Math.ceil( viewport.right / offsetWidth );
 
-    mLastStateSnapshot = new StateSnapshot( this, startRow, endRow, startColumn, endColumn );
+    StateSnapshot stateSnapshot = new StateSnapshot( this, rowStart, rowEnd, columnStart, columnEnd );
 
-    return mLastStateSnapshot;
+    boolean sameState = stateSnapshot.equals( mLastStateSnapshot );
+
+    mLastStateSnapshot = stateSnapshot;
+
+    return !sameState;
 
   }
 
-  public LinkedList<Tile> calculateIntersections() {
+  /**
+   * Returns a list of Tile instances desribing the currently visible viewport.
+   * @return List of Tile instances desribing the currently visible viewport.
+   */
 
-    // must call computeState prior
+  public LinkedList<Tile> getVisibleTilesFromLastViewportComputation() {
+
+    if( mLastStateSnapshot == null ) {
+      throw new IllegalStateException( ILLEGAL_STATE_EXCEPTION_MESSAGE );
+    }
 
     LinkedList<Tile> intersections = new LinkedList<Tile>();
 
-    for( int currentRow = mLastStateSnapshot.startRow; currentRow < mLastStateSnapshot.endRow; currentRow++ ) {
-      for( int currentColumn = mLastStateSnapshot.startColumn; currentColumn < mLastStateSnapshot.endColumn; currentColumn++ ) {
-        Tile tile = new Tile( currentColumn, currentRow, mTileWidth, mTileHeight, mData, this );
+    for( int rowCurrent = mLastStateSnapshot.rowStart; rowCurrent < mLastStateSnapshot.rowEnd; rowCurrent++ ) {
+      for( int columnCurrent = mLastStateSnapshot.columnStart; columnCurrent < mLastStateSnapshot.columnEnd; columnCurrent++ ) {
+        Tile tile = new Tile( columnCurrent, rowCurrent, mTileWidth, mTileHeight, mData, this );
         intersections.add( tile );
       }
     }
 
     return intersections;
 
-  }
-
-  public StateSnapshot getLastStateSnapshot(){
-    return mLastStateSnapshot;
   }
 
   public float getScale() {
@@ -95,10 +110,6 @@ public class DetailLevel implements Comparable<DetailLevel> {
     return mData;
   }
 
-  public Rect getViewport(){
-    return mViewport;
-  }
-
   @Override
   public int compareTo( @NonNull DetailLevel detailLevel ) {
     return (int) Math.signum( getScale() - detailLevel.getScale() );
@@ -111,7 +122,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
     }
     if( object instanceof DetailLevel ) {
       DetailLevel detailLevel = (DetailLevel) object;
-      return (getScale() == detailLevel.getScale());
+      return mScale == detailLevel.getScale();
     }
     return false;
   }
@@ -122,18 +133,18 @@ public class DetailLevel implements Comparable<DetailLevel> {
     return (((int) bits) ^ ((int) (bits >> 32)));
   }
 
-  public static class StateSnapshot {
-    public int startRow;
-    public int endRow;
-    public int startColumn;
-    public int endColumn;
+  private static class StateSnapshot {
+    public int rowStart;
+    public int rowEnd;
+    public int columnStart;
+    public int columnEnd;
     public DetailLevel detailLevel;
-    public StateSnapshot( DetailLevel dl, int sr, int er, int sc, int ec ) {
-      detailLevel = dl;
-      startRow = sr;
-      endRow = er;
-      startColumn = sc;
-      endColumn = ec;
+    public StateSnapshot( DetailLevel level, int startRow, int endRow, int startColumn, int endColumn ) {
+      detailLevel = level;
+      rowStart = startRow;
+      rowEnd = endRow;
+      columnStart = startColumn;
+      columnEnd = endColumn;
     }
     public boolean equals( Object o ) {
       if( o == this ) {
@@ -142,17 +153,13 @@ public class DetailLevel implements Comparable<DetailLevel> {
       if( o instanceof StateSnapshot ) {
         StateSnapshot stateSnapshot = (StateSnapshot) o;
         return detailLevel.equals( stateSnapshot.detailLevel )
-          && startRow == stateSnapshot.startRow
-          && startColumn == stateSnapshot.startColumn
-          && endRow == stateSnapshot.endRow
-          && endColumn == stateSnapshot.endColumn;
+          && rowStart == stateSnapshot.rowStart
+          && columnStart == stateSnapshot.columnStart
+          && rowEnd == stateSnapshot.rowEnd
+          && columnEnd == stateSnapshot.columnEnd;
       }
       return false;
     }
-    public String toString(){
-      return startRow + ", " + endRow + ", " + startColumn + ", " + endColumn;
-    }
-    // TODO: maybe need to add DetailLevel instance to this?
   }
 
 
