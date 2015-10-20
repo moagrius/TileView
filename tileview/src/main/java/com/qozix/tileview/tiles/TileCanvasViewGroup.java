@@ -66,8 +66,8 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    int availableWidth = r - l;
-    int availableHeight = b - t;
+    int availableWidth = (int) ((r - l) / mScale + 0.5);
+    int availableHeight = (int) ((b - t) / mScale + 0.5);
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
@@ -76,7 +76,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     }
   }
 
-  public boolean getTransitionsEnabled(){
+  public boolean getTransitionsEnabled() {
     return mTransitionsEnabled;
   }
 
@@ -163,7 +163,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     mAlreadyRendered.clear();
   }
 
-  private float getCurrentDetailLevelScale(){
+  private float getCurrentDetailLevelScale() {
     if( mDetailLevelToRender != null ) {
       return mDetailLevelToRender.getScale();
     }
@@ -204,7 +204,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   private void beginRenderTask() {
     boolean changed = mDetailLevelToRender.computeCurrentState();
-    if( !changed ){
+    if( !changed ) {
       return;
     }
     mScheduledToRender = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
