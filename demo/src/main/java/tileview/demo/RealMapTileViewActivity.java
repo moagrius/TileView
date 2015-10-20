@@ -156,9 +156,14 @@ public class RealMapTileViewActivity extends Activity {
 			// we saved the coordinate in the marker's tag
 			double[] position = (double[]) view.getTag();
       float destScale = tileView.getScale() > 0.5f ? 0.5f : 1f;
+
+      tileView.testZoomPan( position[0], position[1], destScale );
+      /*
+
       int x = tileView.getCoordinateTranslater().translateAndScaleX( position[0], destScale );
       int y = tileView.getCoordinateTranslater().translateAndScaleY( position[1], destScale );
-      tileView.slideToAndScale( x, y, destScale, true );
+      tileView.slideToAndCenterWithScale( x, y, destScale, true );
+      */
 		  /*
 			/ lets center the screen to that coordinate
 			tileView.slideToAndCenter( position[0], position[1] );
