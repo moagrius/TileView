@@ -228,7 +228,6 @@ public class TileView extends ZoomPanLayout implements
     super.setSize( width, height );
     mDetailLevelManager.setSize( width, height );
     mCoordinateTranslater.setSize( width, height );
-    mTileCanvasViewGroup.setSize( width, height );
   }
 
   /**

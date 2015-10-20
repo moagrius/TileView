@@ -11,16 +11,6 @@ import com.qozix.tileview.graphics.BitmapProvider;
 
 public class Tile {
 
-  /**
-   * TODO: here, 10/19/15
-   *
-   *
-   *
-   *
-   *
-   *
-   */
-
   private static final int DEFAULT_TRANSITION_DURATION = 200;
 
   private int mWidth;
@@ -55,6 +45,42 @@ public class Tile {
     mTop = row * height;
     mData = data;
     mDetailLevel = detailLevel;
+  }
+
+  public int getWidth() {
+    return mWidth;
+  }
+
+  public int getHeight() {
+    return mHeight;
+  }
+
+  public int getLeft() {
+    return mLeft;
+  }
+
+  public int getTop() {
+    return mTop;
+  }
+
+  public int getRow() {
+    return mRow;
+  }
+
+  public int getColumn() {
+    return mColumn;
+  }
+
+  public Object getData() {
+    return mData;
+  }
+
+  public Bitmap getBitmap() {
+    return mBitmap;
+  }
+
+  public boolean hasBitmap() {
+    return mBitmap != null;
   }
 
   public void setTransitionDuration( int transitionDuration ) {
@@ -101,42 +127,6 @@ public class Tile {
     int opacity = (int) (rendered * 255);
     mPaint.setAlpha( opacity );
     return mPaint;
-  }
-
-  public int getWidth() {
-    return mWidth;
-  }
-
-  public int getHeight() {
-    return mHeight;
-  }
-
-  public int getLeft() {
-    return mLeft;
-  }
-
-  public int getTop() {
-    return mTop;
-  }
-
-  public int getRow() {
-    return mRow;
-  }
-
-  public int getColumn() {
-    return mColumn;
-  }
-
-  public Object getData() {
-    return mData;
-  }
-
-  public Bitmap getBitmap() {
-    return mBitmap;
-  }
-
-  public boolean hasBitmap() {
-    return mBitmap != null;
   }
 
   void generateBitmap( Context context, BitmapProvider bitmapProvider ) {

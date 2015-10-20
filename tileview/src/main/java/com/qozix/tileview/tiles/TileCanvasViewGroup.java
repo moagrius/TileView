@@ -49,9 +49,6 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   private float mScale = 1;
 
-  private int mBaseWidth;
-  private int mBaseHeight;
-
   public TileCanvasViewGroup( Context context ) {
     super( context );
     setWillNotDraw( false );
@@ -67,17 +64,14 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     invalidate();
   }
 
-  public void setSize( int width, int height ) {
-    mBaseWidth = width;
-    mBaseHeight = height;
-  }
-
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+    int availableWidth = r - l;
+    int availableHeight = b - t;
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mBaseWidth, mBaseHeight );  // TODO: r-l,b-t
+        child.layout( 0, 0, availableWidth, availableHeight );
       }
     }
   }
@@ -98,68 +92,56 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     mTransitionDuration = duration;
   }
 
-  public void setBitmapProvider( BitmapProvider d ) {
-    mBitmapProvider = d;
+  public void setBitmapProvider( BitmapProvider bitmapProvider ) {
+    mBitmapProvider = bitmapProvider;
   }
 
-  public void setTileRenderListener( TileRenderListener listener ) {
-    mTileRenderListener = listener;
+  public void setTileRenderListener( TileRenderListener tileRenderListener ) {
+    mTileRenderListener = tileRenderListener;
   }
 
   public void requestRender() {
-    // if we're requesting it, we must really want one
     mRenderIsCancelled = false;
     mRenderIsSuppressed = false;
-    // if there's no data about the current detail level, don't bother
     if( mDetailLevelToRender == null ) {
       return;
     }
-    // throttle requests
     if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {
-      // give it enough buffer that (generally) successive calls will be captured
       mTileRenderHandler.sendEmptyMessageDelayed( RENDER_FLAG, RENDER_BUFFER );
     }
   }
 
+  /**
+   * Prevent new render tasks from starting, attempts to interrupt ongoing tasks, and will
+   * prevent queued tiles from begin decoded or rendered.
+   */
   public void cancelRender() {
-    // hard cancel - further render tasks won't start, and we'll attempt to interrupt the currently executing task
     mRenderIsCancelled = true;
-    // if the currently executing task isn't null...
-    if( mLastRunTileRenderTask != null ) {
-      // ... and it's in a cancellable state
-      if( mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
-        // ... then squash it
-        mLastRunTileRenderTask.cancel( true );
-      }
+    if( mLastRunTileRenderTask != null && mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
+      mLastRunTileRenderTask.cancel( true );
     }
-    // give it to gc
     mLastRunTileRenderTask = null;
   }
 
+  /**
+   * Prevent new render tasks from starting, but does not cancel any ongoing operations.
+   */
   public void suppressRender() {
-    // this will prevent new tasks from starting, but won't actually cancel the currently executing task
     mRenderIsSuppressed = true;
   }
 
   public void updateTileSet( DetailLevel detailLevel ) {
-    // grab reference to this detail level, so we can get it's tile set for comparison to viewport
     mDetailLevelToRender = detailLevel;
-    // fast-fail if it's null
     if( mDetailLevelToRender == null ) {
       return;
     }
-    // fast-fail if there's no change (same tile set)
     if( mDetailLevelToRender.equals( mLastRenderedDetailLevel ) ) {
       return;
     }
-    // we made it this far, cache the new level to test for changes on next invocation
     mLastRenderedDetailLevel = mDetailLevelToRender;
-    // fetch appropriate child
     mCurrentTileCanvasView = getCurrentTileCanvasView();
-    // show it
-    mCurrentTileCanvasView.setVisibility( View.VISIBLE );
-    // bring it to top of stack
     mCurrentTileCanvasView.bringToFront();
+    mCurrentTileCanvasView.setVisibility( View.VISIBLE );
   }
 
   public boolean getIsRendering() {
@@ -249,8 +231,8 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     // hide all other groups
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       if( mCurrentTileCanvasView != tileGroup ) {
-        tileGroup.setVisibility( View.GONE );
         tileGroup.clearTiles();
+        tileGroup.setVisibility( View.GONE );
       }
 
     }
@@ -327,7 +309,6 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   public void onCleanDrawComplete( TileCanvasView tileCanvasView ) {
     if( mTransitionsEnabled && tileCanvasView == mCurrentTileCanvasView ) {
       cleanup();
-      Log.d( "Tiles", "current group is done rendering including transitions, do cleanup" );
     }
   }
 

@@ -23,6 +23,19 @@ public class TileCanvasView extends View {
     super( context );
   }
 
+  public void setScale( float factor ) {
+    mScale = factor;
+    invalidate();
+  }
+
+  public float getScale() {
+    return mScale;
+  }
+
+  public void setTileCanvasDrawListener( TileCanvasDrawListener tileCanvasDrawListener ) {
+    mTileCanvasDrawListener = tileCanvasDrawListener;
+  }
+
   public void addTile( Tile tile ) {
     if( !mTiles.contains( tile ) ) {
       mTiles.add( tile );
@@ -44,19 +57,6 @@ public class TileCanvasView extends View {
     for( Tile tile : condemned ) {
       tile.destroy();
     }
-  }
-
-  public void setScale( float factor ) {
-    mScale = factor;
-    postInvalidate();
-  }
-
-  public float getScale() {
-    return mScale;
-  }
-
-  public void setTileCanvasDrawListener( TileCanvasDrawListener tileCanvasDrawListener ) {
-    mTileCanvasDrawListener = tileCanvasDrawListener;
   }
 
   private boolean drawTiles( Canvas canvas ) {

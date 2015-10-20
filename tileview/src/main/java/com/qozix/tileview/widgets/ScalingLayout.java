@@ -37,11 +37,12 @@ public class ScalingLayout extends ViewGroup {
 
 	@Override
 	protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+    int availableWidth = r - l;
+    int availableHeight = b - t;
 		for( int i = 0; i < getChildCount(); i++ ) {
 			View child = getChildAt( i );
 			if( child.getVisibility() != GONE ) {
-				child.layout( 0, 0, r - l, b - t );  // TODO: might need to setSize
-        // TODO: does the r-l,b-t thing work?
+				child.layout( 0, 0, availableWidth, availableHeight );
 			}
 		}
 	}
