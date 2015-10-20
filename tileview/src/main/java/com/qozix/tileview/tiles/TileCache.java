@@ -157,7 +157,7 @@ public class TileCache {
 				if ( editor != null ) {
 					editor.abort();
 				}
-			} catch ( IOException io ) {
+			} catch ( Exception e1 ) {
 
 			}
 		}
