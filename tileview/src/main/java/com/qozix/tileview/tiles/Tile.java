@@ -11,6 +11,18 @@ import com.qozix.tileview.graphics.BitmapProvider;
 
 public class Tile {
 
+  /**
+   * TODO: here, 10/19/15
+   *
+   *
+   *
+   *
+   *
+   *
+   */
+
+  private static final int DEFAULT_TRANSITION_DURATION = 200;
+
   private int mWidth;
   private int mHeight;
   private int mLeft;
@@ -22,15 +34,15 @@ public class Tile {
   private Object mData;
   private Bitmap mBitmap;
 
-  private int mDuration = 200;
-
-  private Paint mPaint = new Paint();
-
-  private TileCanvasView mParentTileCanvasView;
-
   public double renderTimestamp;
 
   private boolean mTransitionsEnabled;
+
+  private int mTransitionDuration = DEFAULT_TRANSITION_DURATION;
+
+  private Paint mPaint;
+
+  private TileCanvasView mParentTileCanvasView;
 
   private DetailLevel mDetailLevel;
 
@@ -45,8 +57,8 @@ public class Tile {
     mDetailLevel = detailLevel;
   }
 
-  public void setDuration( int duration ) {
-    mDuration = duration;
+  public void setTransitionDuration( int transitionDuration ) {
+    mTransitionDuration = transitionDuration;
   }
 
   public void stampTime() {
@@ -67,8 +79,7 @@ public class Tile {
     }
     double now = AnimationUtils.currentAnimationTimeMillis();
     double ellapsed = now - renderTimestamp;
-    float progress = (float) Math.min( 1, ellapsed / mDuration );
-    // if it's transitioned in full, there won't be subsequent animations so stop computing
+    float progress = (float) Math.min( 1, ellapsed / mTransitionDuration );
     if( progress == 1 ) {
       mTransitionsEnabled = false;
     }
@@ -82,6 +93,9 @@ public class Tile {
   public Paint getPaint() {
     if( !mTransitionsEnabled ) {
       return null;
+    }
+    if( mPaint == null ) {
+      mPaint = new Paint();
     }
     float rendered = getRendered();
     int opacity = (int) (rendered * 255);
@@ -125,18 +139,21 @@ public class Tile {
     return mBitmap != null;
   }
 
-  public void setParentTileCanvasView( TileCanvasView tileCanvasView ) {
+  void generateBitmap( Context context, BitmapProvider bitmapProvider ) {
+    if( mBitmap != null ) {
+      return;
+    }
+    mBitmap = bitmapProvider.getBitmap( this, context );
+  }
+
+  void setParentTileCanvasView( TileCanvasView tileCanvasView ) {
     mParentTileCanvasView = tileCanvasView;
   }
 
-  public void decode( Context context, BitmapProvider decoder ) {
-    if( hasBitmap() ) {
-      return;
+  void destroy() {
+    if( mBitmap != null ) {
+      mBitmap.recycle();
     }
-    mBitmap = decoder.getBitmap( this, context );
-  }
-
-  public void destroy() {
     mBitmap = null;
     if( mParentTileCanvasView != null ) {
       mParentTileCanvasView.removeTile( this );
@@ -147,9 +164,9 @@ public class Tile {
    * @param canvas The canvas the tile's bitmap should be drawn into
    * @return True if the tile is dirty (drawing output has changed and needs parent validation)
    */
-  public boolean draw( Canvas canvas ) {
+  boolean draw( Canvas canvas ) {
     if( mBitmap != null ) {
-      canvas.drawBitmap( mBitmap, getLeft(), getTop(), getPaint() );
+      canvas.drawBitmap( mBitmap, mLeft, mTop, getPaint() );
     }
     return getIsDirty();
   }

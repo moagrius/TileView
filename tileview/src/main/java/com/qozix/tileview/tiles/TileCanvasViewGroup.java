@@ -298,7 +298,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   // package level access so it can be invoked by the render task
   void decodeIndividualTile( Tile m ) {
-    m.decode( getContext(), mBitmapProvider );
+    m.generateBitmap( getContext(), mBitmapProvider );
   }
 
   // package level access so it can be invoked by the render task
@@ -310,7 +310,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     // do we animate?
     tile.setTransitionsEnabled( mTransitionsEnabled );
     // set duration in either case, they may be enabled later
-    tile.setDuration( mTransitionDuration );
+    tile.setTransitionDuration( mTransitionDuration );
     // stamp no matter what, transitions might be enabled later
     tile.stampTime();
     // add it to the list of those rendered
