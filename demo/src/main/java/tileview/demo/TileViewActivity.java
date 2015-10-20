@@ -19,7 +19,7 @@ public class TileViewActivity extends Activity {
 	@Override
 	public void onPause() {
 		super.onPause();
-		tileView.clear();
+		tileView.pause();
 	}
 
 	@Override

@@ -63,11 +63,9 @@ public class MarkerLayout extends ViewGroup {
   }
 
   public void moveMarker( View view, int x, int y ) {
-    moveMarker( view, x, y, null, null );
-  }
-
-  public void moveMarker( View view, int x, int y, Float aX, Float aY ) {
-    LayoutParams layoutParams = new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, x, y, aX, aY );
+    LayoutParams layoutParams = (LayoutParams) view.getLayoutParams();
+    layoutParams.x = x;
+    layoutParams.y = y;
     moveMarker( view, layoutParams );
   }
 

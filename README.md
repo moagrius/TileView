@@ -5,74 +5,79 @@ X1.  Single package
 X1.  Eliminate hacked core classes
 X1.  Better thread management
 1.  Issues
-1.  Allow layer insertion and scaling layer insertion
+    Xa. Disable zoom on double tap feature request - extend and override onDoubleTap (no super)
+    b. Smooth scale to position feature request
+    c. Skipped detail level feature request
+    Xd. moveMarker(x, y) overrides anchor feature request
+    e. setScaleLimit does not work with setScaleToFit(false) bug
+X1.  Allow layer insertion and scaling layer insertion
 X1.  Eliminate downsample paradigm
 X1.  Include a sample downsample
 X1.  Remove LRU cache dependency
 X1.  Use more framework-provided functionality, like GestureListener
 X1.  End fling (test for change)
 1.  Make most private into protected for extensibility
-1.  Other Issues
+X1.  Other Issues
     a.  when detail levels change with no downsample, there's a moment when the old one dies before the new one is done.
-1.  Don't use detail manager as intermediary anymore
-1.  BitmapDecoder to TileProvider or Adapter paradigm
-1.  Remove TileSetSelector
-1.  consider generics in the arbitrary data Object for detail levels
-1.  optimize data structures
-1.  optimize tile set comparisons
+X1.  Don't use detail manager as intermediary anymore
+X1.  BitmapDecoder to TileProvider or Adapter paradigm
+X1.  Remove TileSetSelector
+-1.  consider generics in the arbitrary data Object for detail levels
+X1.  optimize data structures
+X1.  optimize tile set comparisons
 1.  set downsample (addView imageView)?
 
 
-  // Hooks provided by android.view.View
+
+
+
+
+
+
+
+
+
+
+
+  // android.view.View
   protected void onScrollChanged( int l, int t, int oldl, int oldt );
-  // Hooks provided by com.qozix.tileview.widgets.ZoomPanLayout
+  // com.qozix.tileview.widgets.ZoomPanLayout
   public void onScaleChanged( float scale, float previous );
-  // Hooks provided by com.qozix.tileview.widgets.ZoomPanLayout.ZoomPanListener
+  // com.qozix.tileview.widgets.ZoomPanLayout.ZoomPanListener
   public void onPanBegin( int x, int y, Origination origin );
   public void onPanUpdate( int x, int y, Origination origin );
   public void onPanEnd( int x, int y, Origination origin );
   public void onZoomBegin( float scale, float focusX, float focusY, Origination origin );
   public void onZoomUpdate( float scale, float focusX, float focusY, Origination origin );
   public void onZoomEnd( float scale, float focusX, float focusY, Origination origin );
-  // Hooks provided by com.qozix.tileview.details.DetailLevel.DetailLevelChangeListener
+  // com.qozix.tileview.details.DetailLevel.DetailLevelChangeListener
   public void onDetailLevelChanged( DetailLevel detailLevel );
-  // Hooks provided by android.view.GestureDetector.OnDoubleTapListener
+  // android.view.GestureDetector.OnDoubleTapListener
   public boolean onSingleTapConfirmed( MotionEvent event );
-  // Hooks provided by com.qozix.TileRenderTask.TileRenderListener
+  // com.qozix.TileRenderTask.TileRenderListener
   public void onRenderStart();
   public void onRenderCancelled();
   public void onRenderComplete();
-
-
-
-
-  //START OnGestureListener
+  // android.view.GestureDetector.OnGestureListener
   public boolean onScroll( MotionEvent e1, MotionEvent e2, float distanceX, float distanceY );
   public boolean onDown( MotionEvent event );
   public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY );
   public void onLongPress( MotionEvent event );
   public void onShowPress( MotionEvent event );
   public boolean onSingleTapUp( MotionEvent event );
-
-
-  //START OnDoubleTapListener
+  // android.view.GestureDetector.OnDoubleTapListener
   public boolean onSingleTapConfirmed( MotionEvent event );
   public boolean onDoubleTap( MotionEvent event );
   public boolean onDoubleTapEvent( MotionEvent event );
-
-  //START OnTouchUpListener
-  public boolean onTouchUp();
-
-  //START OnScaleGestureListener
+  // android.view.GestureDetector.OnScaleGestureListener
   public boolean onScaleBegin( ScaleGestureDetector scaleGestureDetector );
   public void onScaleEnd( ScaleGestureDetector scaleGestureDetector );
   public boolean onScale( ScaleGestureDetector scaleGestureDetector );
-
-  //START AnimatorUpdateListener
+  // com.qozix.tileview.view.TouchUpGestureDetectorOnTouchUpListener
+  public boolean onTouchUp();
+  // android.animation.ValueAnimator.AnimatorUpdateListener
   public void onAnimationUpdate( ValueAnimator valueAnimator );
-
-
-  //START AnimatorListener
+  // android.animation.ValueAnimator.AnimatorListener
   public void onAnimationStart( Animator animator );
   public void onAnimationEnd( Animator animator );
   public void onAnimationCancel( Animator animator );

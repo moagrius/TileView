@@ -1,8 +1,10 @@
 package tileview.demo;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -19,13 +21,21 @@ public class RealMapTileViewActivity extends Activity {
 
 	private TileView tileView;
 
+  private static class NoDoubleTapTileView extends TileView {
+    public NoDoubleTapTileView( Context context ) {
+      super( context );
+    }
+    public boolean onDoubleTap(MotionEvent event ) {
+      return false;
+    }
+  }
 	@Override
 	public void onCreate( Bundle savedInstanceState ) {
 
 		super.onCreate( savedInstanceState );
 
 		// we'll reference the TileView multiple times
-		tileView = new TileView(this);
+		tileView = new NoDoubleTapTileView(this);
 
 		// size and geolocation
 		tileView.setSize( 17934 / 2, 13452 / 2);
@@ -116,7 +126,7 @@ public class RealMapTileViewActivity extends Activity {
     tileView.setTransitionsEnabled( false );
 
     ImageView downsample = new ImageView( this );
-    downsample.setImageResource(R.drawable.downsample );
+    downsample.setImageResource( R.drawable.downsample );
     tileView.addView( downsample, 0 );
 
     setContentView( tileView );
@@ -145,8 +155,14 @@ public class RealMapTileViewActivity extends Activity {
 		public void onClick( View view ) {
 			// we saved the coordinate in the marker's tag
 			double[] position = (double[]) view.getTag();
-			// lets center the screen to that coordinate
+      float destScale = tileView.getScale() > 0.5f ? 0.5f : 1f;
+      int x = tileView.getCoordinateTranslater().translateAndScaleX( position[0], destScale );
+      int y = tileView.getCoordinateTranslater().translateAndScaleY( position[1], destScale );
+      tileView.slideToAndScale( x, y, destScale, true );
+		  /*
+			/ lets center the screen to that coordinate
 			tileView.slideToAndCenter( position[0], position[1] );
+
 			// create a simple callout
 			SampleCallout callout = new SampleCallout( view.getContext() );
 			// add it to the view tree at the same position and offset as the marker that invoked it
@@ -156,6 +172,7 @@ public class RealMapTileViewActivity extends Activity {
 			// stub out some text
 			callout.setTitle( "MAP CALLOUT" );
 			callout.setSubtitle( "Info window at coordinate:\n" + position[1] + ", " + position[0] );
+			*/
 		}
 	};
 

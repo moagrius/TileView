@@ -461,14 +461,11 @@ public class TileView extends ZoomPanLayout implements
    * @param view    The marker View to be repositioned.
    * @param x       Relative x position the View instance should be positioned at.
    * @param y       Relative y position the View instance should be positioned at.
-   * @param anchorX The x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value.
-   * @param anchorY The y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value.
    */
-  public void moveMarker( View view, double x, double y, Float anchorX, Float anchorY ) {
+  public void moveMarker( View view, double x, double y ) {
     mMarkerLayout.moveMarker( view,
       mCoordinateTranslater.translateX( x ),
-      mCoordinateTranslater.translateY( y ),
-      anchorX, anchorY );
+      mCoordinateTranslater.translateY( y ));
   }
 
   /**
