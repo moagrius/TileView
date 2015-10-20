@@ -1,7 +1,6 @@
 package com.qozix.tileview.markers;
 
 import android.content.Context;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.view.View;
 import android.view.ViewGroup;
@@ -83,7 +82,7 @@ public class MarkerLayout extends ViewGroup {
     removeView( view );
   }
 
-  public void addMarketTapListener( MarkerTapListener listener ) {
+  public void addMarkerTapListener( MarkerTapListener listener ) {
     mMarkerTapListeners.add( listener );
   }
 
@@ -103,14 +102,14 @@ public class MarkerLayout extends ViewGroup {
     return null;
   }
 
-  public void processHit( Point point ) {
+  public void processHit( int x, int y ) {
     if( mMarkerTapListeners.isEmpty() ) {
       return;
     }
-    View view = getViewFromTap( point.x, point.y );
+    View view = getViewFromTap( x, y );
     if( view != null ) {
       for( MarkerTapListener listener : mMarkerTapListeners ) {  // TODO: single listener?
-        listener.onMarkerTap( view, point.x, point.y );
+        listener.onMarkerTap( view, x, y );
       }
     }
   }

@@ -141,7 +141,7 @@ public class Tile {
   }
 
   void destroy() {
-    if( mBitmap != null ) {
+    if( mBitmap != null && !mBitmap.isRecycled() ) {
       mBitmap.recycle();
     }
     mBitmap = null;

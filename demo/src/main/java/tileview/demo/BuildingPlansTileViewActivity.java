@@ -34,7 +34,7 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		tileView.setMarkerAnchorPoints( -0.5f, -0.5f );
 		
 		// add a marker listener
-		tileView.addMarkerEventListener( mMarkerTapListener );
+		tileView.addMarkerTapListener( mMarkerTapListener );
 		
 		// add some pins...
 		addPin( 0.25, 0.25 );

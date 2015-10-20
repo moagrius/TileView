@@ -53,14 +53,12 @@ public class ZoomPanLayout extends ViewGroup implements
   private float mMinScale = 0;
   private float mMaxScale = 1;
 
-  private boolean mIsWatchingForScrollActionComplete = false;
-
   private float mStartFocusX;
   private float mStartFocusY;
   private int mStartScaleScrollX;
   private int mStartScaleScrollY;
 
-  private boolean mShouldScaleToFit = true;
+  private boolean mShouldScaleToFit = true;  // TODO:
 
   private boolean mIsFlinging;
   private boolean mIsDragging;
@@ -210,14 +208,6 @@ public class ZoomPanLayout extends ViewGroup implements
   private void updateScaledDimensions() {
     mScaledWidth = (int) ((mBaseWidth * mScale) + 0.5);
     mScaledHeight = (int) ((mBaseHeight * mScale) + 0.5);
-  }
-
-  /**
-   * Requests a redraw
-   */
-  public void redraw() {
-    requestLayout();
-    invalidate();
   }
 
   /**

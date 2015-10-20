@@ -6,9 +6,6 @@ import android.view.View;
 
 import java.util.HashSet;
 
-/**
- * Created by q on 10/2/15.
- */
 public class TileCanvasView extends View {
 
   private float mScale = 1;
@@ -57,6 +54,7 @@ public class TileCanvasView extends View {
     for( Tile tile : condemned ) {
       tile.destroy();
     }
+    invalidate();
   }
 
   private boolean drawTiles( Canvas canvas ) {
@@ -81,7 +79,6 @@ public class TileCanvasView extends View {
     }
   }
 
-
   @Override
   public void onDraw( Canvas canvas ) {
     super.onDraw( canvas );
@@ -93,7 +90,10 @@ public class TileCanvasView extends View {
   }
 
   /**
-   * will only fire if transitions are enabled, the first time a "clean" draw is complete after a dirty draw
+   * Interface definition for a callback to be invoked when a "clean" draw occurs.
+   * The callback will only be invoked if transitions are enabled, and will occur
+   * the first time a "clean" draw is complete after a "dirty" draw (a dirty draw
+   * is defined as an onDraw invocation that requires a subsequent call to invalidate).
    */
   public interface TileCanvasDrawListener {
     void onCleanDrawComplete( TileCanvasView tileCanvasView );

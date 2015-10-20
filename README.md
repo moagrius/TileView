@@ -22,6 +22,62 @@ X1.  End fling (test for change)
 1.  optimize tile set comparisons
 1.  set downsample (addView imageView)?
 
+
+  // Hooks provided by android.view.View
+  protected void onScrollChanged( int l, int t, int oldl, int oldt );
+  // Hooks provided by com.qozix.tileview.widgets.ZoomPanLayout
+  public void onScaleChanged( float scale, float previous );
+  // Hooks provided by com.qozix.tileview.widgets.ZoomPanLayout.ZoomPanListener
+  public void onPanBegin( int x, int y, Origination origin );
+  public void onPanUpdate( int x, int y, Origination origin );
+  public void onPanEnd( int x, int y, Origination origin );
+  public void onZoomBegin( float scale, float focusX, float focusY, Origination origin );
+  public void onZoomUpdate( float scale, float focusX, float focusY, Origination origin );
+  public void onZoomEnd( float scale, float focusX, float focusY, Origination origin );
+  // Hooks provided by com.qozix.tileview.details.DetailLevel.DetailLevelChangeListener
+  public void onDetailLevelChanged( DetailLevel detailLevel );
+  // Hooks provided by android.view.GestureDetector.OnDoubleTapListener
+  public boolean onSingleTapConfirmed( MotionEvent event );
+  // Hooks provided by com.qozix.TileRenderTask.TileRenderListener
+  public void onRenderStart();
+  public void onRenderCancelled();
+  public void onRenderComplete();
+
+
+
+
+  //START OnGestureListener
+  public boolean onScroll( MotionEvent e1, MotionEvent e2, float distanceX, float distanceY );
+  public boolean onDown( MotionEvent event );
+  public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY );
+  public void onLongPress( MotionEvent event );
+  public void onShowPress( MotionEvent event );
+  public boolean onSingleTapUp( MotionEvent event );
+
+
+  //START OnDoubleTapListener
+  public boolean onSingleTapConfirmed( MotionEvent event );
+  public boolean onDoubleTap( MotionEvent event );
+  public boolean onDoubleTapEvent( MotionEvent event );
+
+  //START OnTouchUpListener
+  public boolean onTouchUp();
+
+  //START OnScaleGestureListener
+  public boolean onScaleBegin( ScaleGestureDetector scaleGestureDetector );
+  public void onScaleEnd( ScaleGestureDetector scaleGestureDetector );
+  public boolean onScale( ScaleGestureDetector scaleGestureDetector );
+
+  //START AnimatorUpdateListener
+  public void onAnimationUpdate( ValueAnimator valueAnimator );
+
+
+  //START AnimatorListener
+  public void onAnimationStart( Animator animator );
+  public void onAnimationEnd( Animator animator );
+  public void onAnimationCancel( Animator animator );
+  public void onAnimationRepeat( Animator animator );
+
 #TileView
 
 *Update: this repo has been updated to include a demo app,

@@ -3,14 +3,12 @@ package com.qozix.tileview;
 import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,32 +30,36 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**
- * The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
- * with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
- * built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
- * coordinate system.
- * <p/>
- * <p>A minimal implementation:</p>
- * <p/>
+ * The TileView widget is a subclass of ViewGroup that supports:
+ * 1. Memory-managed tiled images with multiple levels of detail.
+ * 2. Panning by drag and fling.
+ * 3. Zooming by pinch and double-tap.
+ * 4. Markers and info windows.
+ * 5. Arbitrary coordinate systems.
+ * 6. Tappable hot spots.
+ * 7. Path drawing.
+ *
+ * A minimal implementation might look like this:
+ *
  * <pre>{@code
- * TileView tileView = new TileView(this);
- * tileView.setSize(3000,5000);
- * tileView.addDetailLevel(1.0f, "path/to/tiles/%col%-%row%.jpg");
+ * TileView tileView = new TileView( this );
+ * tileView.setSize( 3000, 5000 );
+ * tileView.addDetailLevel( 1.0f, "path/to/tiles/%d-%d.jpg" );
  * }</pre>
- * <p/>
+ *
  * A more advanced implementation might look like:
+ *
  * <pre>{@code
- * TileView tileView = new TileView(this);
- * tileView.setSize(3000,5000);
- * tileView.addTileViewEventListener(someMapEventListener);
- * tileView.defineBounds(42.379676, -71.094919, 42.346550, -71.040280);
- * tileView.addDetailLevel(1.000f, "tiles/boston-1000-%col%_%row%.jpg", 256, 256);
- * tileView.addDetailLevel(0.500f, "tiles/boston-500-%col%_%row%.jpg", 256, 256);
- * tileView.addDetailLevel(0.250f, "tiles/boston-250-%col%_%row%.jpg", 256, 256);
- * tileView.addDetailLevel(0.125f, "tiles/boston-125-%col%_%row%.jpg", 128, 128);
- * tileView.addMarker(someView, 42.35848, -71.063736);
- * tileView.addMarker(anotherView, 42.3665, -71.05224);
- * tileView.addMarketTapListener(someMarkerEventListener);
+ * TileView tileView = new TileView( this );
+ * tileView.setSize( 3000, 5000 );
+ * tileView.defineBounds( 42.379676, -71.094919, 42.346550, -71.040280 );
+ * tileView.addDetailLevel( 1.000f, "path/to/tiles/1000/%d-%d.jpg", 256, 256 );
+ * tileView.addDetailLevel( 0.500f, "path/to/tiles/500/%d-%d.jpg", 256, 256 );
+ * tileView.addDetailLevel( 0.250f, "path/to/tiles/250/%d-%d.jpg", 256, 256 );
+ * tileView.addDetailLevel( 0.125f, "path/to/tiles/125/%d-%d.jpg", 128, 128 );
+ * tileView.addMarker( someView, 42.35848, -71.063736 );
+ * tileView.addMarker( anotherView, 42.3665, -71.05224 );
+ * tileView.addMarkerTapListener( someMarkerTapListenerImplementation );
  * }</pre>
  */
 public class TileView extends ZoomPanLayout implements
@@ -120,18 +122,85 @@ public class TileView extends ZoomPanLayout implements
 
   }
 
-  //------------------------------------------------------------------------------------
-  // Layers API
-  //------------------------------------------------------------------------------------
-
-  public void addScalingView( View view, int index ) {
-    mScalingLayout.addView( view, index );
+  /**
+   * Returns the DetailLevelManager instance used by the TileView to coordinate DetailLevels.
+   * @return
+   */
+  public DetailLevelManager getDetailLevelManager() {
+    return mDetailLevelManager;
   }
 
+  /**
+   * Returns the CoordinateTranslater instance used by the TileView to manage abritrary coordinate
+   * systems.
+   * @return
+   */
+  public CoordinateTranslater getCoordinateTranslater() {
+    return mCoordinateTranslater;
+  }
 
-  //------------------------------------------------------------------------------------
-  // Rendering API
-  //------------------------------------------------------------------------------------
+  /**
+   * Returns the HotSpotManager instance used by the TileView to detect and react to touch events
+   * that intersect a user-defined region.
+   * @return
+   */
+  public HotSpotManager getHotSpotManager() {
+    return mHotSpotManager;
+  }
+
+  /**
+   * Returns the CompositePathView instance used by the TileView to draw and scale paths.
+   * @return
+   */
+  public CompositePathView getCompositePathView() {
+    return mCompositePathView;
+  }
+
+  /**
+   * Returns the TileCanvasViewGroup instance used by the TileView to manage tile bitmap rendering.
+   * @return
+   */
+  public TileCanvasViewGroup getTileCanvasViewGroup() {
+    return mTileCanvasViewGroup;
+  }
+
+  /**
+   * Returns the MakerLayout instance used by the TileView to position and display Views used
+   * as markers.
+   * @return
+   */
+  public MarkerLayout getMarkerLayout() {
+    return mMarkerLayout;
+  }
+
+  /**
+   * Returns the CalloutLayout instance used by the TileView to position and display Views used
+   * as callouts.
+   * @return
+   */
+  public CalloutLayout getCalloutLayout() {
+    return mCalloutLayout;
+  }
+
+  /**
+   * Returns the ScalingLayout instance used by the TileView to allow insertion of arbitrary
+   * Views and ViewGroups that will scale visually with the TileView.
+   * @return
+   */
+  public ScalingLayout getScalingLayout() {
+    return mScalingLayout;
+  }
+
+  /**
+   * Add a View (or ViewGroup) to the TileView at a z-index above tiles and paths but beneath
+   * markers and callouts.  The View will be laid out to the full dimensions of the largest
+   * detail level, and will scale with the TileView.  Due to the layout behavior, it's suggested
+   * that a ViewGroup (e.g., RelativeLayout) be used here in most circumstances.
+   * @param view The View to be added to the TileView, that will scale visually.
+   */
+  public void addScalingView( View view ) {
+    mScalingLayout.addView( view );
+  }
 
   /**
    * Request that the current tile set is re-examined and re-drawn.
@@ -145,7 +214,7 @@ public class TileView extends ZoomPanLayout implements
   /**
    * While all render operation requests are queued and batched, this method provides an additional
    * throttle layer, so that any subsequent invocations cancel and pending invocations.
-   * <p/>
+   *
    * This is useful when requesting in a stream fashion, either in a loop or in response to a
    * progressive action like an animation or touch move.
    */
@@ -159,7 +228,6 @@ public class TileView extends ZoomPanLayout implements
    */
   private void requestSafeRender() {
     if( isFlinging() ) {
-      // TODO: does this really help?
       requestThrottledRender();
     } else {
       requestRender();
@@ -183,20 +251,22 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
-   * Sets a custom class to perform the getBitmap operation when tile bitmaps are requested for tile images only.
-   * By default, a BitmapDecoder implementation is provided that renders bitmaps from the context's Assets,
-   * but alternative implementations could be used that fetch images via HTTP, or from the SD card, or resources, SVG, etc.
+   * Sets a custom class to perform the getBitmap operation when tile bitmaps are requested for
+   * tile images only.
+   * By default, a BitmapDecoder implementation is provided that renders bitmaps from the context's
+   * Assets, but alternative implementations could be used that fetch images via HTTP, or from the
+   * SD card, or resources, SVG, etc.
    *
-   * @param decoder (BitmapDecoder) A class instance that implements BitmapDecoder, and must define a getBitmap method, which accepts a String file name and a Context object, and returns a Bitmap
+   * @param bitmapProvider A class instance that implements BitmapProvider, and must define a getBitmap method, which accepts a String file name and a Context object, and returns a Bitmap
    */
-  public void setBitmapProvider( BitmapProvider decoder ) {
-    mTileCanvasViewGroup.setBitmapProvider( decoder );
+  public void setBitmapProvider( BitmapProvider bitmapProvider ) {
+    mTileCanvasViewGroup.setBitmapProvider( bitmapProvider );
   }
 
   /**
    * Defines whether tile bitmaps should be rendered using an AlphaAnimation
    *
-   * @param enabled (boolean) true if the TileView should render tiles with fade transitions
+   * @param enabled True if the TileView should render tiles with fade transitions
    */
   public void setTransitionsEnabled( boolean enabled ) {
     mTileCanvasViewGroup.setTransitionsEnabled( enabled );
@@ -205,23 +275,19 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Define the duration (in milliseconds) for each tile transition.
    *
-   * @param duration (int) the duration of the transition in milliseconds.
+   * @param duration The duration of the transition in milliseconds.
    */
   public void setTransitionDuration( int duration ) {
     mTileCanvasViewGroup.setTransitionDuration( duration );
   }
 
-  //------------------------------------------------------------------------------------
-  // Detail Level Management API
-  //------------------------------------------------------------------------------------
-
   /**
-   * Defines the total size, in pixels, of the tile set at 100% mScale.
+   * Defines the total size, in pixels, of the tile set at 100% scale.
    * The TileView wills pan within it's layout dimensions, with the content (scrollable)
    * size defined by this method.
    *
-   * @param width  (int) total width of the tiled set
-   * @param height (int) total height of the tiled set
+   * @param width  Total width of the tiled set.
+   * @param height Total height of the tiled set.
    */
   @Override
   public void setSize( int width, int height ) {
@@ -236,7 +302,7 @@ public class TileView extends ZoomPanLayout implements
    * and at least one tile set must be registered for the TileView to render any tiles.
    *
    * @param detailScale Scale at which the TileView should use the tiles in this set.
-   * @param data        An arbitrary object of any type that is passed to the (Adapter|Decoder) for each tile on this level.
+   * @param data        An arbitrary object of any type that is passed to the BitmapProvider for each tile on this level.
    */
   public void addDetailLevel( float detailScale, Object data ) {
     addDetailLevel( detailScale, data, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE );
@@ -247,46 +313,21 @@ public class TileView extends ZoomPanLayout implements
    * Each tile set to be used must be registered using this method,
    * and at least one tile set must be registered for the TileView to render any tiles.
    *
-   * @param detailScale (float) mScale at which the TileView should use the tiles in this set.
+   * @param detailScale Scale at which the TileView should use the tiles in this set.
    * @param data        An arbitrary object of any type that is passed to the (Adapter|Decoder) for each tile on this level.
-   * @param tileWidth   (int) size of each tiled column
-   * @param tileHeight  (int) size of each tiled row
+   * @param tileWidth   Size of each tiled column.
+   * @param tileHeight  Size of each tiled row.
    */
   public void addDetailLevel( float detailScale, Object data, int tileWidth, int tileHeight ) {
     mDetailLevelManager.addDetailLevel( detailScale, data, tileWidth, tileHeight );
   }
 
   /**
-   * Clear all previously registered zoom levels.  This method is experimental.
-   */
-  public void resetDetailLevels() {
-    mDetailLevelManager.resetDetailLevels();
-    refresh();
-  }
-
-  /**
-   * While the detail level is locked (after this method is invoked, and before unlockDetailLevel is invoked),
-   * the DetailLevel will not change, and the current DetailLevel will be scaled beyond the normal
-   * bounds.  Normally, during any mScale change the details manager searches for the DetailLevel with
-   * a registered mScale closest to the defined mScale.  While locked, this does not occur.
-   */
-  public void lockDetailLevel() {
-    mDetailLevelManager.lockDetailLevel();
-  }
-
-  /**
-   * Unlocks a DetailLevel locked with lockDetailLevel
-   */
-  public void unlockDetailLevel() {
-    mDetailLevelManager.unlockDetailLevel();
-  }
-
-  /**
-   * pads the viewport by the number of pixels passed.  e.g., setViewportPadding( 100 ) instructs the
+   * Pads the viewport by the number of pixels passed.  e.g., setViewportPadding( 100 ) instructs the
    * TileView to interpret it's actual viewport offset by 100 pixels in each direction (top, left,
    * right, bottom), so more tiles will qualify for "visible" status when intersections are calculated.
    *
-   * @param padding (int) the number of pixels to pad the viewport by
+   * @param padding The number of pixels to pad the viewport by
    */
   public void setViewportPadding( int padding ) {
     mDetailLevelManager.setViewportPadding( padding );
@@ -303,10 +344,10 @@ public class TileView extends ZoomPanLayout implements
    * received by TileView methods will be translated to the the appropriate pixel value.
    * To remove this process, use undefineBounds.
    *
-   * @param left   the left edge of the rectangle used when calculating position.
-   * @param top    the top edge of the rectangle used when calculating position.
-   * @param right  the right edge of the rectangle used when calculating position.
-   * @param bottom the bottom edge of the rectangle used when calculating position.
+   * @param left   The left edge of the rectangle used when calculating position.
+   * @param top    The top edge of the rectangle used when calculating position.
+   * @param right  The right edge of the rectangle used when calculating position.
+   * @param bottom The bottom edge of the rectangle used when calculating position.
    */
   public void defineBounds( double left, double top, double right, double bottom ) {
     mCoordinateTranslater.setBounds( left, top, right, bottom );
@@ -372,20 +413,14 @@ public class TileView extends ZoomPanLayout implements
     );
   }
 
-
-  //------------------------------------------------------------------------------------
-  // Marker, Callout and HotSpot API
-  //------------------------------------------------------------------------------------
-
   /**
    * Markers added to this TileView will have anchor logic applied on the values provided here.
    * E.g., setMarkerAnchorPoints(-0.5f, -1.0f) will have markers centered horizontally, positioned
    * vertically to a value equal to - 1 * height.
-   * Note that individual markers can be assigned specific anchors - this method applies a default
-   * value to all markers added without specifying anchor values.
+   * Anchor values assigned to individual markers will override this default values.
    *
-   * @param anchorX The x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-   * @param anchorY The y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+   * @param anchorX The x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value.
+   * @param anchorY The y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value.
    */
   public void setMarkerAnchorPoints( float anchorX, float anchorY ) {
     mMarkerLayout.setAnchors( anchorX, anchorY );
@@ -393,14 +428,14 @@ public class TileView extends ZoomPanLayout implements
 
   /**
    * Add a marker to the the TileView.  The marker can be any View.
-   * No LayoutParams are required; the View will be laid out using WRAP_CONTENT for both width and height, and positioned based on the parameters
+   * No LayoutParams are required; the View will be laid out using WRAP_CONTENT for both width and height, and positioned based on the parameters.
    *
-   * @param view    View instance to be added to the TileView
-   * @param x       relative x position the View instance should be positioned at
-   * @param y       relative y position the View instance should be positioned at
-   * @param anchorX the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-   * @param anchorY the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
-   * @return  the View instance added to the TileView
+   * @param view    View instance to be added to the TileView.
+   * @param x       Relative x position the View instance should be positioned at.
+   * @param y       Relative y position the View instance should be positioned at.
+   * @param anchorX The x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value.
+   * @param anchorY The y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value.
+   * @return The View instance added to the TileView.
    */
   public View addMarker( View view, double x, double y, Float anchorX, Float anchorY ) {
     return mMarkerLayout.addMarker( view,
@@ -424,10 +459,10 @@ public class TileView extends ZoomPanLayout implements
    * Moves an existing marker to another position.
    *
    * @param view    The marker View to be repositioned.
-   * @param x       relative x position the View instance should be positioned at
-   * @param y       relative y position the View instance should be positioned at
-   * @param anchorX the x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value
-   * @param anchorY the y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value
+   * @param x       Relative x position the View instance should be positioned at.
+   * @param y       Relative y position the View instance should be positioned at.
+   * @param anchorX The x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value.
+   * @param anchorY The y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value.
    */
   public void moveMarker( View view, double x, double y, Float anchorX, Float anchorY ) {
     mMarkerLayout.moveMarker( view,
@@ -437,44 +472,45 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
-   * Scroll the TileView so that the View passed is centered in the viewport
+   * Scroll the TileView so that the View passed is centered in the viewport.
    *
-   * @param view    (View) the View marker that the TileView should center on.
-   * @param animate (boolean) should the movement use a transition effectg
+   * @param view    The View marker that the TileView should center on.
+   * @param animate True if the movement should use a transition effect.
    */
   public void moveToMarker( View view, boolean animate ) {
     if( mMarkerLayout.indexOfChild( view ) > -1 ) {
-      ViewGroup.LayoutParams params = view.getLayoutParams();
-      if( params instanceof MarkerLayout.LayoutParams ) {
-        MarkerLayout.LayoutParams anchorLayoutParams = (MarkerLayout.LayoutParams) params;
-        int scaledX = (int) (anchorLayoutParams.x * getScale() + 0.5);
-        int scaledY = (int) (anchorLayoutParams.y * getScale() + 0.5);
-        if( animate ) {
-          slideToAndCenter( scaledX, scaledY );
-        } else {
-          scrollToAndCenter( scaledX, scaledY );
-        }
+      throw new IllegalStateException( "The view passed is not an existing marker" );
+    }
+    ViewGroup.LayoutParams params = view.getLayoutParams();
+    if( params instanceof MarkerLayout.LayoutParams ) {
+      MarkerLayout.LayoutParams anchorLayoutParams = (MarkerLayout.LayoutParams) params;
+      int scaledX = (int) (anchorLayoutParams.x * getScale() + 0.5);
+      int scaledY = (int) (anchorLayoutParams.y * getScale() + 0.5);
+      if( animate ) {
+        slideToAndCenter( scaledX, scaledY );
+      } else {
+        scrollToAndCenter( scaledX, scaledY );
       }
     }
   }
 
   /**
-   * Register a MarkerEventListener.  Unlike standard touch events attached to marker View's (e.g., View.OnClickListener),
-   * MarkerEventListeners do not consume the touch event, so will not interfere with scrolling.  While the event is
+   * Register a MarkerTapListener.  Unlike standard touch events attached to marker View's (e.g., View.OnClickListener),
+   * MarkerTapListener do not consume the touch event, so will not interfere with scrolling.  While the event is
    * dispatched from a Tap event, it's routed though a hit detection API to trigger the listener.
    *
-   * @param listener Listener to be added to the TileView's list of MarkerEventListeners
+   * @param listener Listener to be added to the TileView's list of MarkerTapListener.
    */
-  public void addMarkerEventListener( MarkerLayout.MarkerTapListener listener ) {
-    mMarkerLayout.addMarketTapListener( listener );
+  public void addMarkerTapListener( MarkerLayout.MarkerTapListener listener ) {
+    mMarkerLayout.addMarkerTapListener( listener );
   }
 
   /**
-   * Removes a MarkerEventListener from the TileView's registry.
+   * Removes a MarkerTapListener from the TileView's registry.
    *
-   * @param listener Listener to be removed From the TileView's list of MarkerEventListeners
+   * @param listener Listener to be removed From the TileView's list of MarkerTapListener.
    */
-  public void removeMarkerEventListener( MarkerLayout.MarkerTapListener listener ) {
+  public void removeMarkerTapListener( MarkerLayout.MarkerTapListener listener ) {
     mMarkerLayout.removeMarkerTapListener( listener );
   }
 
@@ -484,24 +520,23 @@ public class TileView extends ZoomPanLayout implements
    * Callout views will always be positioned at the top of the view tree (at the highest z-index), and will always be removed during any touch event
    * that is not consumed by the callout View.
    *
-   * @param view    View instance to be added to the TileView's
-   * @param x       relative x position the View instance should be positioned at
-   * @param y       relative y position the View instance should be positioned at
-   * @param anchorX the x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value
-   * @param anchorY the y-axis position of a callout view will be offset by a number equal to the height of the callout view multiplied by this value
-   * @return the View instance added to the TileView's
+   * @param view    View instance to be added to the TileView.
+   * @param x       Relative x position the View instance should be positioned at.
+   * @param y       Relative y position the View instance should be positioned at.
+   * @param anchorX The x-axis position of a callout view will be offset by a number equal to the width of the callout view multiplied by this value.
+   * @param anchorY The y-axis position of a callout view will be offset by a number equal to the height of the callout view multiplied by this value.
+   * @return The View instance added to the TileView.
    */
   public View addCallout( View view, double x, double y, Float anchorX, Float anchorY ) {
     return mCalloutLayout.addMarker( view,
       mCoordinateTranslater.translateX( x ),
       mCoordinateTranslater.translateY( y ),
-      anchorX,
-      anchorY
+      anchorX, anchorY
     );
   }
 
   /**
-   * Removes a callout View from the TileView's view tree.
+   * Removes a callout View from the TileView.
    *
    * @param view The callout View to be removed.
    */
@@ -513,8 +548,8 @@ public class TileView extends ZoomPanLayout implements
    * Register a HotSpot that should fire an listener when a touch event occurs that intersects that rectangle.
    * The HotSpot moves and scales with the TileView.
    *
-   * @param hotSpot The hotspot that is tested against touch events that occur on the TileView
-   * @return The hotspot created with this method
+   * @param hotSpot The hotspot that is tested against touch events that occur on the TileView.
+   * @return The HotSpot instance added.
    */
   public HotSpot addHotSpot( HotSpot hotSpot ) {
     mHotSpotManager.addHotSpot( hotSpot );
@@ -526,7 +561,7 @@ public class TileView extends ZoomPanLayout implements
    * The HotSpot moves and scales with the TileView.
    *
    * @param positions (List<double[]>) List of paired doubles { x, y } that represents the points that make up the region.
-   * @return HotSpot the hotspot created with this method
+   * @return HotSpot the hotspot created with this method.
    */
   public HotSpot addHotSpot( List<double[]> positions, HotSpot.HotSpotTapListener listener ) {
     Path path = mCoordinateTranslater.pathFromPositions( positions );
@@ -542,21 +577,22 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
-   * Remove a HotSpot registered with addHotSpot
+   * Remove a HotSpot registered with addHotSpot.
    *
-   * @param hotSpot (HotSpot) the hotspot to remove
+   * @param hotSpot The HotSpot instance to remove.
    */
   public void removeHotSpot( HotSpot hotSpot ) {
     mHotSpotManager.removeHotSpot( hotSpot );
   }
 
   /**
-   * Register a HotSpotEventListener with the TileView.  This listener will fire if any hotspot's region intersects a Tap event.
+   * Register a HotSpotTapListener with the TileView.  This listener will fire if any registered
+   * HotSpot's region intersects a Tap event.
    *
-   * @param listener (HotSpotTapListener) the listener to be added.
+   * @param hotSpotTapListener The listener to be added.
    */
-  public void setHotSpotTapListener( HotSpot.HotSpotTapListener listener ) {
-    mHotSpotManager.setHotSpotTapListener( listener );
+  public void setHotSpotTapListener( HotSpot.HotSpotTapListener hotSpotTapListener ) {
+    mHotSpotManager.setHotSpotTapListener( hotSpotTapListener );
   }
 
   //------------------------------------------------------------------------------------
@@ -567,8 +603,8 @@ public class TileView extends ZoomPanLayout implements
    * Register a Path and Paint that will be drawn on a layer above the tiles, but below markers.
    * This Path's will be scaled with the TileView, but will always be as wide as the stroke set for the Paint.
    *
-   * @param drawablePath (DrawablePath) a DrawablePath instance to be drawn by the TileView
-   * @return DrawablePath the DrawablePath instance passed to the TileView
+   * @param drawablePath DrawablePath instance to be drawn by the TileView.
+   * @return The DrawablePath instance passed to the TileView.
    */
   public CompositePathView.DrawablePath drawPath( CompositePathView.DrawablePath drawablePath ) {
     return mCompositePathView.addPath( drawablePath );
@@ -580,7 +616,7 @@ public class TileView extends ZoomPanLayout implements
    *
    * @param positions List of doubles { x, y } that represent the points of the Path.
    * @param paint     the Paint instance that defines the style of the drawn path.
-   * @return the DrawablePath instance passed to the TileView
+   * @return The DrawablePath instance passed to the TileView.
    */
   public CompositePathView.DrawablePath drawPath( List<double[]> positions, Paint paint ) {
     Path path = mCoordinateTranslater.pathFromPositions( positions );
@@ -590,7 +626,7 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Removes a DrawablePath from the TileView's registry.  This path will no longer be drawn by the TileView.
    *
-   * @param drawablePath (DrawablePath) the DrawablePath instance to be removed.
+   * @param drawablePath The DrawablePath instance to be removed.
    */
   public void removePath( CompositePathView.DrawablePath drawablePath ) {
     mCompositePathView.removePath( drawablePath );
@@ -605,39 +641,32 @@ public class TileView extends ZoomPanLayout implements
     return mCompositePathView.getDefaultPaint();
   }
 
-  //------------------------------------------------------------------------------------
-  // Memory Management API
-  //------------------------------------------------------------------------------------
-
   /**
-   * Clear bitmap image files, appropriate for Activity.onPause
-   */
-  public void clear() {
-    mTileCanvasViewGroup.clear();
-    mCompositePathView.setShouldDraw( false );
-  }
-
-  /**
-   * Clear bitmap image files, appropriate for Activity.onPause (mirror for .clear)
+   * Clear bitmap image files, appropriate for Activity.onPause.
    */
   public void pause() {
-    clear();
+    mTileCanvasViewGroup.clear();
+    mRenderThrottleHandler.clear();
+    mCompositePathView.setShouldDraw( false );
+    setWillNotDraw( true );
   }
 
   /**
-   * Clear tile image files and remove all views, appropriate for Activity.onDestroy
-   * References to TileView should be set to null following invocations of this method.
+   * Clear tile image files and remove all views, appropriate for Activity.onDestroy.
+   * After invoking this method, the TileView instance should be removed from any view trees,
+   * and references should be set to null.
    */
   public void destroy() {
-    mTileCanvasViewGroup.clear();
+    pause();
     mCompositePathView.clear();
   }
 
   /**
-   * Restore visible state (generally after a call to .clear()
-   * Appropriate for Activity.onResume
+   * Restore visible state (generally after a call to clear).
+   * Appropriate for Activity.onResume.
    */
   public void resume() {
+    setWillNotDraw( false );
     updateViewport();
     mTileCanvasViewGroup.requestRender();
     mCompositePathView.setShouldDraw( true );
@@ -650,15 +679,9 @@ public class TileView extends ZoomPanLayout implements
     updateViewport();
     mTileCanvasViewGroup.updateTileSet( mDetailLevelManager.getCurrentDetailLevel() );
     mTileCanvasViewGroup.requestRender();
-    redraw();
+    requestLayout();
   }
 
-  //------------------------------------------------------------------------------------
-  // PRIVATE API
-  //------------------------------------------------------------------------------------
-
-
-  // make sure we keep the viewport UTD, and if layout changes we'll need to recompute what tiles to show
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
     super.onLayout( changed, l, t, r, b );
@@ -666,13 +689,11 @@ public class TileView extends ZoomPanLayout implements
     requestRender();
   }
 
-  // let the zoom manager know what tiles to show based on our position and dimensions
   private void updateViewport() {
     int left = getScrollX();
     int top = getScrollY();
     int right = left + getWidth();
     int bottom = top + getHeight();
-    Log.d( "Tiles", "tv.uvp=" + getWidth() + " (should be screen size, not map size" );
     mDetailLevelManager.updateViewport( left, top, right, bottom );
   }
 
@@ -753,8 +774,7 @@ public class TileView extends ZoomPanLayout implements
     // TODO: test
     int x = (int) (getScrollX() + event.getX());
     int y = (int) (getScrollY() + event.getY());
-    Point point = new Point( x, y );
-    mMarkerLayout.processHit( point );
+    mMarkerLayout.processHit( x, y );
     mHotSpotManager.processHit( x, y );
     return super.onSingleTapConfirmed( event );
   }
@@ -781,54 +801,6 @@ public class TileView extends ZoomPanLayout implements
   // end hooks
   //------------------------------------------------------------------------------------
 
-  //------------------------------------------------------------------------------------
-  // start high-level accessors
-  //------------------------------------------------------------------------------------
-
-  public DetailLevelManager getDetailLevelManager() {
-    return mDetailLevelManager;
-  }
-
-  public CoordinateTranslater getCoordinateTranslater() {
-    return mCoordinateTranslater;
-  }
-
-  public HotSpotManager getHotSpotManager() {
-    return mHotSpotManager;
-  }
-
-  public CompositePathView getCompositePathView() {
-    return mCompositePathView;
-  }
-
-  public TileCanvasViewGroup getTileCanvasViewGroup() {
-    return mTileCanvasViewGroup;
-  }
-
-  public MarkerLayout getMarkerLayout() {
-    return mMarkerLayout;
-  }
-
-  public CalloutLayout getCalloutLayout() {
-    return mCalloutLayout;
-  }
-
-  public ScalingLayout getScalingLayout() {
-    return mScalingLayout;
-  }
-
-  //------------------------------------------------------------------------------------
-  // end high-level accessors
-  //------------------------------------------------------------------------------------
-
-  //------------------------------------------------------------------------------------
-  // private internal listeners
-  //------------------------------------------------------------------------------------
-
-
-  //------------------------------------------------------------------------------------
-  // end internal listeners
-  //------------------------------------------------------------------------------------
 
   //------------------------------------------------------------------------------------
   // private internal classes

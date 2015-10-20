@@ -99,10 +99,19 @@ public class DetailLevelManager {
     return mComputedViewport;
   }
 
+  /**
+   * While the detail level is locked (after this method is invoked, and before unlockDetailLevel is invoked),
+   * the DetailLevel will not change, and the current DetailLevel will be scaled beyond the normal
+   * bounds.  Normally, during any scale change the DetailManager searches for the DetailLevel with
+   * a registered scale closest to the defined mScale.  While locked, this does not occur.
+   */
   public void lockDetailLevel() {
     mDetailLevelLocked = true;
   }
 
+  /**
+   * Unlocks a DetailLevel locked with lockDetailLevel.
+   */
   public void unlockDetailLevel() {
     mDetailLevelLocked = false;
   }

@@ -16,7 +16,7 @@ public class ScalingLayout extends ViewGroup {
 
 	public void setScale( float factor ) {
 		mScale = factor;
-		postInvalidate();
+		invalidate();
 	}
 
 	public float getScale() {
@@ -35,17 +35,17 @@ public class ScalingLayout extends ViewGroup {
 		setMeasuredDimension( width, height );
 	}
 
-	@Override
-	protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    int availableWidth = r - l;
-    int availableHeight = b - t;
-		for( int i = 0; i < getChildCount(); i++ ) {
-			View child = getChildAt( i );
-			if( child.getVisibility() != GONE ) {
-				child.layout( 0, 0, availableWidth, availableHeight );
-			}
-		}
-	}
+  @Override
+  protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+    int availableWidth = (int) ((r - l) / mScale + 0.5);
+    int availableHeight = (int) ((b - t) / mScale + 0.5);
+    for( int i = 0; i < getChildCount(); i++ ) {
+      View child = getChildAt( i );
+      if( child.getVisibility() != GONE ) {
+        child.layout( 0, 0, availableWidth, availableHeight );
+      }
+    }
+  }
 
 	@Override
 	public void onDraw( Canvas canvas ) {
