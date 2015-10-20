@@ -68,19 +68,19 @@ public class TileView extends ZoomPanLayout implements
   TileCanvasViewGroup.TileRenderListener,
   DetailLevelManager.DetailLevelChangeListener {
 
-  private static final int DEFAULT_TILE_SIZE = 256;
+  protected static final int DEFAULT_TILE_SIZE = 256;
 
-  private DetailLevelManager mDetailLevelManager = new DetailLevelManager();
-  private CoordinateTranslater mCoordinateTranslater = new CoordinateTranslater();
-  private HotSpotManager mHotSpotManager = new HotSpotManager();
+  protected DetailLevelManager mDetailLevelManager = new DetailLevelManager();
+  protected CoordinateTranslater mCoordinateTranslater = new CoordinateTranslater();
+  protected HotSpotManager mHotSpotManager = new HotSpotManager();
 
-  private TileCanvasViewGroup mTileCanvasViewGroup;
-  private CompositePathView mCompositePathView;
-  private ScalingLayout mScalingLayout;
-  private MarkerLayout mMarkerLayout;
-  private CalloutLayout mCalloutLayout;
+  protected TileCanvasViewGroup mTileCanvasViewGroup;
+  protected CompositePathView mCompositePathView;
+  protected ScalingLayout mScalingLayout;
+  protected MarkerLayout mMarkerLayout;
+  protected CalloutLayout mCalloutLayout;
 
-  private RenderThrottleHandler mRenderThrottleHandler;
+  protected RenderThrottleHandler mRenderThrottleHandler;
 
   /**
    * Constructor to use when creating a TileView from code.
@@ -227,7 +227,7 @@ public class TileView extends ZoomPanLayout implements
    * If flinging, defer render, otherwise request now.
    * If a render operation starts at the beginning of a fling, a stutter can occur.
    */
-  private void requestSafeRender() {
+  protected void requestSafeRender() {
     if( isFlinging() ) {
       requestThrottledRender();
     } else {
@@ -687,7 +687,7 @@ public class TileView extends ZoomPanLayout implements
     requestRender();
   }
 
-  private void updateViewport() {
+  protected void updateViewport() {
     int left = getScrollX();
     int top = getScrollY();
     int right = left + getWidth();
@@ -857,6 +857,13 @@ public class TileView extends ZoomPanLayout implements
     getZoomPanAnimator().startZoomPanAndCenter( x, y, scale );
   }
 
+  public void slideToAndCenterWithScale( double x, double y, float scale ) {
+    slideToAndCenter(
+      mCoordinateTranslater.translateAndScaleX( x, scale ),
+      mCoordinateTranslater.translateAndScaleY( y, scale )
+    );
+    smoothScaleTo( scale, SLIDE_DURATION, false );
+  }
 
 
   //------------------------------------------------------------------------------------

@@ -157,7 +157,21 @@ public class RealMapTileViewActivity extends Activity {
 			double[] position = (double[]) view.getTag();
       float destScale = tileView.getScale() > 0.5f ? 0.5f : 1f;
 
+      /*
+      tileView.slideToAndCenterWithScale( position[0], position[1], destScale );
+      */
+
+
       tileView.testZoomPan( position[0], position[1], destScale );
+
+
+      /*
+      int x = (int) (tileView.getCoordinateTranslater().translateX( position[0] ) * destScale - tileView.getWidth() / 2);
+      int y = (int) (tileView.getCoordinateTranslater().translateY( position[1] ) * destScale - tileView.getHeight() / 2);
+      tileView.slideToAndCenter( x, y );
+      tileView.smoothScaleTo( destScale, 400, false );
+      */
+
       /*
 
       int x = tileView.getCoordinateTranslater().translateAndScaleX( position[0], destScale );

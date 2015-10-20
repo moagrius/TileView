@@ -16,7 +16,7 @@ X1.  Include a sample downsample
 X1.  Remove LRU cache dependency
 X1.  Use more framework-provided functionality, like GestureListener
 X1.  End fling (test for change)
-1.  Make most private into protected for extensibility
+X1.  Make most private into protected for extensibility
 X1.  Other Issues
     a.  when detail levels change with no downsample, there's a moment when the old one dies before the new one is done.
 X1.  Don't use detail manager as intermediary anymore
@@ -25,7 +25,7 @@ X1.  Remove TileSetSelector
 -1.  consider generics in the arbitrary data Object for detail levels
 X1.  optimize data structures
 X1.  optimize tile set comparisons
-1.  set downsample (addView imageView)?
+-1.  set downsample (addView imageView)?
 
 
 

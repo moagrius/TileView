@@ -3,11 +3,11 @@ package com.qozix.tileview.widgets;
 import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -37,9 +37,9 @@ public class ZoomPanLayout extends ViewGroup implements
   ValueAnimator.AnimatorUpdateListener,
   TouchUpGestureDetector.OnTouchUpListener {
 
-  private static final int ZOOM_ANIMATION_DURATION = 400;
-  private static final int SLIDE_DURATION = 400;
-  private static final int FLYWHEEL_TIMEOUT = 40;  // from AbsListView
+  protected static final int ZOOM_ANIMATION_DURATION = 400;
+  protected static final int SLIDE_DURATION = 400;
+  protected static final int FLYWHEEL_TIMEOUT = 40;  // from AbsListView
 
   private int mBaseWidth;
   private int mBaseHeight;
@@ -57,6 +57,8 @@ public class ZoomPanLayout extends ViewGroup implements
   private float mStartFocusY;
   private int mStartScaleScrollX;
   private int mStartScaleScrollY;
+
+  private boolean mShouldMaintainPositionWhileZooming;
 
   private boolean mShouldScaleToFit = true;  // TODO:
 
@@ -321,22 +323,9 @@ public class ZoomPanLayout extends ViewGroup implements
     slideTo( x - getHalfWidth(), y - getHalfHeight() );
   }
 
-  /**
-   * <i>This method is experimental</i>
-   * Scroll and mScale to match passed Rect as closely as possible.
-   * The widget will attempt to frame the Rectangle, so that it's contained
-   * within the viewport, if possible.
-   *
-   * @param rect A Rectangle instance describing the area to frame.
-   */
-  public void frameViewport( Rect rect ) {
-    // TODO: slideTo? center the axis that's smaller?
-    scrollTo( rect.left, rect.top );
-    float scaleX = getWidth() / (float) rect.width();
-    float scaleY = getHeight() / (float) rect.height();
-    float minimumScale = Math.min( scaleX, scaleY );
-    smoothScaleTo( minimumScale, SLIDE_DURATION );
-
+  public void slideToAndCenterWithScale( int x, int y, float scale ) {
+    slideToAndCenter( (int) (x * scale), (int) (y * scale) );
+    smoothScaleTo( scale, SLIDE_DURATION, false );
   }
 
   /**
@@ -367,12 +356,12 @@ public class ZoomPanLayout extends ViewGroup implements
    * @param destination (double) The final mScale to animate to
    * @param duration    (int) The duration (in milliseconds) of the animation
    */
-  public void smoothScaleTo( float destination, int duration ) {
+  public void smoothScaleTo( float destination, int duration, boolean shouldMaintainPosition ) {
     if( mIsScaling ) {
       return;
     }
     saveScaleOrigination( getHalfWidth(), getHalfHeight() );
-    startSmoothScaleTo( destination, duration );
+    startSmoothScaleTo( destination, duration, shouldMaintainPosition );
   }
 
   @Override
@@ -500,16 +489,20 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   private void maintainScrollDuringScaleOperation() {
-    double deltaScale = mScale / mHistoricalScale;
-    int x = (int) ((mStartScaleScrollX * deltaScale) - mStartFocusX);
-    int y = (int) ((mStartScaleScrollY * deltaScale) - mStartFocusY);
-    scrollTo( x, y );
+    if( mShouldMaintainPositionWhileZooming ) {
+      double deltaScale = mScale / mHistoricalScale;
+      int x = (int) ((mStartScaleScrollX * deltaScale) - mStartFocusX);
+      int y = (int) ((mStartScaleScrollY * deltaScale) - mStartFocusY);
+      Log.d( "Scroll", "maintaining" );
+      scrollTo( x, y );
+    }
   }
 
-  private void startSmoothScaleTo( float destination, int duration ) {
+  private void startSmoothScaleTo( float destination, int duration, boolean shouldMaintainPosition ) {
     if( mIsScaling ) {
       return;
     }
+    mShouldMaintainPositionWhileZooming = shouldMaintainPosition;
     ValueAnimator animator = getAnimator();
     animator.setFloatValues( mScale, destination );
     animator.setDuration( duration );
@@ -601,6 +594,7 @@ public class ZoomPanLayout extends ViewGroup implements
     }
   }
 
+  // TODO:
   private void broadcastProgrammaticPanBegin( int x, int y ) {
     for( ZoomPanListener listener : mZoomPanListeners ) {
       listener.onPanBegin( x, y, null );
@@ -723,7 +717,7 @@ public class ZoomPanLayout extends ViewGroup implements
   public boolean onDoubleTap( MotionEvent event ) {
     float destination = mScale >= mMaxScale ? mMinScale : Math.min( mMaxScale, mScale * 2 );
     saveScaleOrigination( event.getX(), event.getY() );
-    startSmoothScaleTo( destination, ZOOM_ANIMATION_DURATION );
+    startSmoothScaleTo( destination, ZOOM_ANIMATION_DURATION, true );
     return true;
   }
 
@@ -771,7 +765,9 @@ public class ZoomPanLayout extends ViewGroup implements
   public void onAnimationUpdate( ValueAnimator valueAnimator ) {
     float scale = (float) valueAnimator.getAnimatedValue();
     setScale( scale );
-    maintainScrollDuringScaleOperation();
+    if( mShouldMaintainPositionWhileZooming ) {
+      maintainScrollDuringScaleOperation();
+    }
     broadcastProgrammaticZoomUpdate( scale, mStartFocusX, mStartFocusY );
   }
   //END AnimatorUpdateListener
