@@ -417,8 +417,8 @@ public class TileView extends ZoomPanLayout implements
   public void slideToAndCenterWithScale( double x, double y, float scale ){
     Log.d( "Anim", "correct slideToAndCenterWithScale called" );
     slideToAndCenterWithScale(
-      mCoordinateTranslater.translateAndScaleX( x, getScale() ),  // TODO: scale, not getScale()?z
-      mCoordinateTranslater.translateAndScaleY( y, getScale() ),
+      mCoordinateTranslater.translateAndScaleX( x, scale ),  // TODO: scale, not getScale()?z
+      mCoordinateTranslater.translateAndScaleY( y, scale ),
       scale
     );
   }
@@ -763,6 +763,7 @@ public class TileView extends ZoomPanLayout implements
   public void onZoomEnd( float scale, float focusX, float focusY, Origination origin ) {
     mDetailLevelManager.unlockDetailLevel();
     mDetailLevelManager.setScale( scale );
+    Log.d( "Anim", "onZoomEnd, requestRender" );
     requestRender();
   }
   // end ZoomPanListener

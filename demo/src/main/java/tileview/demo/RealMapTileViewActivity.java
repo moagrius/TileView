@@ -2,12 +2,16 @@ package tileview.demo;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.CornerPathEffect;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.qozix.tileview.TileView;
 
@@ -41,16 +45,8 @@ public class RealMapTileViewActivity extends Activity {
 		// size and geolocation
 		tileView.setSize( 17934 / 2, 13452 / 2);
 
-		// we won't use a downsample here, so color it similarly to tiles
 		tileView.setBackgroundColor( 0xFFe7e7e7 );
 
-		/*
-		tileView.addDetailLevel( 0.0625f, "tiles/map/phi-62500-%d_%d.jpg" );
-		tileView.addDetailLevel( 0.1250f, "tiles/map/phi-125000-%d_%d.jpg" );
-		tileView.addDetailLevel( 0.2500f, "tiles/map/phi-250000-%d_%d.jpg" );
-		tileView.addDetailLevel( 0.5000f, "tiles/map/phi-500000-%d_%d.jpg" );
-		tileView.addDetailLevel( 1.0000f, "tiles/map/phi-1000000-%d_%d.jpg" );
-		*/
 		tileView.addDetailLevel( 0.1250f, "tiles/map/phi-62500-%d_%d.jpg" );
 		tileView.addDetailLevel( 0.2500f, "tiles/map/phi-125000-%d_%d.jpg" );
 		tileView.addDetailLevel( 0.5000f, "tiles/map/phi-250000-%d_%d.jpg" );
@@ -71,7 +67,7 @@ public class RealMapTileViewActivity extends Activity {
     // get metrics for programmatic DP
     DisplayMetrics metrics = getResources().getDisplayMetrics();
 
-    /*
+
     // get the default paint and style it.  the same effect could be achieved by passing a custom Paint instnace
 		Paint paint = tileView.getPathPaint();
 
@@ -87,8 +83,8 @@ public class RealMapTileViewActivity extends Activity {
         TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 5, metrics )
       )
     );
-		tileView.drawPath( points.subList( 1, 5 ) );
-		*/
+		tileView.drawPath( points.subList( 1, 5 ), null );
+
 
 
 		// add markers for all the points
@@ -126,23 +122,30 @@ public class RealMapTileViewActivity extends Activity {
 
     tileView.setTransitionsEnabled( false );
 
+    /*
     ImageView downsample = new ImageView( this );
     downsample.setImageResource( R.drawable.downsample );
     tileView.addView( downsample, 0 );
+*/
 
-    // TODO: put this in a relativelayout
     Button button = new Button( this );
     button.setText( "ZoomAndScale" );
-    button.setOnClickListener( new View.OnClickListener(){
+    button.setOnClickListener( new View.OnClickListener() {
       @Override
       public void onClick( View view ) {
         double[] spot = points.get( 0 );
         tileView.slideToAndCenterWithScale( spot[0], spot[1], 0.5f );
+        //tileView.slideToAndCenter( spot[0], spot[1] );
       }
-    });
-    tileView.addMarker( button, NORTH_WEST_LONGITUDE, NORTH_WEST_LATITUDE, 0f, 0f );
+    } );
 
-    setContentView( tileView );
+
+
+    RelativeLayout contentView = new RelativeLayout( this );
+    contentView.addView( tileView );
+    contentView.addView( button );
+
+    setContentView( contentView );
     /*
 		LinearLayout linearLayout = new LinearLayout( this );
 		linearLayout.setOrientation( LinearLayout.VERTICAL );
