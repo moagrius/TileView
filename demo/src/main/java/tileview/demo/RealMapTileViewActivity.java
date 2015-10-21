@@ -97,8 +97,13 @@ public class RealMapTileViewActivity extends Activity {
     button.setOnClickListener( new View.OnClickListener() {
       @Override
       public void onClick( View view ) {
+        /*
         double[] spot = points.get( 0 );
         tileView.slideToAndCenterWithScale( spot[0], spot[1], 0.5f );
+        */
+        tileView.setScaleLimits( 0.1f, 1.0f );
+        //tileView.setShouldScaleToFit( false );
+        tileView.setScale( 0.1f );
       }
     } );
 

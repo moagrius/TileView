@@ -45,7 +45,8 @@ public class ZoomPanLayout extends ViewGroup implements
   private float mMinScale = 0;
   private float mMaxScale = 1;
 
-  private boolean mShouldScaleToFit = true;  // TODO:
+  private float mEffectiveMinScale;
+  private boolean mShouldScaleToFit = true;
 
   private boolean mIsFlinging;
   private boolean mIsDragging;
@@ -109,10 +110,7 @@ public class ZoomPanLayout extends ViewGroup implements
    * @param max Maximum mScale the ZoomPanLayout should accept.
    */
   public void setScaleLimits( float min, float max ) {
-    // if mShouldScaleToFit is set, don't allow overwrite
-    if( !mShouldScaleToFit ) {
-      mMinScale = min;
-    }
+    mMinScale = min;
     mMaxScale = max;
     setScale( mScale );
   }
@@ -168,7 +166,8 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   private float getConstrainedDestinationScale( float scale ) {
-    scale = Math.max( scale, mMinScale );
+    float currentMinumumScale = mShouldScaleToFit ? mEffectiveMinScale : mMinScale;
+    scale = Math.max( scale, currentMinumumScale );
     scale = Math.min( scale, mMaxScale );
     return scale;
   }
@@ -468,8 +467,8 @@ public class ZoomPanLayout extends ViewGroup implements
       float minimumScaleX = getWidth() / (float) mBaseWidth;
       float minimumScaleY = getHeight() / (float) mBaseHeight;
       float recalculatedMinScale = Math.max( minimumScaleX, minimumScaleY );
-      if( recalculatedMinScale != mMinScale ) {
-        mMinScale = recalculatedMinScale;
+      if( recalculatedMinScale != mEffectiveMinScale ) {
+        mEffectiveMinScale = recalculatedMinScale;
         setScale( mScale );
       }
     }

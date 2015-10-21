@@ -7,9 +7,9 @@ X1.  Better thread management
 1.  Issues
     Xa. Disable zoom on double tap feature request - extend and override onDoubleTap (no super)
     Xb. Smooth scale to position feature request
-    c. Skipped detail level feature request
+    -c. Skipped detail level feature request
     Xd. moveMarker(x, y) overrides anchor feature request
-    e. setScaleLimit does not work with setScaleToFit(false) bug
+    Xe. setScaleLimit does not work with setScaleToFit(false) bug
 X1.  Allow layer insertion and scaling layer insertion
 X1.  Eliminate downsample paradigm
 X1.  Include a sample downsample
