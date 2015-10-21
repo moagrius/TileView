@@ -6,7 +6,7 @@ X1.  Eliminate hacked core classes
 X1.  Better thread management
 1.  Issues
     Xa. Disable zoom on double tap feature request - extend and override onDoubleTap (no super)
-    b. Smooth scale to position feature request
+    Xb. Smooth scale to position feature request
     c. Skipped detail level feature request
     Xd. moveMarker(x, y) overrides anchor feature request
     e. setScaleLimit does not work with setScaleToFit(false) bug
@@ -18,7 +18,7 @@ X1.  Use more framework-provided functionality, like GestureListener
 X1.  End fling (test for change)
 X1.  Make most private into protected for extensibility
 X1.  Other Issues
-    a.  when detail levels change with no downsample, there's a moment when the old one dies before the new one is done.
+    Xa.  when detail levels change with no downsample, there's a moment when the old one dies before the new one is done.
 X1.  Don't use detail manager as intermediary anymore
 X1.  BitmapDecoder to TileProvider or Adapter paradigm
 X1.  Remove TileSetSelector

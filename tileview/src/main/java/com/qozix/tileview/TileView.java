@@ -274,15 +274,6 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
-   * Define the duration (in milliseconds) for each tile transition.
-   *
-   * @param duration The duration of the transition in milliseconds.
-   */
-  public void setTransitionDuration( int duration ) {
-    mTileCanvasViewGroup.setTransitionDuration( duration );
-  }
-
-  /**
    * Defines the total size, in pixels, of the tile set at 100% scale.
    * The TileView wills pan within it's layout dimensions, with the content (scrollable)
    * size defined by this method.
@@ -415,9 +406,8 @@ public class TileView extends ZoomPanLayout implements
   }
 
   public void slideToAndCenterWithScale( double x, double y, float scale ){
-    Log.d( "Anim", "correct slideToAndCenterWithScale called" );
     slideToAndCenterWithScale(
-      mCoordinateTranslater.translateAndScaleX( x, scale ),  // TODO: scale, not getScale()?z
+      mCoordinateTranslater.translateAndScaleX( x, scale ),
       mCoordinateTranslater.translateAndScaleY( y, scale ),
       scale
     );
@@ -749,18 +739,18 @@ public class TileView extends ZoomPanLayout implements
   }
 
   @Override
-  public void onZoomBegin( float scale, float focusX, float focusY, Origination origin ) {
+  public void onZoomBegin( float scale, Origination origin ) {
     mDetailLevelManager.lockDetailLevel();
     mDetailLevelManager.setScale( scale );
   }
 
   @Override
-  public void onZoomUpdate( float scale, float focusX, float focusY, Origination origin ) {
+  public void onZoomUpdate( float scale, Origination origin ) {
 
   }
 
   @Override
-  public void onZoomEnd( float scale, float focusX, float focusY, Origination origin ) {
+  public void onZoomEnd( float scale, Origination origin ) {
     mDetailLevelManager.unlockDetailLevel();
     mDetailLevelManager.setScale( scale );
     Log.d( "Anim", "onZoomEnd, requestRender" );
