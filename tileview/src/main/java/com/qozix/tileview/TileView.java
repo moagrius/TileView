@@ -1,6 +1,5 @@
 package com.qozix.tileview;
 
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -10,6 +9,7 @@ import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -414,6 +414,15 @@ public class TileView extends ZoomPanLayout implements
     );
   }
 
+  public void slideToAndCenterWithScale( double x, double y, float scale ){
+    Log.d( "Anim", "correct slideToAndCenterWithScale called" );
+    slideToAndCenterWithScale(
+      mCoordinateTranslater.translateAndScaleX( x, getScale() ),  // TODO: scale, not getScale()?z
+      mCoordinateTranslater.translateAndScaleY( y, getScale() ),
+      scale
+    );
+  }
+
   /**
    * Markers added to this TileView will have anchor logic applied on the values provided here.
    * E.g., setMarkerAnchorPoints(-0.5f, -1.0f) will have markers centered horizontally, positioned
@@ -794,76 +803,6 @@ public class TileView extends ZoomPanLayout implements
 
   }
   // end TileRenderListener
-
-  //------------------------------------------------------------------------------------
-  // end hooks
-  //------------------------------------------------------------------------------------
-  private static class ZoomPanAnimator implements ValueAnimator.AnimatorUpdateListener {
-    private static final int DEFAULT_ZOOM_PAN_ANIMATION_DURATION = 400;
-    private WeakReference<TileView> mTileViewWeakReference;
-    private ValueAnimator mValueAnimator;
-    private ZoomPanState mStartState = new ZoomPanState();
-    private ZoomPanState mEndState = new ZoomPanState();
-    public ZoomPanAnimator( TileView tileView ) {
-      mTileViewWeakReference = new WeakReference<TileView>( tileView );
-    }
-    public ValueAnimator getValueAnimator(){
-      if( mValueAnimator == null ) {
-        mValueAnimator = ValueAnimator.ofFloat( 0, 1 );
-        mValueAnimator.setDuration( DEFAULT_ZOOM_PAN_ANIMATION_DURATION );
-        mValueAnimator.addUpdateListener( this );
-      }
-      return mValueAnimator;
-    }
-    public void startZoomPanAndCenter( double x, double y, float scale ) {
-      TileView tileView = mTileViewWeakReference.get();
-      if( tileView != null ) {
-        mStartState.scale = tileView.getScale();
-        mStartState.scrollX = tileView.getScrollX();
-        mStartState.scrollY = tileView.getScrollY();
-        mEndState.scale = scale;
-        mEndState.scrollX = tileView.getCoordinateTranslater().translateAndScaleX( x, scale ) - tileView.getWidth() / 2;
-        mEndState.scrollY = tileView.getCoordinateTranslater().translateAndScaleY( y, scale ) - tileView.getHeight() / 2;
-        getValueAnimator().start();
-      }
-    }
-    @Override
-    public void onAnimationUpdate( ValueAnimator animation ) {
-      TileView tileView = mTileViewWeakReference.get();
-      if( tileView != null ) {
-        float progress = (float) animation.getAnimatedValue();
-        int scrollX = (int) (mStartState.scrollX + ( mEndState.scrollX - mStartState.scrollX) * progress);
-        int scrollY = (int) (mStartState.scrollY + ( mEndState.scrollY - mStartState.scrollY) * progress);
-        float scale = mStartState.scale + ( mEndState.scale - mStartState.scale) * progress;
-        tileView.scrollTo( scrollX, scrollY );
-        tileView.setScale( scale );
-      }
-    }
-    private static class ZoomPanState {
-      public int scrollX;
-      public int scrollY;
-      public float scale;
-    }
-  }
-
-  private ZoomPanAnimator mZoomPanAnimator;
-  public ZoomPanAnimator getZoomPanAnimator(){
-    if( mZoomPanAnimator == null ) {
-      mZoomPanAnimator = new ZoomPanAnimator( this );
-    }
-    return mZoomPanAnimator;
-  }
-  public void testZoomPan( double x, double y, float scale ) {
-    getZoomPanAnimator().startZoomPanAndCenter( x, y, scale );
-  }
-
-  public void slideToAndCenterWithScale( double x, double y, float scale ) {
-    slideToAndCenter(
-      mCoordinateTranslater.translateAndScaleX( x, scale ),
-      mCoordinateTranslater.translateAndScaleY( y, scale )
-    );
-    smoothScaleTo( scale, SLIDE_DURATION, false );
-  }
 
 
   //------------------------------------------------------------------------------------

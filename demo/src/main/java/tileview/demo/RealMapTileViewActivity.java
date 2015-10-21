@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import com.qozix.tileview.TileView;
@@ -35,7 +36,7 @@ public class RealMapTileViewActivity extends Activity {
 		super.onCreate( savedInstanceState );
 
 		// we'll reference the TileView multiple times
-		tileView = new NoDoubleTapTileView(this);
+		tileView = new TileView(this);
 
 		// size and geolocation
 		tileView.setSize( 17934 / 2, 13452 / 2);
@@ -129,6 +130,18 @@ public class RealMapTileViewActivity extends Activity {
     downsample.setImageResource( R.drawable.downsample );
     tileView.addView( downsample, 0 );
 
+    // TODO: put this in a relativelayout
+    Button button = new Button( this );
+    button.setText( "ZoomAndScale" );
+    button.setOnClickListener( new View.OnClickListener(){
+      @Override
+      public void onClick( View view ) {
+        double[] spot = points.get( 0 );
+        tileView.slideToAndCenterWithScale( spot[0], spot[1], 0.5f );
+      }
+    });
+    tileView.addMarker( button, NORTH_WEST_LONGITUDE, NORTH_WEST_LATITUDE, 0f, 0f );
+
     setContentView( tileView );
     /*
 		LinearLayout linearLayout = new LinearLayout( this );
@@ -155,33 +168,8 @@ public class RealMapTileViewActivity extends Activity {
 		public void onClick( View view ) {
 			// we saved the coordinate in the marker's tag
 			double[] position = (double[]) view.getTag();
-      float destScale = tileView.getScale() > 0.5f ? 0.5f : 1f;
-
-      /*
-      tileView.slideToAndCenterWithScale( position[0], position[1], destScale );
-      */
-
-
-      tileView.testZoomPan( position[0], position[1], destScale );
-
-
-      /*
-      int x = (int) (tileView.getCoordinateTranslater().translateX( position[0] ) * destScale - tileView.getWidth() / 2);
-      int y = (int) (tileView.getCoordinateTranslater().translateY( position[1] ) * destScale - tileView.getHeight() / 2);
-      tileView.slideToAndCenter( x, y );
-      tileView.smoothScaleTo( destScale, 400, false );
-      */
-
-      /*
-
-      int x = tileView.getCoordinateTranslater().translateAndScaleX( position[0], destScale );
-      int y = tileView.getCoordinateTranslater().translateAndScaleY( position[1], destScale );
-      tileView.slideToAndCenterWithScale( x, y, destScale, true );
-      */
-		  /*
-			/ lets center the screen to that coordinate
+			// lets center the screen to that coordinate
 			tileView.slideToAndCenter( position[0], position[1] );
-
 			// create a simple callout
 			SampleCallout callout = new SampleCallout( view.getContext() );
 			// add it to the view tree at the same position and offset as the marker that invoked it
@@ -191,7 +179,6 @@ public class RealMapTileViewActivity extends Activity {
 			// stub out some text
 			callout.setTitle( "MAP CALLOUT" );
 			callout.setSubtitle( "Info window at coordinate:\n" + position[1] + ", " + position[0] );
-			*/
 		}
 	};
 

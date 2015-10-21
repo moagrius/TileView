@@ -7,12 +7,12 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Interpolator;
 import android.widget.Scroller;
 
 import com.qozix.tileview.view.TouchUpGestureDetector;
@@ -33,11 +33,10 @@ public class ZoomPanLayout extends ViewGroup implements
   GestureDetector.OnGestureListener,
   GestureDetector.OnDoubleTapListener,
   ScaleGestureDetector.OnScaleGestureListener,
-  ValueAnimator.AnimatorListener,
-  ValueAnimator.AnimatorUpdateListener,
   TouchUpGestureDetector.OnTouchUpListener {
 
   protected static final int ZOOM_ANIMATION_DURATION = 400;
+  // TODO: consolidate, and allow setable
   protected static final int SLIDE_DURATION = 400;
   protected static final int FLYWHEEL_TIMEOUT = 40;  // from AbsListView
 
@@ -48,17 +47,9 @@ public class ZoomPanLayout extends ViewGroup implements
   private int mScaledHeight;
 
   private float mScale = 1;
-  private float mHistoricalScale = 1;
 
   private float mMinScale = 0;
   private float mMaxScale = 1;
-
-  private float mStartFocusX;
-  private float mStartFocusY;
-  private int mStartScaleScrollX;
-  private int mStartScaleScrollY;
-
-  private boolean mShouldMaintainPositionWhileZooming;
 
   private boolean mShouldScaleToFit = true;  // TODO:
 
@@ -71,8 +62,7 @@ public class ZoomPanLayout extends ViewGroup implements
 
   private ScrollActionHandler mScrollActionHandler;
   private Scroller mScroller;
-
-  private ValueAnimator mValueAnimator;
+  private ZoomPanAnimator mZoomPanAnimator;
 
   private ScaleGestureDetector mScaleGestureDetector;
   private GestureDetector mGestureDetector;
@@ -183,14 +173,19 @@ public class ZoomPanLayout extends ViewGroup implements
     return mScaledHeight;
   }
 
+  private float getConstrainedDestinationScale( float scale ) {
+    scale = Math.max( scale, mMinScale );
+    scale = Math.min( scale, mMaxScale );
+    return scale;
+  }
+
   /**
    * Sets the mScale (0-1) of the ZoomPanLayout.
    *
    * @param scale The new value of the ZoomPanLayout mScale.
    */
   public void setScale( float scale ) {
-    scale = Math.max( scale, mMinScale );
-    scale = Math.min( scale, mMaxScale );
+    scale = getConstrainedDestinationScale( scale );
     if( mScale != scale ) {
       float previous = mScale;
       mScale = scale;
@@ -266,6 +261,13 @@ public class ZoomPanLayout extends ViewGroup implements
     return mScroller;
   }
 
+  protected ZoomPanAnimator getAnimator(){
+    if( mZoomPanAnimator == null ) {
+      mZoomPanAnimator = new ZoomPanAnimator( this );
+    }
+    return mZoomPanAnimator;
+  }
+
   /**
    * Adds a ZoomPanListener to the ZoomPanLayout, which will receive events relating to zoom and pan actions
    *
@@ -303,14 +305,9 @@ public class ZoomPanLayout extends ViewGroup implements
    * @param y Vertical destination point.
    */
   public void slideTo( int x, int y ) {
-    int startX = getScrollX();
-    int startY = getScrollY();
-    int dx = x - startX;
-    int dy = y - startY;
-    mScroller.startScroll( startX, startY, dx, dy, SLIDE_DURATION );
-    ViewCompat.postInvalidateOnAnimation( this );
     mIsSliding = true;
-    startWatchingScrollActions();
+    getAnimator().animate( x, y, mScale );
+
   }
 
   /**
@@ -324,8 +321,11 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   public void slideToAndCenterWithScale( int x, int y, float scale ) {
-    slideToAndCenter( (int) (x * scale), (int) (y * scale) );
-    smoothScaleTo( scale, SLIDE_DURATION, false );
+    getAnimator().animate(
+      (int) (x * scale) - getHalfWidth(),
+      (int) (y * scale) - getHalfHeight(),
+      scale
+    );
   }
 
   /**
@@ -334,13 +334,17 @@ public class ZoomPanLayout extends ViewGroup implements
    * @param scale The new value of the ZoomPanLayout mScale.
    */
   public void setScaleFromCenter( float scale ) {
+    int offsetX = getHalfWidth();
+    int offsetY = getHalfHeight();
+    setScaleFromPosition( offsetX, offsetY, scale );
+  }
+
+  public void setScaleFromPosition( int offsetX, int offsetY, float scale ) {
     scale = Math.max( scale, mMinScale );
     scale = Math.min( scale, mMaxScale );
     if( scale == mScale ) {
       return;
     }
-    int offsetX = getHalfWidth();
-    int offsetY = getHalfHeight();
     int scrollX = getScrollX() + offsetX;
     int scrollY = getScrollY() + offsetY;
     float deltaScale = scale / getScale();
@@ -353,15 +357,39 @@ public class ZoomPanLayout extends ViewGroup implements
   /**
    * Scales the ZoomPanLayout with animated progress
    *
-   * @param destination (double) The final mScale to animate to
-   * @param duration    (int) The duration (in milliseconds) of the animation
    */
-  public void smoothScaleTo( float destination, int duration, boolean shouldMaintainPosition ) {
+  public void smoothScaleTo( float destination ) {
     if( mIsScaling ) {
       return;
     }
-    saveScaleOrigination( getHalfWidth(), getHalfHeight() );
-    startSmoothScaleTo( destination, duration, shouldMaintainPosition );
+    getAnimator().animate( getScrollX(), getScrollY(), destination );
+  }
+
+  public void smoothScaleFromCenter( float scale ) {
+    scale = Math.max( scale, mMinScale );
+    scale = Math.min( scale, mMaxScale );
+    if( scale == mScale ) {
+      return;
+    }
+    int offsetX = getHalfWidth();
+    int offsetY = getHalfHeight();
+    smoothScaleFromLocation( offsetX, offsetY, scale );
+
+  }
+
+  /**
+   * from point *on screen*, as is returned by MotionEvent.getX/Y
+   * @param offsetX
+   * @param offsetY
+   * @param scale
+   */
+  public void smoothScaleFromLocation( int offsetX, int offsetY, float scale ) {
+    int scrollX = getScrollX() + offsetX;
+    int scrollY = getScrollY() + offsetY;
+    float deltaScale = scale / getScale();
+    int x = (int) (scrollX * deltaScale) - offsetX;
+    int y = (int) (scrollY * deltaScale) - offsetY;
+    getAnimator().animate( x, y, scale );
   }
 
   @Override
@@ -426,15 +454,6 @@ public class ZoomPanLayout extends ViewGroup implements
     }
   }
 
-  private ValueAnimator getAnimator() {
-    if( mValueAnimator == null ) {
-      mValueAnimator = ValueAnimator.ofFloat( 0, 1 );
-      mValueAnimator.addListener( this );
-      mValueAnimator.addUpdateListener( this );
-    }
-    return mValueAnimator;
-  }
-
   private int getHalfWidth() {
     return (int) ((getWidth() * 0.5) + 0.5);
   }
@@ -470,43 +489,12 @@ public class ZoomPanLayout extends ViewGroup implements
         scrollTo( endX, endY );
         if( mIsFlinging ) {
           broadcastFlingUpdate( endX, endY );
-        } else if( mIsSliding ) {
-          broadcastProgrammaticPanUpdate( endX, endY );
         }
       }
       if( !mScroller.isFinished()){
         ViewCompat.postInvalidateOnAnimation( this );
       }
     }
-  }
-
-  private void saveScaleOrigination( float focusX, float focusY ) {
-    mHistoricalScale = mScale;
-    mStartFocusX = focusX;
-    mStartFocusY = focusY;
-    mStartScaleScrollX = (int) (getScrollX() + focusX);
-    mStartScaleScrollY = (int) (getScrollY() + focusY);
-  }
-
-  private void maintainScrollDuringScaleOperation() {
-    if( mShouldMaintainPositionWhileZooming ) {
-      double deltaScale = mScale / mHistoricalScale;
-      int x = (int) ((mStartScaleScrollX * deltaScale) - mStartFocusX);
-      int y = (int) ((mStartScaleScrollY * deltaScale) - mStartFocusY);
-      Log.d( "Scroll", "maintaining" );
-      scrollTo( x, y );
-    }
-  }
-
-  private void startSmoothScaleTo( float destination, int duration, boolean shouldMaintainPosition ) {
-    if( mIsScaling ) {
-      return;
-    }
-    mShouldMaintainPositionWhileZooming = shouldMaintainPosition;
-    ValueAnimator animator = getAnimator();
-    animator.setFloatValues( mScale, destination );
-    animator.setDuration( duration );
-    animator.start();
   }
 
   private void concludeDrag() {
@@ -716,8 +704,7 @@ public class ZoomPanLayout extends ViewGroup implements
   @Override
   public boolean onDoubleTap( MotionEvent event ) {
     float destination = mScale >= mMaxScale ? mMinScale : Math.min( mMaxScale, mScale * 2 );
-    saveScaleOrigination( event.getX(), event.getY() );
-    startSmoothScaleTo( destination, ZOOM_ANIMATION_DURATION, true );
+    smoothScaleFromLocation( (int) event.getX(), (int) event.getY(), destination );
     return true;
   }
 
@@ -740,7 +727,6 @@ public class ZoomPanLayout extends ViewGroup implements
   public boolean onScaleBegin( ScaleGestureDetector scaleGestureDetector ) {
     float focusX = scaleGestureDetector.getFocusX();
     float focusY = scaleGestureDetector.getFocusY();
-    saveScaleOrigination( focusX, focusY );
     broadcastPinchBegin( mScale, focusX, focusY );
     return true;
   }
@@ -753,49 +739,15 @@ public class ZoomPanLayout extends ViewGroup implements
   @Override
   public boolean onScale( ScaleGestureDetector scaleGestureDetector ) {
     float currentScale = mScale * mScaleGestureDetector.getScaleFactor();
-    setScale( currentScale );
-    maintainScrollDuringScaleOperation();
+    setScaleFromPosition(
+      (int) scaleGestureDetector.getFocusX(),
+      (int) scaleGestureDetector.getFocusY(),
+      currentScale );
     broadcastPinchUpdate( mScale, scaleGestureDetector.getFocusX(), scaleGestureDetector.getFocusY() );
     return true;
   }
   //END OnScaleGestureListener
 
-  //START AnimatorUpdateListener
-  @Override
-  public void onAnimationUpdate( ValueAnimator valueAnimator ) {
-    float scale = (float) valueAnimator.getAnimatedValue();
-    setScale( scale );
-    if( mShouldMaintainPositionWhileZooming ) {
-      maintainScrollDuringScaleOperation();
-    }
-    broadcastProgrammaticZoomUpdate( scale, mStartFocusX, mStartFocusY );
-  }
-  //END AnimatorUpdateListener
-
-  //START AnimatorListener
-  @Override
-  public void onAnimationStart( Animator animator ) {
-    mIsScaling = true;
-    broadcastProgrammaticZoomBegin( mScale, mStartFocusX, mStartFocusY );
-  }
-
-  @Override
-  public void onAnimationEnd( Animator animator ) {
-    mIsScaling = false;
-    broadcastProgrammaticZoomEnd( mScale, mStartFocusX, mStartFocusY );
-  }
-
-  @Override
-  public void onAnimationCancel( Animator animator ) {
-    mIsScaling = false;
-    broadcastProgrammaticZoomEnd( mScale, mStartFocusX, mStartFocusY );
-  }
-
-  @Override
-  public void onAnimationRepeat( Animator animator ) {
-
-  }
-  //END AnimatorListener
 
   //------------------------------------------------------------------------------------
   // end hooks
@@ -840,6 +792,116 @@ public class ZoomPanLayout extends ViewGroup implements
     public void submit() {
       clear();
       sendEmptyMessageDelayed( MESSAGE, FLYWHEEL_TIMEOUT );
+    }
+  }
+
+  // TODO: new animator instance per call?  or no calls while mIsAnimating?
+  // TODO: leverage a scroller for everything?  bleh @ pure scale calls
+  private static class ZoomPanAnimator extends ValueAnimator implements
+    ValueAnimator.AnimatorUpdateListener,
+    ValueAnimator.AnimatorListener {
+    private static final int DEFAULT_ZOOM_PAN_ANIMATION_DURATION = 250;  // per Scroller
+    private WeakReference<ZoomPanLayout> mZoomPanLayoutWeakReference;
+    private ZoomPanState mStartState = new ZoomPanState();
+    private ZoomPanState mEndState = new ZoomPanState();
+    private boolean mIsMutatingScale;
+    private boolean mIsMutatingScroll;
+    public ZoomPanAnimator( ZoomPanLayout zoomPanLayout ) {
+      super();
+      setDuration( DEFAULT_ZOOM_PAN_ANIMATION_DURATION );
+      addUpdateListener( this );
+      setFloatValues( 0f, 1f );
+      setInterpolator( new ViscousFluidInterpolator() );
+      mZoomPanLayoutWeakReference = new WeakReference<ZoomPanLayout>( zoomPanLayout );
+    }
+    public void animate( int x, int y, float scale ) {
+      ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
+      if( zoomPanLayout != null ) {
+        mStartState.scale = zoomPanLayout.getScale();
+        mStartState.scrollX = zoomPanLayout.getScrollX();
+        mStartState.scrollY = zoomPanLayout.getScrollY();
+        mEndState.scale = scale;
+        mEndState.scrollX = x;
+        mEndState.scrollY = y;
+        mIsMutatingScale = mStartState.scale != mEndState.scale;
+        mIsMutatingScroll = mStartState.scrollX != mEndState.scrollX
+          || mStartState.scrollY != mEndState.scrollY;
+        start();
+      }
+    }
+    @Override
+    public void onAnimationUpdate( ValueAnimator animation ) {
+      ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
+      if( zoomPanLayout != null ) {
+        float progress = (float) animation.getAnimatedValue();
+        int scrollX = (int) (mStartState.scrollX + ( mEndState.scrollX - mStartState.scrollX) * progress);
+        int scrollY = (int) (mStartState.scrollY + ( mEndState.scrollY - mStartState.scrollY) * progress);
+        float scale = mStartState.scale + ( mEndState.scale - mStartState.scale) * progress;
+        zoomPanLayout.scrollTo( scrollX, scrollY );
+        zoomPanLayout.setScale( scale );
+      }
+    }
+    @Override
+    public void onAnimationStart( Animator animator ) {
+      ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
+      if( zoomPanLayout != null ) {
+        zoomPanLayout.mIsScaling = true;
+        zoomPanLayout.broadcastProgrammaticZoomBegin( zoomPanLayout.mScale, 0, 0 );
+      }
+    }
+    @Override
+    public void onAnimationEnd( Animator animator ) {
+      ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
+      if( zoomPanLayout != null ) {
+        zoomPanLayout.mIsScaling = false;  // TODO: broadcast changes
+        zoomPanLayout.broadcastProgrammaticZoomEnd( zoomPanLayout.mScale, 0, 0 );
+      }
+    }
+    @Override
+    public void onAnimationCancel( Animator animator ) {
+      ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
+      if( zoomPanLayout != null ) {
+        zoomPanLayout.mIsScaling = false; // TODO: startFocusX still being used?
+        zoomPanLayout.broadcastProgrammaticZoomEnd( zoomPanLayout.mScale, 0, 0 );
+      }
+    }
+    @Override
+    public void onAnimationRepeat( Animator animator ) {
+
+    }
+    private static class ZoomPanState {
+      public int scrollX;
+      public int scrollY;
+      public float scale;
+    }
+    private static class ViscousFluidInterpolator implements Interpolator {
+      private static final float VISCOUS_FLUID_SCALE = 8.0f;
+      private static final float VISCOUS_FLUID_NORMALIZE;
+      private static final float VISCOUS_FLUID_OFFSET;
+      static {
+        VISCOUS_FLUID_NORMALIZE = 1.0f / viscousFluid(1.0f);
+        VISCOUS_FLUID_OFFSET = 1.0f - VISCOUS_FLUID_NORMALIZE * viscousFluid(1.0f);
+      }
+      private static float viscousFluid(float x) {
+        x *= VISCOUS_FLUID_SCALE;
+        if (x < 1.0f) {
+          x -= (1.0f - (float)Math.exp(-x));
+        } else {
+          float start = 0.36787944117f;   // 1/e == exp(-1)
+          x = 1.0f - (float)Math.exp(1.0f - x);
+          x = start + x * (1.0f - start);
+        }
+        return x;
+      }
+
+      @Override
+      public float getInterpolation(float input) {
+        final float interpolated = VISCOUS_FLUID_NORMALIZE * viscousFluid(input);
+        if (interpolated > 0) {
+          return interpolated + VISCOUS_FLUID_OFFSET;
+        }
+        return interpolated;
+      }
     }
   }
 
