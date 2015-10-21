@@ -13,6 +13,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.Scroller;
 
@@ -821,7 +822,8 @@ public class ZoomPanLayout extends ViewGroup implements
       addUpdateListener( this );
       addListener( this );
       setFloatValues( 0f, 1f );
-      setInterpolator( new ViscousFluidInterpolator() );
+      //setInterpolator( new ViscousFluidInterpolator() );
+      setInterpolator( new DecelerateInterpolator() );
       mZoomPanLayoutWeakReference = new WeakReference<ZoomPanLayout>( zoomPanLayout );
       mZoomPanLayoutWeakReference = new WeakReference<ZoomPanLayout>( zoomPanLayout );
     }
@@ -886,6 +888,14 @@ public class ZoomPanLayout extends ViewGroup implements
       public int scrollY;
       public float scale;
     }
+    private static class ExpoInterpolator implements Interpolator {
+      @Override
+      public float getInterpolation( float input ) {
+        float interpolation = (float) (1 - Math.pow(1 - input, 5));
+        Log.d( "VFI", "" + interpolation );
+        return interpolation;
+      }
+    }
     private static class ViscousFluidInterpolator implements Interpolator {
       private static final float VISCOUS_FLUID_SCALE = 8.0f;
       private static final float VISCOUS_FLUID_NORMALIZE;
@@ -893,6 +903,9 @@ public class ZoomPanLayout extends ViewGroup implements
       static {
         VISCOUS_FLUID_NORMALIZE = 1.0f / viscousFluid(1.0f);
         VISCOUS_FLUID_OFFSET = 1.0f - VISCOUS_FLUID_NORMALIZE * viscousFluid(1.0f);
+      }
+      public ViscousFluidInterpolator(){
+        Log.d( "VFI", "VISCOUS_FLUID_NORMALIZE=" + VISCOUS_FLUID_NORMALIZE + ", VISCOUS_FLUID_OFFSET=" + VISCOUS_FLUID_OFFSET);
       }
       private static float viscousFluid(float x) {
         x *= VISCOUS_FLUID_SCALE;
@@ -910,8 +923,10 @@ public class ZoomPanLayout extends ViewGroup implements
       public float getInterpolation(float input) {
         final float interpolated = VISCOUS_FLUID_NORMALIZE * viscousFluid(input);
         if (interpolated > 0) {
+          Log.d( "VFI", "interpolated > 0, interpolated + VISCOUS_FLUID_OFFSET =" + (interpolated + VISCOUS_FLUID_OFFSET ) );
           return interpolated + VISCOUS_FLUID_OFFSET;
         }
+        Log.d( "VFI", "interpolated=" + interpolated );
         return interpolated;
       }
     }
