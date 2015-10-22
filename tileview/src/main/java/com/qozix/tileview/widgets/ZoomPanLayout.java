@@ -780,8 +780,14 @@ public class ZoomPanLayout extends ViewGroup implements
     }
 
     public void animateZoomPan( int x, int y, float scale ) {
-      animateZoom( scale );
-      animatePan( x, y );
+      ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
+      if( zoomPanLayout != null ) {
+        mHasPendingZoomUpdates = setupZoomAnimation( scale );
+        mHasPendingPanUpdates = setupPanAnimation( x, y );
+        if( mHasPendingPanUpdates || mHasPendingZoomUpdates ) {
+          start();
+        }
+      }
     }
 
     public void animateZoom( float scale ) {
