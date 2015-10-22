@@ -71,6 +71,18 @@ public class MarkerManager extends TranslationLayout implements DetailLevelEvent
 		markerMap.remove( v );
 	}
 
+    public void removeAllMarkers(){
+
+        Iterator<View> iteratorViews = markerMap.keySet().iterator();
+
+        while(iteratorViews.hasNext()){
+            View v = iteratorViews.next();
+            removeView(v);
+            iteratorViews.remove();
+        }
+
+    }
+
 	public void addMarkerEventListener( MarkerEventListener listener ) {
 		listeners.add( listener );
 	}
