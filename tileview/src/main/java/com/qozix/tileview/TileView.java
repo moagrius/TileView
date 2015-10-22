@@ -541,6 +541,11 @@ public class TileView extends ZoomPanLayout {
 		markerManager.removeMarker( view );
 	}
 
+    /**
+     * Removes all markers from TileView's view tree
+     */
+    public void removeAllMarkers(){ markerManager.removeAllMarkers();}
+
 	/**
 	 * Moves an existing marker to another position.
 	 * @param view The marker View to be repositioned.
