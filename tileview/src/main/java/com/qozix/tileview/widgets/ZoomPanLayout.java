@@ -5,6 +5,7 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -323,7 +324,7 @@ public class ZoomPanLayout extends ViewGroup implements
     scrollTo( x - getHalfWidth(), y - getHalfHeight() );
   }
 
-  private int getOffsetScrollXFromScale( int offsetX, float scale ) {
+  private int getOffsetScrollXFromScale( int offsetX, float scale ) {  // TODO: here?
     int scrollX = getScrollX() + offsetX;
     float deltaScale = scale / mScale;
     return (int) (scrollX * deltaScale) - offsetX;
@@ -397,12 +398,11 @@ public class ZoomPanLayout extends ViewGroup implements
    * @param scale
    */
   public void smoothScaleFromFocalPoint( int focusX, int focusY, float scale ) {
-    scale = Math.max( scale, mMinScale );
-    scale = Math.min( scale, mMaxScale );
     if( scale == mScale ) {
       return;
     }
     int x = getOffsetScrollXFromScale( focusX, scale );
+    Log.d( "Scroll", "scale from focal, x = " + x );
     int y = getOffsetScrollYFromScale( focusY, scale );
     getAnimator().animateZoomPan( x, y, scale );
   }
@@ -424,11 +424,15 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
-    measureChildren( widthMeasureSpec, heightMeasureSpec );
+    // the container's children should be the size provided by setSize
+    int computedWidthSpec = MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY );
+    int computedHeightSpec = MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY );
+    measureChildren( computedWidthSpec, computedHeightSpec );
+    // but the container should still measure normally
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
-    width = Math.max( width, getSuggestedMinimumWidth() );
-    height = Math.max( height, getSuggestedMinimumHeight() );
+    //width = Math.max( width, getSuggestedMinimumWidth() );
+    //height = Math.max( height, getSuggestedMinimumHeight() );
     width = resolveSize( width, widthMeasureSpec );
     height = resolveSize( height, heightMeasureSpec );
     setMeasuredDimension( width, height );
@@ -439,7 +443,7 @@ public class ZoomPanLayout extends ViewGroup implements
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mScaledWidth, mScaledHeight );
+        child.layout( 0, 0, mBaseWidth, mBaseHeight );
       }
     }
     if( changed ) {
@@ -681,7 +685,8 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public boolean onDoubleTap( MotionEvent event ) {
-    float destination = mScale >= mMaxScale ? mMinScale : Math.min( mMaxScale, mScale * 2 );
+    float destination = mScale >= mMaxScale ? mMinScale : mScale * 2;
+    destination = getConstrainedDestinationScale( destination );
     smoothScaleFromFocalPoint( (int) event.getX(), (int) event.getY(), destination );
     return true;
   }

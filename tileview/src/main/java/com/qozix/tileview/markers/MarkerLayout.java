@@ -114,12 +114,7 @@ public class MarkerLayout extends ViewGroup {
 
   @Override
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
-
     measureChildren( widthMeasureSpec, heightMeasureSpec );
-
-    int currentGreatestWidth = getSuggestedMinimumWidth();
-    int currentGreatestHeight = getSuggestedMinimumHeight();
-
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
@@ -141,17 +136,11 @@ public class MarkerLayout extends ViewGroup {
         layoutParams.mTop = (int) (scaledY + heightOffset);
         layoutParams.mRight = layoutParams.mLeft + actualWidth;
         layoutParams.mBottom = layoutParams.mTop + actualHeight;
-        // if it's larger, use that
-        currentGreatestWidth = Math.max( currentGreatestWidth, layoutParams.mRight );
-        currentGreatestHeight = Math.max( currentGreatestHeight, layoutParams.mBottom );
       }
     }
-
-    currentGreatestWidth = resolveSize( currentGreatestWidth, widthMeasureSpec );
-    currentGreatestHeight = resolveSize( currentGreatestHeight, heightMeasureSpec );
-
-    setMeasuredDimension( currentGreatestWidth, currentGreatestHeight );
-
+    int availableWidth = MeasureSpec.getSize( widthMeasureSpec );
+    int availableHeight = MeasureSpec.getSize( heightMeasureSpec );
+    setMeasuredDimension( availableWidth, availableHeight );
   }
 
   @Override
@@ -163,7 +152,6 @@ public class MarkerLayout extends ViewGroup {
         child.layout( layoutParams.mLeft, layoutParams.mTop, layoutParams.mRight, layoutParams.mBottom );
       }
     }
-
   }
 
   @Override
@@ -215,13 +203,17 @@ public class MarkerLayout extends ViewGroup {
     private int mBottom;
     private int mRight;
 
+    private Rect mHitRect;
+
     private Rect getHitRect(){
-      Rect hitRect = new Rect();
-      hitRect.left = mLeft;
-      hitRect.top = mTop;
-      hitRect.right = mRight;
-      hitRect.bottom = mBottom;
-      return hitRect;
+      if( mHitRect == null ) {
+        mHitRect = new Rect();
+      }
+      mHitRect.left = mLeft;
+      mHitRect.top = mTop;
+      mHitRect.right = mRight;
+      mHitRect.bottom = mBottom;
+      return mHitRect;
     }
 
     /**
