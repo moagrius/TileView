@@ -2,6 +2,9 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.graphics.Region;
+import android.util.Log;
 import android.view.View;
 
 import java.util.HashSet;
@@ -79,13 +82,24 @@ public class TileCanvasView extends View {
     }
   }
 
+  private Rect mClipRect = new Rect();
+  private void scaleCanvasBounds( Canvas canvas ){
+    canvas.getClipBounds( mClipRect );
+    Log.d( "TileView", "original=" + mClipRect );
+    // TODO: ScalingLayout
+    mClipRect.bottom = 100000;
+    mClipRect.right = 100000;
+    Log.d( "TileView", "modified=" + mClipRect );
+    canvas.clipRect( mClipRect, Region.Op.REPLACE );
+  }
+
+
   @Override
   public void onDraw( Canvas canvas ) {
-    super.onDraw( canvas );
-    canvas.save();
-    boolean dirty = drawTiles( canvas );
     canvas.scale( mScale, mScale );
-    canvas.restore();
+    scaleCanvasBounds( canvas );
+    boolean dirty = drawTiles( canvas );
+    super.onDraw( canvas );
     handleDrawState( dirty );
   }
 
