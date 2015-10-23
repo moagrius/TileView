@@ -3,11 +3,9 @@ package com.qozix.tileview.tiles;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.graphics.Region;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -57,6 +55,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   public TileCanvasViewGroup( Context context ) {
     super( context );
     setWillNotDraw( false );
+    setBackgroundColor( 0xffff9900 );
     mTileRenderHandler = new TileRenderHandler( this );
   }
 
@@ -106,6 +105,13 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   public void setRenderBuffer( int renderBuffer ) {
     mRenderBuffer = renderBuffer;
+  }
+
+  @Override
+  protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
+    int width = MeasureSpec.getSize( widthMeasureSpec );
+    int height = MeasureSpec.getSize( heightMeasureSpec );
+    setMeasuredDimension( width, height );
   }
 
   @Override
@@ -299,24 +305,25 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
    * while preserving the visual transformation.
    * @param canvas The canvas whose bounds are to be redefined.
    */
-  private void scaleCanvasBounds( Canvas canvas ){
-    canvas.getClipBounds( mClipRect );
-    Log.d( "TileView", "original=" + mClipRect );
-    mClipRect.top = 0;  // TODO: ScalingLayout
-    mClipRect.left = 0;
-    mClipRect.bottom = (int) (mClipRect.bottom * mScale);
-    mClipRect.right = (int) (mClipRect.right * mScale);
-    Log.d( "TileView", "modified=" + mClipRect );
-    canvas.clipRect( mClipRect, Region.Op.REPLACE );
-  }
 
+
+  /*
   @Override
   public void onDraw( Canvas canvas ) {
     canvas.scale( mScale, mScale );
-    scaleCanvasBounds( canvas );
-
     super.onDraw( canvas );
   }
+  */
+
+
+  @Override
+  public void onDraw(Canvas canvas) {
+    super.onDraw(canvas);
+    canvas.save();
+    canvas.scale( mScale, mScale );
+    canvas.restore();
+  }
+
 
   private static class TileRenderHandler extends Handler {
 

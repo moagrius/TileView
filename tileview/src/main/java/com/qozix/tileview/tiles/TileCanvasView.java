@@ -83,8 +83,8 @@ public class TileCanvasView extends View {
   public void onDraw( Canvas canvas ) {
     super.onDraw( canvas );
     canvas.save();
-    canvas.scale( mScale, mScale );
     boolean dirty = drawTiles( canvas );
+    canvas.scale( mScale, mScale );
     canvas.restore();
     handleDrawState( dirty );
   }
