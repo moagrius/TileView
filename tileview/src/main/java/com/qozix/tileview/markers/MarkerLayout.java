@@ -22,8 +22,8 @@ public class MarkerLayout extends ViewGroup {
    * Sets the anchor values used by this ViewGroup if it's children do not
    * have anchor values supplied directly (via individual LayoutParams).
    *
-   * @param aX x-axis anchor value (offset computed by multiplying this value by the child's width
-   * @param aY y-axis anchor value (offset computed by multiplying this value by the child's height
+   * @param aX x-axis anchor value (offset computed by multiplying this value by the child's width).
+   * @param aY y-axis anchor value (offset computed by multiplying this value by the child's height).
    */
   public void setAnchors( float aX, float aY ) {
     mAnchorX = aX;
@@ -32,9 +32,9 @@ public class MarkerLayout extends ViewGroup {
   }
 
   /**
-   * Sets the scale (0-1) of the MarkerLayout
+   * Sets the scale (0-1) of the MarkerLayout.
    *
-   * @param scale The new value of the MarkerLayout scale
+   * @param scale The new value of the MarkerLayout scale.
    */
   public void setScale( float scale ) {
     mScale = scale;
@@ -42,9 +42,9 @@ public class MarkerLayout extends ViewGroup {
   }
 
   /**
-   * Retrieves the current scale of the MarkerLayout
+   * Retrieves the current scale of the MarkerLayout.
    *
-   * @return The current scale of the MarkerLayout
+   * @return The current scale of the MarkerLayout.
    */
   public float getScale() {
     return mScale;
@@ -208,7 +208,7 @@ public class MarkerLayout extends ViewGroup {
     }
 
     /**
-     * Copy constructor
+     * Copy constructor.
      *
      * @param source LayoutParams instance to copy properties from.
      */

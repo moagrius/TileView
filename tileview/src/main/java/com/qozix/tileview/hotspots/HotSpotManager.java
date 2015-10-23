@@ -10,9 +10,6 @@ public class HotSpotManager {
   private HotSpot.HotSpotTapListener mHotSpotTapListener;
   private LinkedList<HotSpot> mHotSpots = new LinkedList<HotSpot>();
 
-  public HotSpotManager() {
-  }
-
   public float getScale() {
     return mScale;
   }

@@ -32,7 +32,7 @@ public class ZoomPanLayout extends ViewGroup implements
   ScaleGestureDetector.OnScaleGestureListener,
   TouchUpGestureDetector.OnTouchUpListener {
 
-  private static final int DEFAULT_ZOOM_PAN_ANIMATION_DURATION = 400;  // per Scroller
+  private static final int DEFAULT_ZOOM_PAN_ANIMATION_DURATION = 400;
 
   private int mBaseWidth;
   private int mBaseHeight;
@@ -86,9 +86,32 @@ public class ZoomPanLayout extends ViewGroup implements
     mTouchUpGestureDetector = new TouchUpGestureDetector( this );
   }
 
-  //------------------------------------------------------------------------------------
-  // PUBLIC API
-  //------------------------------------------------------------------------------------
+  @Override
+  protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
+    // the container's children should be the size provided by setSize
+    measureChildren(
+      MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY ),
+      MeasureSpec.makeMeasureSpec( mScaledHeight, MeasureSpec.EXACTLY ) );
+    // but the container should still measure normally
+    int width = MeasureSpec.getSize( widthMeasureSpec );
+    int height = MeasureSpec.getSize( heightMeasureSpec );
+    width = resolveSize( width, widthMeasureSpec );
+    height = resolveSize( height, heightMeasureSpec );
+    setMeasuredDimension( width, height );
+  }
+
+  @Override
+  protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+    for( int i = 0; i < getChildCount(); i++ ) {
+      View child = getChildAt( i );
+      if( child.getVisibility() != GONE ) {
+        child.layout( 0, 0, mScaledWidth, mScaledHeight );
+      }
+    }
+    if( changed ) {
+      calculateMinimumScaleToFit();
+    }
+  }
 
   /**
    * Determines whether the ZoomPanLayout should limit it's minimum mScale to no less than what
@@ -416,37 +439,6 @@ public class ZoomPanLayout extends ViewGroup implements
     return direction > 0 ? position < getScrollLimitX() : direction < 0 && position > 0;
   }
 
-  //------------------------------------------------------------------------------------
-  // PRIVATE/PROTECTED
-  //------------------------------------------------------------------------------------
-
-  @Override
-  protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
-    // the container's children should be the size provided by setSize
-    measureChildren(
-      MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY ),
-      MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY ) );
-    // but the container should still measure normally
-    int width = MeasureSpec.getSize( widthMeasureSpec );
-    int height = MeasureSpec.getSize( heightMeasureSpec );
-    width = resolveSize( width, widthMeasureSpec );
-    height = resolveSize( height, heightMeasureSpec );
-    setMeasuredDimension( width, height );
-  }
-
-  @Override
-  protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    for( int i = 0; i < getChildCount(); i++ ) {
-      View child = getChildAt( i );
-      if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mBaseWidth, mBaseHeight );
-      }
-    }
-    if( changed ) {
-      calculateMinimumScaleToFit();
-    }
-  }
-
   @Override
   public boolean onTouchEvent( MotionEvent event ) {
     boolean gestureIntercept = mGestureDetector.onTouchEvent( event );
@@ -521,10 +513,6 @@ public class ZoomPanLayout extends ViewGroup implements
       }
     }
   }
-
-  //------------------------------------------------------------------------------------
-  // Convenience dispatch methods
-  //------------------------------------------------------------------------------------
 
   private void broadcastDragBegin() {
     for( ZoomPanListener listener : mZoomPanListeners ) {
@@ -616,15 +604,6 @@ public class ZoomPanLayout extends ViewGroup implements
     }
   }
 
-  //------------------------------------------------------------------------------------
-  // end convenience dispatch methods
-  //------------------------------------------------------------------------------------
-
-  //------------------------------------------------------------------------------------
-  // Hooks - override at will in subclasses
-  //------------------------------------------------------------------------------------
-
-  //START OnGestureListener
   @Override
   public boolean onDown( MotionEvent event ) {
     if( mIsFlinging && !mScroller.isFinished() ) {
@@ -671,9 +650,7 @@ public class ZoomPanLayout extends ViewGroup implements
   public boolean onSingleTapUp( MotionEvent event ) {
     return true;
   }
-  //END OnGestureListener
 
-  //START OnDoubleTapListener
   @Override
   public boolean onSingleTapConfirmed( MotionEvent event ) {
     return true;
@@ -691,9 +668,7 @@ public class ZoomPanLayout extends ViewGroup implements
   public boolean onDoubleTapEvent( MotionEvent event ) {
     return true;
   }
-  //END OnDoubleTapListener
 
-  //START OnTouchUpListener
   @Override
   public boolean onTouchUp() {
     if( mIsDragging ) {
@@ -702,9 +677,7 @@ public class ZoomPanLayout extends ViewGroup implements
     }
     return true;
   }
-  //END OnTouchUpListener
 
-  //START OnScaleGestureListener
   @Override
   public boolean onScaleBegin( ScaleGestureDetector scaleGestureDetector ) {
     mIsScaling = true;
@@ -728,16 +701,6 @@ public class ZoomPanLayout extends ViewGroup implements
     broadcastPinchUpdate();
     return true;
   }
-  //END OnScaleGestureListener
-
-
-  //------------------------------------------------------------------------------------
-  // end hooks
-  //------------------------------------------------------------------------------------
-
-  //------------------------------------------------------------------------------------
-  // Helper classes (internal, private)
-  //------------------------------------------------------------------------------------
 
   private static class ZoomPanAnimator extends ValueAnimator implements
     ValueAnimator.AnimatorUpdateListener,
@@ -886,14 +849,6 @@ public class ZoomPanLayout extends ViewGroup implements
     }
   }
 
-  //------------------------------------------------------------------------------------
-  // end helper classes (internal, private)
-  //------------------------------------------------------------------------------------
-
-  //------------------------------------------------------------------------------------
-  // Listener interfaces
-  //------------------------------------------------------------------------------------
-
   public interface ZoomPanListener {
     enum Origination {
       DRAG,
@@ -907,9 +862,5 @@ public class ZoomPanLayout extends ViewGroup implements
     void onZoomUpdate( float scale, Origination origin );
     void onZoomEnd( float scale, Origination origin );
   }
-
-  //------------------------------------------------------------------------------------
-  // end listener interfaces
-  //------------------------------------------------------------------------------------
 
 }

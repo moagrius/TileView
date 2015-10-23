@@ -1,64 +1,47 @@
 package tileview.demo;
 
-import android.app.Activity;
-import android.content.Context;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 
 import com.qozix.tileview.TileView;
-import com.qozix.tileview.hotspots.HotSpot;
-import com.qozix.tileview.markers.MarkerLayout;
 
 import java.util.ArrayList;
 
-public class RealMapTileViewActivity extends Activity {
+public class RealMapTileViewActivity extends TileViewActivity {
 
   public static final double NORTH_WEST_LATITUDE = 39.9639998777094;
   public static final double NORTH_WEST_LONGITUDE = -75.17261900652977;
   public static final double SOUTH_EAST_LATITUDE = 39.93699709962642;
   public static final double SOUTH_EAST_LONGITUDE = -75.12462846235614;
 
-  private TileView tileView;
-
-  private static class NoDoubleTapTileView extends TileView {
-    public NoDoubleTapTileView( Context context ) {
-      super( context );
-    }
-
-    public boolean onDoubleTap( MotionEvent event ) {
-      return false;
-    }
-  }
-
   @Override
   public void onCreate( Bundle savedInstanceState ) {
 
     super.onCreate( savedInstanceState );
 
-    tileView = new TileView( this );
+    // we'll reference the TileView multiple times
+    TileView tileView = getTileView();
 
-    tileView.setSize( 8967, 6726 );
+    // size and geolocation
+    tileView.setSize( 17934, 13452 );
 
+    // we won't use a downsample here, so color it similarly to tiles
     tileView.setBackgroundColor( 0xFFe7e7e7 );
 
-    tileView.addDetailLevel( 0.1250f, "tiles/map/phi-62500-%d_%d.jpg" );
+    tileView.addDetailLevel( 0.0125f, "tiles/map/phi-62500-%d_%d.jpg" );
     tileView.addDetailLevel( 0.2500f, "tiles/map/phi-125000-%d_%d.jpg" );
     tileView.addDetailLevel( 0.5000f, "tiles/map/phi-250000-%d_%d.jpg" );
     tileView.addDetailLevel( 1.0000f, "tiles/map/phi-500000-%d_%d.jpg" );
 
+    // markers should align to the coordinate along the horizontal center and vertical bottom
     tileView.setMarkerAnchorPoints( -0.5f, -1.0f );
 
+    // provide the corner coordinates for relative positioning
     tileView.defineBounds(
       NORTH_WEST_LONGITUDE,
       NORTH_WEST_LATITUDE,
@@ -66,16 +49,20 @@ public class RealMapTileViewActivity extends Activity {
       SOUTH_EAST_LATITUDE
     );
 
-    DisplayMetrics metrics = getResources().getDisplayMetrics();
+    // get the default paint and style it.  the same effect could be achieved by passing a custom Paint instnace
     Paint paint = tileView.getPathPaint();
+
+    // get metrics for programmatic DP
+    DisplayMetrics metrics = getResources().getDisplayMetrics();
+
+    // dress up the path effects and draw it between some points
     paint.setShadowLayer(
       TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 4, metrics ),
       TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 2, metrics ),
       TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 2, metrics ),
       0x66000000
     );
-    paint.setColor( 0x883399FF );
-    paint.setStrokeWidth( TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 4, metrics ) );
+    paint.setStrokeWidth( TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 5, metrics ) );
     paint.setPathEffect(
       new CornerPathEffect(
         TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 5, metrics )
@@ -83,110 +70,64 @@ public class RealMapTileViewActivity extends Activity {
     );
     tileView.drawPath( points.subList( 1, 5 ), null );
 
+    // add markers for all the points
     for( double[] point : points ) {
+      // any view will do...
       ImageView marker = new ImageView( this );
+      // save the coordinate for centering and callout positioning
       marker.setTag( point );
+      // give it a standard marker icon - this indicator points down and is centered, so we'll use appropriate anchors
       marker.setImageResource( Math.random() < 0.75 ? R.drawable.map_marker_normal : R.drawable.map_marker_featured );
-      //marker.setOnClickListener( markerClickListener );
+      // on tap show further information about the area indicated
+      // this could be done using a MarkerEventListener as well, which would prevent the touch
+      // event from being consumed and would not interrupt dragging
+      marker.setOnClickListener( markerClickListener );
+      // add it to the view tree
       tileView.addMarker( marker, point[0], point[1], null, null );
     }
 
-    tileView.setMarkerTapListener( markerTapListener );
-    tileView.setTransitionsEnabled( false );
-
-    ImageView downsample = new ImageView( this );
-    downsample.setImageResource( R.drawable.downsample );
-    //tileView.addView( downsample, 0 );
-
-    RelativeLayout contentView = new RelativeLayout( this );
-    contentView.addView( tileView );
-
-    Button button = new Button( this );
-    button.setText( "ZoomAndScale" );
-    RelativeLayout.LayoutParams buttonLayoutParams = new RelativeLayout.LayoutParams( ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT );
-    buttonLayoutParams.addRule( RelativeLayout.ALIGN_PARENT_BOTTOM );
-    buttonLayoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT );
-    contentView.addView( button, buttonLayoutParams );
-    button.setOnClickListener( new View.OnClickListener() {
-      @Override
-      public void onClick( View view ) {
-
-        double[] spot = points.get( 0 );
-        tileView.slideToAndCenterWithScale( spot[0], spot[1], 0.5f );
-
-        /*
-        tileView.setScaleLimits( 0.1f, 1.0f );
-        //tileView.setShouldScaleToFit( false );
-        tileView.setScale( 0.1f );
-        */
-
-      }
-    } );
-
-
-
-
-
-    HotSpot hotSpot = new HotSpot();
-    hotSpot.set( new Rect( 0, 0, 100, 100 ));
-    tileView.addHotSpot( hotSpot );
-    tileView.setHotSpotTapListener( new HotSpot.HotSpotTapListener() {
-      @Override
-      public void onHotSpotTap( HotSpot hotSpot, int x, int y ) {
-        Log.d( "TileView", "hot spot tapped" );
-      }
-    } );
-
-
-    setContentView( contentView );
-
-    /*
-    LinearLayout linearLayout = new LinearLayout( this );
-		linearLayout.setOrientation( LinearLayout.VERTICAL );
-
-		View spacer = new View( this );
-		LayoutParams spacerLayoutParams =  new LayoutParams( LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT );
-		spacerLayoutParams.weight = 1;
-		linearLayout.addView( spacer, spacerLayoutParams );
-
-		LayoutParams tileViewLayoutParams = new LayoutParams( LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT );
-		tileViewLayoutParams.weight = 1;
-		linearLayout.addView( tileView, tileViewLayoutParams );
-
-		setContentView( linearLayout );
-
-		*/
-
-  }
-
-  private void showMarker( View view ) {
-    double[] position = (double[]) view.getTag();
-    tileView.slideToAndCenter( position[0], position[1] );
-    SampleCallout callout = new SampleCallout( view.getContext() );
-    tileView.addCallout( callout, position[0], position[1], -0.5f, -1.0f );
-    callout.transitionIn();
-    callout.setTitle( "MAP CALLOUT" );
-    callout.setSubtitle( "Info window at coordinate:\n" + position[1] + ", " + position[0] );
-  }
-
-  private MarkerLayout.MarkerTapListener markerTapListener = new MarkerLayout.MarkerTapListener() {
-    @Override
-    public void onMarkerTap( View view, int x, int y ) {
-      showMarker( view );
+    // let's start off framed to the center of all points
+    double x = 0;
+    double y = 0;
+    for( double[] point : points ) {
+      x = x + point[0];
+      y = y + point[1];
     }
-  };
+    int size = points.size();
+    x = x / size;
+    y = y / size;
+    frameTo( x, y );
+
+    // start small and allow zoom
+    tileView.setScale( 0.3f );
+
+  }
 
   private View.OnClickListener markerClickListener = new View.OnClickListener() {
 
     @Override
     public void onClick( View view ) {
-      showMarker( view );
+      // get reference to the TileView
+      TileView tileView = getTileView();
+      // we saved the coordinate in the marker's tag
+      double[] position = (double[]) view.getTag();
+      // lets center the screen to that coordinate
+      tileView.slideToAndCenter( position[0], position[1] );
+      // create a simple callout
+      SampleCallout callout = new SampleCallout( view.getContext() );
+      // add it to the view tree at the same position and offset as the marker that invoked it
+      tileView.addCallout( callout, position[0], position[1], -0.5f, -1.0f );
+      // a little sugar
+      callout.transitionIn();
+      // stub out some text
+      callout.setTitle( "MAP CALLOUT" );
+      callout.setSubtitle( "Info window at coordinate:\n" + position[1] + ", " + position[0] );
     }
   };
 
-  // if you want the bottoms of your markers to not show, sort them by y position
   // a list of points to demonstrate markers and paths
   private ArrayList<double[]> points = new ArrayList<>();
+
   {
     points.add( new double[] {-75.1489070, 39.9484760} );
     points.add( new double[] {-75.1494000, 39.9487722} );

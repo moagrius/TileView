@@ -193,14 +193,13 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
-   * Add a View (or ViewGroup) to the TileView at a z-index above tiles and paths but beneath
-   * markers and callouts.  The View will be laid out to the full dimensions of the largest
-   * detail level, and will scale with the TileView.  Due to the layout behavior, it's suggested
-   * that a ViewGroup (e.g., RelativeLayout) be used here in most circumstances.
-   * @param view The View to be added to the TileView, that will scale visually.
+   * Add a ViewGroup to the TileView at a z-index above tiles and paths but beneath
+   * markers and callouts.  The ViewGroup will be laid out to the full dimensions of the largest
+   * detail level, and will scale with the TileView.
+   * @param viewGroup The ViewGroup to be added to the TileView, that will scale visually.
    */
-  public void addScalingView( View view ) {
-    mScalingLayout.addView( view );
+  public void addScalingViewGroup( ViewGroup viewGroup ) {
+    mScalingLayout.addView( viewGroup );
   }
 
   /**
@@ -324,10 +323,6 @@ public class TileView extends ZoomPanLayout implements
   public void setViewportPadding( int padding ) {
     mDetailLevelManager.setViewportPadding( padding );
   }
-
-  //------------------------------------------------------------------------------------
-  // Positioning API
-  //------------------------------------------------------------------------------------
 
   /**
    * Register a set of offset points to use when calculating position within the TileView.
@@ -588,10 +583,6 @@ public class TileView extends ZoomPanLayout implements
   public void setHotSpotTapListener( HotSpot.HotSpotTapListener hotSpotTapListener ) {
     mHotSpotManager.setHotSpotTapListener( hotSpotTapListener );
   }
-
-  //------------------------------------------------------------------------------------
-  // Path Drawing API
-  //------------------------------------------------------------------------------------
 
   /**
    * Register a Path and Paint that will be drawn on a layer above the tiles, but below markers.

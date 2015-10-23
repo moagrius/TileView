@@ -2,9 +2,12 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.graphics.Region;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -48,6 +51,8 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   private int mRenderBuffer = DEFAULT_RENDER_BUFFER;
 
   private float mScale = 1;
+
+  private Rect mClipRect = new Rect();
 
   public TileCanvasViewGroup( Context context ) {
     super( context );
@@ -287,9 +292,29 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     }
   }
 
+  /**
+   * The layout dimensions supplied to this ViewGroup will be exactly as large as the scaled
+   * width and height of the containing ZoomPanLayout (or TileView).  However, when the canvas
+   * is scaled, it's clip area is also scaled - this method will "unscale" the total clip area
+   * while preserving the visual transformation.
+   * @param canvas The canvas whose bounds are to be redefined.
+   */
+  private void scaleCanvasBounds( Canvas canvas ){
+    canvas.getClipBounds( mClipRect );
+    Log.d( "TileView", "original=" + mClipRect );
+    mClipRect.top = 0;  // TODO: ScalingLayout
+    mClipRect.left = 0;
+    mClipRect.bottom = (int) (mClipRect.bottom * mScale);
+    mClipRect.right = (int) (mClipRect.right * mScale);
+    Log.d( "TileView", "modified=" + mClipRect );
+    canvas.clipRect( mClipRect, Region.Op.REPLACE );
+  }
+
   @Override
   public void onDraw( Canvas canvas ) {
     canvas.scale( mScale, mScale );
+    scaleCanvasBounds( canvas );
+
     super.onDraw( canvas );
   }
 
