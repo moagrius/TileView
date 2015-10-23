@@ -5,7 +5,6 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -176,8 +175,8 @@ public class ZoomPanLayout extends ViewGroup implements
   private void constrainScrollToLimits() {
     int x = getScrollX();
     int y = getScrollY();
-    int constrainedX = constrainX( x );
-    int constrainedY = constrainY( y );
+    int constrainedX = getConstrainedScrollX( x );
+    int constrainedY = getConstrainedScrollY( y );
     if( x != constrainedX || y != constrainedY ) {
       scrollTo( constrainedX, constrainedY );
     }
@@ -324,7 +323,7 @@ public class ZoomPanLayout extends ViewGroup implements
     scrollTo( x - getHalfWidth(), y - getHalfHeight() );
   }
 
-  private int getOffsetScrollXFromScale( int offsetX, float scale ) {  // TODO: here?
+  private int getOffsetScrollXFromScale( int offsetX, float scale ) {
     int scrollX = getScrollX() + offsetX;
     float deltaScale = scale / mScale;
     return (int) (scrollX * deltaScale) - offsetX;
@@ -337,8 +336,7 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   public void setScaleFromPosition( int offsetX, int offsetY, float scale ) {
-    scale = Math.max( scale, mMinScale );
-    scale = Math.min( scale, mMaxScale );
+    scale = getConstrainedDestinationScale( scale );
     if( scale == mScale ) {
       return;
     }
@@ -398,11 +396,11 @@ public class ZoomPanLayout extends ViewGroup implements
    * @param scale
    */
   public void smoothScaleFromFocalPoint( int focusX, int focusY, float scale ) {
+    scale = getConstrainedDestinationScale( scale );
     if( scale == mScale ) {
       return;
     }
     int x = getOffsetScrollXFromScale( focusX, scale );
-    Log.d( "Scroll", "scale from focal, x = " + x );
     int y = getOffsetScrollYFromScale( focusY, scale );
     getAnimator().animateZoomPan( x, y, scale );
   }
@@ -415,7 +413,7 @@ public class ZoomPanLayout extends ViewGroup implements
   @Override
   public boolean canScrollHorizontally( int direction ) {
     int position = getScrollX();
-    return direction > 0 ? position < getLimitX() : direction < 0 && position > 0;
+    return direction > 0 ? position < getScrollLimitX() : direction < 0 && position > 0;
   }
 
   //------------------------------------------------------------------------------------
@@ -425,14 +423,12 @@ public class ZoomPanLayout extends ViewGroup implements
   @Override
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     // the container's children should be the size provided by setSize
-    int computedWidthSpec = MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY );
-    int computedHeightSpec = MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY );
-    measureChildren( computedWidthSpec, computedHeightSpec );
+    measureChildren(
+      MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY ),
+      MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY ) );
     // but the container should still measure normally
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
-    //width = Math.max( width, getSuggestedMinimumWidth() );
-    //height = Math.max( height, getSuggestedMinimumHeight() );
     width = resolveSize( width, widthMeasureSpec );
     height = resolveSize( height, heightMeasureSpec );
     setMeasuredDimension( width, height );
@@ -461,8 +457,8 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public void scrollTo( int x, int y ) {
-    x = constrainX( x );
-    y = constrainY( y );
+    x = getConstrainedScrollX( x );
+    y = getConstrainedScrollY( y );
     super.scrollTo( x, y );
   }
 
@@ -486,19 +482,19 @@ public class ZoomPanLayout extends ViewGroup implements
     return (int) ((getHeight() * 0.5) + 0.5);
   }
 
-  private int constrainX( int x ) {
-    return Math.max( 0, Math.min( x, getLimitX() ) );
+  private int getConstrainedScrollX( int x ) {
+    return Math.max( 0, Math.min( x, getScrollLimitX() ) );
   }
 
-  private int constrainY( int y ) {
-    return Math.max( 0, Math.min( y, getLimitY() ) );
+  private int getConstrainedScrollY( int y ) {
+    return Math.max( 0, Math.min( y, getScrollLimitY() ) );
   }
 
-  private int getLimitX() {
+  private int getScrollLimitX() {
     return mScaledWidth - getWidth();
   }
 
-  private int getLimitY() {
+  private int getScrollLimitY() {
     return mScaledHeight - getHeight();
   }
 
@@ -507,8 +503,8 @@ public class ZoomPanLayout extends ViewGroup implements
     if( mScroller.computeScrollOffset() ) {
       int startX = getScrollX();
       int startY = getScrollY();
-      int endX = constrainX( mScroller.getCurrX() );
-      int endY = constrainY( mScroller.getCurrY() );
+      int endX = getConstrainedScrollX( mScroller.getCurrX() );
+      int endY = getConstrainedScrollY( mScroller.getCurrY() );
       if( startX != endX || startY != endY ) {
         scrollTo( endX, endY );
         if( mIsFlinging ) {
@@ -640,7 +636,7 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
-    mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, getLimitX(), 0, getLimitY() );
+    mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, getScrollLimitX(), 0, getScrollLimitY() );
     mIsFlinging = true;
     ViewCompat.postInvalidateOnAnimation( this );
     broadcastFlingBegin();

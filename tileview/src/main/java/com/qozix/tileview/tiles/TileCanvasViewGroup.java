@@ -23,8 +23,8 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   private static final int DEFAULT_RENDER_BUFFER = 250;
   private static final int DEFAULT_TRANSITION_DURATION = 200;
 
-  private LinkedList<Tile> mScheduledToRender = new LinkedList<Tile>();
-  private LinkedList<Tile> mAlreadyRendered = new LinkedList<Tile>();
+  private LinkedList<Tile> mTilesScheduledToRender = new LinkedList<Tile>();
+  private LinkedList<Tile> mTilesAlreadyRendered = new LinkedList<Tile>();
 
   private BitmapProvider mBitmapProvider;
   private HashMap<Float, TileCanvasView> mTileCanvasViewHashMap = new HashMap<Float, TileCanvasView>();
@@ -40,7 +40,6 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   private boolean mIsRendering = false;
 
   private boolean mTransitionsEnabled = true;
-
   private int mTransitionDuration = DEFAULT_TRANSITION_DURATION;
 
   private TileRenderHandler mTileRenderHandler;
@@ -168,14 +167,14 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   public void clear() {
     suppressRender();
     cancelRender();
-    for( Tile m : mScheduledToRender ) {
+    for( Tile m : mTilesScheduledToRender ) {
       m.destroy();
     }
-    mScheduledToRender.clear();
-    for( Tile m : mAlreadyRendered ) {
+    mTilesScheduledToRender.clear();
+    for( Tile m : mTilesAlreadyRendered ) {
       m.destroy();
     }
-    mAlreadyRendered.clear();
+    mTilesAlreadyRendered.clear();
   }
 
   private float getCurrentDetailLevelScale() {
@@ -209,7 +208,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     if( !changed ) {
       return;
     }
-    mScheduledToRender = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
+    mTilesScheduledToRender = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
     if( mLastRunTileRenderTask != null && mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
       mLastRunTileRenderTask.cancel( true );
     }
@@ -218,12 +217,12 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   }
 
   private void cleanup() {
-    LinkedList<Tile> condemned = new LinkedList<Tile>( mAlreadyRendered );
-    condemned.removeAll( mScheduledToRender );
+    LinkedList<Tile> condemned = new LinkedList<Tile>( mTilesAlreadyRendered );
+    condemned.removeAll( mTilesScheduledToRender );
     for( Tile tile : condemned ) {
       tile.destroy();
     }
-    mAlreadyRendered.removeAll( condemned );
+    mTilesAlreadyRendered.removeAll( condemned );
     mCurrentTileCanvasView.invalidate();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       if( mCurrentTileCanvasView != tileGroup ) {
@@ -259,7 +258,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   }
 
   LinkedList<Tile> getRenderList() {
-    return (LinkedList<Tile>) mScheduledToRender.clone();
+    return (LinkedList<Tile>) mTilesScheduledToRender.clone();
   }
 
   void generateTileBitmap( Tile tile ) {
@@ -267,13 +266,13 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   }
 
   void addTileToCurrentTileCanvasView( Tile tile ) {
-    if( mAlreadyRendered.contains( tile ) ) {
+    if( mTilesAlreadyRendered.contains( tile ) ) {
       return;
     }
     tile.setTransitionsEnabled( mTransitionsEnabled );
     tile.setTransitionDuration( mTransitionDuration );
     tile.stampTime();
-    mAlreadyRendered.add( tile );
+    mTilesAlreadyRendered.add( tile );
     mCurrentTileCanvasView.addTile( tile );
   }
 
@@ -321,4 +320,77 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     void onRenderComplete();
   }
 
+  static class TileRenderTask extends AsyncTask<Void, Tile, Void> {
+
+    private final WeakReference<TileCanvasViewGroup> mTileManagerWeakReference;
+
+    TileRenderTask( TileCanvasViewGroup tileCanvasViewGroup ) {
+      super();
+      mTileManagerWeakReference = new WeakReference<TileCanvasViewGroup>( tileCanvasViewGroup );
+    }
+
+    @Override
+    protected void onPreExecute() {
+      final TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
+      if( tileCanvasViewGroup != null ) {
+        tileCanvasViewGroup.onRenderTaskPreExecute();
+      }
+    }
+
+    /**
+     * As of 10/03/15, lint is _incorrectly_ indicating that we can't access member
+     * variables from a worker thread (this thread).
+     * https://code.google.com/p/android/issues/detail?id=175397
+     * Until this is corrected, use @SuppressWarnings
+     *
+     * @param params noop
+     * @return null
+     */
+    @SuppressWarnings("all")
+    @Override
+    protected Void doInBackground( Void... params ) {
+      TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
+      if( tileCanvasViewGroup != null ) {
+        LinkedList<Tile> renderList = tileCanvasViewGroup.getRenderList();
+        for( Tile tile : renderList ) {
+          if( !isCancelled() ) {
+            tileCanvasViewGroup = mTileManagerWeakReference.get();
+            if( tileCanvasViewGroup != null && !tileCanvasViewGroup.getRenderIsCancelled() ) {
+              tileCanvasViewGroup.generateTileBitmap( tile );
+              publishProgress( tile );
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    @Override
+    protected void onProgressUpdate( Tile... params ) {
+      if( !isCancelled() ) {
+        TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
+        if( tileCanvasViewGroup != null && !tileCanvasViewGroup.getRenderIsCancelled() ) {
+          Tile tile = params[0];
+          tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
+        }
+      }
+    }
+
+    @Override
+    protected void onPostExecute( Void param ) {
+      TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
+      if( tileCanvasViewGroup != null ) {
+        tileCanvasViewGroup.onRenderTaskPostExecute();
+      }
+    }
+
+    @Override
+    protected void onCancelled() {
+      TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
+      if( tileCanvasViewGroup != null ) {
+        tileCanvasViewGroup.onRenderTaskCancelled();
+      }
+    }
+
+  }
 }

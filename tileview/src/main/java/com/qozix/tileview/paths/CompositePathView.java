@@ -85,10 +85,10 @@ public class CompositePathView extends View {
   public void onDraw( Canvas canvas ) {
     if( mShouldDraw ) {
       mMatrix.setScale( mScale, mScale );
-      for( DrawablePath DrawablePath : mDrawablePaths ) {
-        mRecyclerPath.set( DrawablePath.path );
+      for( DrawablePath drawablePath : mDrawablePaths ) {
+        mRecyclerPath.set( drawablePath.path );
         mRecyclerPath.transform( mMatrix );
-        canvas.drawPath( mRecyclerPath, DrawablePath.paint );
+        canvas.drawPath( mRecyclerPath, drawablePath.paint );
       }
     }
     super.onDraw( canvas );

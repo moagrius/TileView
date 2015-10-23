@@ -60,7 +60,7 @@ import java.util.List;
  * tileView.addDetailLevel( 0.125f, "path/to/tiles/125/%d-%d.jpg", 128, 128 );
  * tileView.addMarker( someView, 42.35848, -71.063736 );
  * tileView.addMarker( anotherView, 42.3665, -71.05224 );
- * tileView.addMarkerTapListener( someMarkerTapListenerImplementation );
+ * tileView.setMarkerTapListener( someMarkerTapListenerImplementation );
  * }</pre>
  */
 public class TileView extends ZoomPanLayout implements
@@ -465,7 +465,7 @@ public class TileView extends ZoomPanLayout implements
   public void moveMarker( View view, double x, double y ) {
     mMarkerLayout.moveMarker( view,
       mCoordinateTranslater.translateX( x ),
-      mCoordinateTranslater.translateY( y ));
+      mCoordinateTranslater.translateY( y ) );
   }
 
   /**
@@ -499,7 +499,7 @@ public class TileView extends ZoomPanLayout implements
    * @param listener Listener to be added to the TileView's list of MarkerTapListener.
    */
   public void addMarkerTapListener( MarkerLayout.MarkerTapListener listener ) {
-    mMarkerLayout.addMarkerTapListener( listener );
+    mMarkerLayout.setMarkerTapListener( listener );
   }
 
   /**

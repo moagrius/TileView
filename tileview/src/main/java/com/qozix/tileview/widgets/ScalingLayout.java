@@ -28,17 +28,13 @@ public class ScalingLayout extends ViewGroup {
 		measureChildren( widthMeasureSpec, heightMeasureSpec );
 		int width = MeasureSpec.getSize( widthMeasureSpec );
 		int height = MeasureSpec.getSize( heightMeasureSpec );
-		width = Math.max( width, getSuggestedMinimumWidth() );
-		height = Math.max( height, getSuggestedMinimumHeight() );
-		width = resolveSize( width, widthMeasureSpec );
-		height = resolveSize( height, heightMeasureSpec );
 		setMeasuredDimension( width, height );
 	}
 
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    int availableWidth = (int) ((r - l) / mScale + 0.5);
-    int availableHeight = (int) ((b - t) / mScale + 0.5);
+    int availableWidth = r - l;
+    int availableHeight = b - t;
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {

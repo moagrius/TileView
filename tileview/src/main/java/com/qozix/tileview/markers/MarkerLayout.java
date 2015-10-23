@@ -5,8 +5,6 @@ import android.graphics.Rect;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.HashSet;
-
 public class MarkerLayout extends ViewGroup {
 
   private float mScale = 1;
@@ -14,7 +12,7 @@ public class MarkerLayout extends ViewGroup {
   private float mAnchorX;
   private float mAnchorY;
 
-  private HashSet<MarkerTapListener> mMarkerTapListeners = new HashSet<MarkerTapListener>();
+  private MarkerTapListener mMarkerTapListener;
 
   public MarkerLayout( Context context ) {
     super( context );
@@ -80,20 +78,16 @@ public class MarkerLayout extends ViewGroup {
     removeView( view );
   }
 
-  public void addMarkerTapListener( MarkerTapListener listener ) {
-    mMarkerTapListeners.add( listener );
-  }
-
-  public void removeMarkerTapListener( MarkerTapListener listener ) {
-    mMarkerTapListeners.remove( listener );
+  public void setMarkerTapListener( MarkerTapListener markerTapListener ) {
+    mMarkerTapListener = markerTapListener;
   }
 
   private View getViewFromTap( int x, int y ) {
-    for( int i = 0; i < getChildCount(); i++){
+    for( int i = getChildCount() - 1; i >= 0; i-- ) {
       View child = getChildAt( i );
       LayoutParams layoutParams = (LayoutParams) child.getLayoutParams();
       Rect hitRect = layoutParams.getHitRect();
-      if( hitRect.contains( x, y ) ){
+      if( hitRect.contains( x, y ) ) {
         return child;
       }
     }
@@ -101,13 +95,10 @@ public class MarkerLayout extends ViewGroup {
   }
 
   public void processHit( int x, int y ) {
-    if( mMarkerTapListeners.isEmpty() ) {
-      return;
-    }
-    View view = getViewFromTap( x, y );
-    if( view != null ) {
-      for( MarkerTapListener listener : mMarkerTapListeners ) {  // TODO: single listener?
-        listener.onMarkerTap( view, x, y );
+    if( mMarkerTapListener != null ) {
+      View view = getViewFromTap( x, y );
+      if( view != null ) {
+        mMarkerTapListener.onMarkerTap( view, x, y );
       }
     }
   }
@@ -205,7 +196,7 @@ public class MarkerLayout extends ViewGroup {
 
     private Rect mHitRect;
 
-    private Rect getHitRect(){
+    private Rect getHitRect() {
       if( mHitRect == null ) {
         mHitRect = new Rect();
       }
