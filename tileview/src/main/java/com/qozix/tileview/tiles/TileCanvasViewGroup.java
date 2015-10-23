@@ -318,7 +318,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   @Override
   public void onDraw(Canvas canvas) {
-    super.onDraw(canvas);
+    super.onDraw( canvas);
     canvas.save();
     canvas.scale( mScale, mScale );
     canvas.restore();
