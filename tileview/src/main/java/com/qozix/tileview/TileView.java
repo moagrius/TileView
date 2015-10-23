@@ -9,7 +9,6 @@ import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -96,6 +95,7 @@ public class TileView extends ZoomPanLayout implements
   }
 
   public TileView( Context context, AttributeSet attrs, int defStyleAttr ) {
+
     super( context, attrs, defStyleAttr );
 
     mTileCanvasViewGroup = new TileCanvasViewGroup( context );
@@ -117,7 +117,7 @@ public class TileView extends ZoomPanLayout implements
     mTileCanvasViewGroup.setTileRenderListener( this );
     addZoomPanListener( this );
 
-    mRenderThrottleHandler = new RenderThrottleHandler( this );  // TODO: cleanup
+    mRenderThrottleHandler = new RenderThrottleHandler( this );
 
     requestRender();
 
@@ -405,7 +405,14 @@ public class TileView extends ZoomPanLayout implements
     );
   }
 
-  public void slideToAndCenterWithScale( double x, double y, float scale ){
+  /**
+   * Scrolls and scales (with animation) the TileView to the specified x, y and scale provided.
+   * The TileView will be centered to the coordinates passed.
+   * @param x The relative x position to move to.
+   * @param y The relative y position to move to.
+   * @param scale The scale the TileView should be at when the animation is complete.
+   */
+  public void slideToAndCenterWithScale( double x, double y, float scale ) {
     slideToAndCenterWithScale(
       mCoordinateTranslater.translateAndScaleX( x, scale ),
       mCoordinateTranslater.translateAndScaleY( y, scale ),
@@ -422,7 +429,7 @@ public class TileView extends ZoomPanLayout implements
    * @param anchorX The x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value.
    * @param anchorY The y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value.
    */
-  public void setMarkerAnchorPoints( float anchorX, float anchorY ) {
+  public void setMarkerAnchorPoints( Float anchorX, Float anchorY ) {
     mMarkerLayout.setAnchors( anchorX, anchorY );
   }
 
@@ -441,15 +448,14 @@ public class TileView extends ZoomPanLayout implements
     return mMarkerLayout.addMarker( view,
       mCoordinateTranslater.translateX( x ),
       mCoordinateTranslater.translateY( y ),
-      anchorX,
-      anchorY
+      anchorX, anchorY
     );
   }
 
   /**
    * Removes a marker View from the TileView's view tree.
    *
-   * @param view (View) The marker View to be removed.
+   * @param view The marker View to be removed.
    */
   public void removeMarker( View view ) {
     mMarkerLayout.removeMarker( view );
@@ -472,9 +478,9 @@ public class TileView extends ZoomPanLayout implements
    * Scroll the TileView so that the View passed is centered in the viewport.
    *
    * @param view    The View marker that the TileView should center on.
-   * @param animate True if the movement should use a transition effect.
+   * @param shouldAnimate True if the movement should use a transition effect.
    */
-  public void moveToMarker( View view, boolean animate ) {
+  public void moveToMarker( View view, boolean shouldAnimate ) {
     if( mMarkerLayout.indexOfChild( view ) > -1 ) {
       throw new IllegalStateException( "The view passed is not an existing marker" );
     }
@@ -483,7 +489,7 @@ public class TileView extends ZoomPanLayout implements
       MarkerLayout.LayoutParams anchorLayoutParams = (MarkerLayout.LayoutParams) params;
       int scaledX = (int) (anchorLayoutParams.x * getScale() + 0.5);
       int scaledY = (int) (anchorLayoutParams.y * getScale() + 0.5);
-      if( animate ) {
+      if( shouldAnimate ) {
         slideToAndCenter( scaledX, scaledY );
       } else {
         scrollToAndCenter( scaledX, scaledY );
@@ -496,19 +502,10 @@ public class TileView extends ZoomPanLayout implements
    * MarkerTapListener do not consume the touch event, so will not interfere with scrolling.  While the event is
    * dispatched from a Tap event, it's routed though a hit detection API to trigger the listener.
    *
-   * @param listener Listener to be added to the TileView's list of MarkerTapListener.
+   * @param markerTapListener Listener to be added to the TileView's list of MarkerTapListener.
    */
-  public void addMarkerTapListener( MarkerLayout.MarkerTapListener listener ) {
-    mMarkerLayout.setMarkerTapListener( listener );
-  }
-
-  /**
-   * Removes a MarkerTapListener from the TileView's registry.
-   *
-   * @param listener Listener to be removed From the TileView's list of MarkerTapListener.
-   */
-  public void removeMarkerTapListener( MarkerLayout.MarkerTapListener listener ) {
-    mMarkerLayout.removeMarkerTapListener( listener );
+  public void setMarkerTapListener( MarkerLayout.MarkerTapListener markerTapListener ) {
+    mMarkerLayout.setMarkerTapListener( markerTapListener );
   }
 
   /**
@@ -694,21 +691,13 @@ public class TileView extends ZoomPanLayout implements
     mDetailLevelManager.updateViewport( left, top, right, bottom );
   }
 
-
-  //------------------------------------------------------------------------------------
-  // start hooks
-  //------------------------------------------------------------------------------------
-
-  // start View
   @Override
   protected void onScrollChanged( int l, int t, int oldl, int oldt ) {
     super.onScrollChanged( l, t, oldl, oldt );
     updateViewport();
     requestThrottledRender();
   }
-  // end View
 
-  // start ZoomPanLayout
   @Override
   public void onScaleChanged( float scale, float previous ) {
     super.onScaleChanged( scale, previous );
@@ -720,9 +709,7 @@ public class TileView extends ZoomPanLayout implements
     mMarkerLayout.setScale( scale );
     mCalloutLayout.setScale( scale );
   }
-  // end ZoomPanLayout
 
-  // start ZoomPanListener
   @Override
   public void onPanBegin( int x, int y, Origination origin ) {
     suppressRender();
@@ -753,32 +740,24 @@ public class TileView extends ZoomPanLayout implements
   public void onZoomEnd( float scale, Origination origin ) {
     mDetailLevelManager.unlockDetailLevel();
     mDetailLevelManager.setScale( scale );
-    Log.d( "Anim", "onZoomEnd, requestRender" );
     requestRender();
   }
-  // end ZoomPanListener
 
-  // start DetailLevelChangeListener
   @Override
   public void onDetailLevelChanged( DetailLevel detailLevel ) {
     requestRender();
     mTileCanvasViewGroup.updateTileSet( detailLevel );
   }
-  // end DetailLevelChangeListener
 
-  // start OnDoubleTapListener
   @Override
   public boolean onSingleTapConfirmed( MotionEvent event ) {
-    // TODO: test
     int x = (int) (getScrollX() + event.getX());
     int y = (int) (getScrollY() + event.getY());
     mMarkerLayout.processHit( x, y );
     mHotSpotManager.processHit( x, y );
     return super.onSingleTapConfirmed( event );
   }
-  // end OnDoubleTapListener
 
-  // start TileRenderListener
   @Override
   public void onRenderStart() {
 
@@ -793,15 +772,12 @@ public class TileView extends ZoomPanLayout implements
   public void onRenderComplete() {
 
   }
-  // end TileRenderListener
 
-
-  //------------------------------------------------------------------------------------
-  // private internal classes
-  //------------------------------------------------------------------------------------
   private static class RenderThrottleHandler extends Handler {
+
     private static final int MESSAGE = 0;
     private static final int RENDER_THROTTLE_TIMEOUT = 100;
+
     private final WeakReference<TileView> mTileViewWeakReference;
 
     public RenderThrottleHandler( TileView tileView ) {
@@ -828,9 +804,5 @@ public class TileView extends ZoomPanLayout implements
       sendEmptyMessageDelayed( MESSAGE, RENDER_THROTTLE_TIMEOUT );
     }
   }
-  //------------------------------------------------------------------------------------
-  // end internal classes
-  //------------------------------------------------------------------------------------
-
 
 }

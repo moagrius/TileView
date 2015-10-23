@@ -4,16 +4,21 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.qozix.tileview.TileView;
+import com.qozix.tileview.hotspots.HotSpot;
+import com.qozix.tileview.markers.MarkerLayout;
 
 import java.util.ArrayList;
 
@@ -82,18 +87,26 @@ public class RealMapTileViewActivity extends Activity {
       ImageView marker = new ImageView( this );
       marker.setTag( point );
       marker.setImageResource( Math.random() < 0.75 ? R.drawable.map_marker_normal : R.drawable.map_marker_featured );
-      marker.setOnClickListener( markerClickListener );
+      //marker.setOnClickListener( markerClickListener );
       tileView.addMarker( marker, point[0], point[1], null, null );
     }
 
+    tileView.setMarkerTapListener( markerTapListener );
     tileView.setTransitionsEnabled( false );
 
     ImageView downsample = new ImageView( this );
     downsample.setImageResource( R.drawable.downsample );
     //tileView.addView( downsample, 0 );
 
+    RelativeLayout contentView = new RelativeLayout( this );
+    contentView.addView( tileView );
+
     Button button = new Button( this );
     button.setText( "ZoomAndScale" );
+    RelativeLayout.LayoutParams buttonLayoutParams = new RelativeLayout.LayoutParams( ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT );
+    buttonLayoutParams.addRule( RelativeLayout.ALIGN_PARENT_BOTTOM );
+    buttonLayoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT );
+    contentView.addView( button, buttonLayoutParams );
     button.setOnClickListener( new View.OnClickListener() {
       @Override
       public void onClick( View view ) {
@@ -111,9 +124,19 @@ public class RealMapTileViewActivity extends Activity {
     } );
 
 
-    RelativeLayout contentView = new RelativeLayout( this );
-    contentView.addView( tileView );
-    contentView.addView( button );
+
+
+
+    HotSpot hotSpot = new HotSpot();
+    hotSpot.set( new Rect( 0, 0, 100, 100 ));
+    tileView.addHotSpot( hotSpot );
+    tileView.setHotSpotTapListener( new HotSpot.HotSpotTapListener() {
+      @Override
+      public void onHotSpotTap( HotSpot hotSpot, int x, int y ) {
+        Log.d( "TileView", "hot spot tapped" );
+      }
+    } );
+
 
     setContentView( contentView );
 
@@ -136,17 +159,28 @@ public class RealMapTileViewActivity extends Activity {
 
   }
 
+  private void showMarker( View view ) {
+    double[] position = (double[]) view.getTag();
+    tileView.slideToAndCenter( position[0], position[1] );
+    SampleCallout callout = new SampleCallout( view.getContext() );
+    tileView.addCallout( callout, position[0], position[1], -0.5f, -1.0f );
+    callout.transitionIn();
+    callout.setTitle( "MAP CALLOUT" );
+    callout.setSubtitle( "Info window at coordinate:\n" + position[1] + ", " + position[0] );
+  }
+
+  private MarkerLayout.MarkerTapListener markerTapListener = new MarkerLayout.MarkerTapListener() {
+    @Override
+    public void onMarkerTap( View view, int x, int y ) {
+      showMarker( view );
+    }
+  };
+
   private View.OnClickListener markerClickListener = new View.OnClickListener() {
 
     @Override
     public void onClick( View view ) {
-      double[] position = (double[]) view.getTag();
-      tileView.slideToAndCenter( position[0], position[1] );
-      SampleCallout callout = new SampleCallout( view.getContext() );
-      tileView.addCallout( callout, position[0], position[1], -0.5f, -1.0f );
-      callout.transitionIn();
-      callout.setTitle( "MAP CALLOUT" );
-      callout.setSubtitle( "Info window at coordinate:\n" + position[1] + ", " + position[0] );
+      showMarker( view );
     }
   };
 
