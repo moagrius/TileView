@@ -17,6 +17,7 @@ public class MarkerLayout extends ViewGroup {
 
   public MarkerLayout( Context context ) {
     super( context );
+    setBackgroundColor( 0x8800ff00 );
   }
 
   /**

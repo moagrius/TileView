@@ -14,6 +14,7 @@ import android.view.animation.Interpolator;
 import android.widget.Scroller;
 
 import com.qozix.tileview.geom.FloatMathHelper;
+import com.qozix.tileview.view.IScalingCanvasView;
 import com.qozix.tileview.view.TouchUpGestureDetector;
 
 import java.lang.ref.WeakReference;
@@ -37,10 +38,8 @@ public class ZoomPanLayout extends ViewGroup implements
 
   private int mBaseWidth;
   private int mBaseHeight;
-
   private int mScaledWidth;
   private int mScaledHeight;
-
   private int mBufferedWidth;
   private int mBufferedHeight;
 
@@ -94,17 +93,9 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     // the container's children should be the size provided by setSize
     measureChildren(
-      MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY ),  // TODO: AT_MOST
+      MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY ),
       MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY ) );
-    for( int i = 0; i < getChildCount(); i++ ){
-      View child = getChildAt( i );
-      LayoutParams layoutParams = (LayoutParams) child.getLayoutParams();
-      layoutParams.baseWidth = mBaseWidth;
-      layoutParams.baseHeight = mBaseHeight;
-      layoutParams.scaledWidth = mScaledWidth;
-      layoutParams.scaledHeight = mScaledHeight;
-    }
-    // but the container should still measure normally
+    // but the layout itself should report normal (on screen) dimensions
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
     width = resolveSize( width, widthMeasureSpec );
@@ -114,14 +105,17 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    //Log.d( "TileView", "ZoomPanLayout.onLayout: " + mBaseWidth + ", " + mBaseHeight );
+    /*
+    Children of ZoomPanLayout will be laid TODO
+    OVERRIDE .layout METHOD OF SCALING VIEWS
+     */
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        if( child instanceof IScalingCanvas ) {
-          child.layout( 0, 0, mBaseWidth - 100, mBaseHeight - 100 );
+        if( child instanceof IScalingCanvasView ) {
+          child.layout( 0, 0, mBufferedWidth - 100, mBufferedHeight - 100 );
         } else {
-          child.layout( 0, 0, mScaledWidth, mScaledHeight );
+          child.layout( 0, 0, mScaledWidth - 50, mScaledHeight - 50 );
         }
       }
     }
@@ -249,8 +243,19 @@ public class ZoomPanLayout extends ViewGroup implements
   private void updateScaledDimensions() {
     mScaledWidth = FloatMathHelper.scale( mBaseWidth, mScale );
     mScaledHeight = FloatMathHelper.scale( mBaseHeight, mScale );
-    mBufferedWidth = FloatMathHelper.unscale( mBaseWidth, mScale );
-    mBufferedHeight = FloatMathHelper.unscale( mBaseHeight, mScale );
+    /*
+    When a canvas is scaled, as happens during onDraw of ScalingLayout and TileCanvasView,
+    the width and height are scaled smaller, but do not scale larger than the original width
+    and height, even if clipRect is set or unioned.  This works around the abbreviated clip
+    on canvases scaled larger than 1.0
+     */
+    if( mScale > 1 ) {
+      mBufferedWidth = FloatMathHelper.unscale( mBaseWidth, mScale );
+      mBufferedHeight = FloatMathHelper.unscale( mBaseHeight, mScale );
+    } else {
+      mBufferedWidth = mBaseWidth;
+      mBufferedHeight = mBaseHeight;
+    }
   }
 
   /**
@@ -486,11 +491,11 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   private int getHalfWidth() {
-    return (int) ((getWidth() * 0.5) + 0.5);
+    return FloatMathHelper.scale( getWidth(), 0.5f );
   }
 
   private int getHalfHeight() {
-    return (int) ((getHeight() * 0.5) + 0.5);
+    return FloatMathHelper.scale( getHeight(), 0.5f );
   }
 
   private int getConstrainedScrollX( int x ) {
