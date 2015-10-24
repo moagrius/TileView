@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.qozix.tileview.geom.FloatMathHelper;
 import com.qozix.tileview.view.IScalingCanvasView;
 
 public class ScalingLayout extends ViewGroup implements IScalingCanvasView {
@@ -27,16 +28,21 @@ public class ScalingLayout extends ViewGroup implements IScalingCanvasView {
 
 	@Override
 	protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
-    measureChildren( widthMeasureSpec, heightMeasureSpec );
-    int availableWidth = MeasureSpec.getSize( widthMeasureSpec );
-    int availableHeight = MeasureSpec.getSize( heightMeasureSpec );
+    //measureChildren( widthMeasureSpec, heightMeasureSpec );
+    int availableWidth = FloatMathHelper.unscale( MeasureSpec.getSize( widthMeasureSpec ), mScale );
+    int availableHeight = FloatMathHelper.unscale( MeasureSpec.getSize( heightMeasureSpec ), mScale );
+
+    measureChildren(
+      MeasureSpec.makeMeasureSpec( availableWidth, MeasureSpec.EXACTLY ),
+      MeasureSpec.makeMeasureSpec( availableHeight, MeasureSpec.EXACTLY ) );
+
 		setMeasuredDimension( availableWidth, availableHeight );
 	}
 
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    int availableWidth = r - l;
-    int availableHeight = b - t;
+    int availableWidth = FloatMathHelper.unscale( r - l, mScale );
+    int availableHeight = FloatMathHelper.unscale( b - t, mScale );
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {

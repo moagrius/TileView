@@ -14,7 +14,6 @@ import android.view.animation.Interpolator;
 import android.widget.Scroller;
 
 import com.qozix.tileview.geom.FloatMathHelper;
-import com.qozix.tileview.view.IScalingCanvasView;
 import com.qozix.tileview.view.TouchUpGestureDetector;
 
 import java.lang.ref.WeakReference;
@@ -93,8 +92,8 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     // the container's children should be the size provided by setSize
     measureChildren(
-      MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY ),
-      MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY ) );
+      MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY ),
+      MeasureSpec.makeMeasureSpec( mScaledHeight, MeasureSpec.EXACTLY ) );
     // but the layout itself should report normal (on screen) dimensions
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
@@ -112,11 +111,7 @@ public class ZoomPanLayout extends ViewGroup implements
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        if( child instanceof IScalingCanvasView ) {
-          child.layout( 0, 0, mBufferedWidth - 100, mBufferedHeight - 100 );
-        } else {
-          child.layout( 0, 0, mScaledWidth - 50, mScaledHeight - 50 );
-        }
+        child.layout( 0, 0, mScaledWidth - 100, mScaledHeight - 100);
       }
     }
     if( changed ) {

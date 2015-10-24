@@ -2,7 +2,6 @@ package com.qozix.tileview.markers;
 
 import android.content.Context;
 import android.graphics.Rect;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -17,7 +16,7 @@ public class MarkerLayout extends ViewGroup {
 
   public MarkerLayout( Context context ) {
     super( context );
-    setBackgroundColor( 0x8800ff00 );
+    setBackgroundColor( 0x4400ff00 );  // TODO:
   }
 
   /**
@@ -133,7 +132,6 @@ public class MarkerLayout extends ViewGroup {
     }
     int availableWidth = MeasureSpec.getSize( widthMeasureSpec );
     int availableHeight = MeasureSpec.getSize( heightMeasureSpec );
-    Log.d( "TileView", "MarkerLayout.onMeasure: " + availableWidth + ", " + availableHeight );
     setMeasuredDimension( availableWidth, availableHeight );
   }
 
