@@ -82,6 +82,7 @@ public class TileCanvasView extends View {
 
   @Override
   public void onDraw( Canvas canvas ) {
+    Log.d( "TileView", "TileCanvasView.onDraw: " + canvas.getWidth() + ", " + canvas.getHeight() );
     canvas.scale( mScale, mScale );
     boolean dirty = drawTiles( canvas );
     super.onDraw( canvas );

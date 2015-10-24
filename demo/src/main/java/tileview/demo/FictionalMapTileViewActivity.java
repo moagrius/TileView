@@ -1,9 +1,11 @@
 package tileview.demo;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 
 import com.qozix.tileview.TileView;
+import com.qozix.tileview.markers.MarkerLayout;
 
 public class FictionalMapTileViewActivity extends TileViewActivity {
 
@@ -22,7 +24,7 @@ public class FictionalMapTileViewActivity extends TileViewActivity {
 		tileView.addDetailLevel( 1.000f, "tiles/fantasy/1000/%d_%d.jpg");
 		tileView.addDetailLevel( 0.500f, "tiles/fantasy/500/%d_%d.jpg");
 		tileView.addDetailLevel( 0.250f, "tiles/fantasy/250/%d_%d.jpg");
-		tileView.addDetailLevel( 0.125f, "tiles/fantasy/125/%d_%d.jpg");
+		tileView.addDetailLevel( 0.125f, "tiles/fantasy/125/%d_%d.jpg" );
 		
 		// allow scaling past original size
 		tileView.setScaleLimits( 0, 2 );
@@ -39,6 +41,14 @@ public class FictionalMapTileViewActivity extends TileViewActivity {
 		
 		// frame the troll
 		frameTo( 3267, 1896 );
+
+		// DEBUG
+    tileView.setMarkerTapListener( new MarkerLayout.MarkerTapListener() {
+      @Override
+      public void onMarkerTap( View view, int x, int y ) {
+        getTileView().setScale( 1 );
+      }
+    } );
 				
 	}
 	

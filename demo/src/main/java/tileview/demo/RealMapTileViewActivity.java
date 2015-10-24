@@ -99,6 +99,9 @@ public class RealMapTileViewActivity extends TileViewActivity {
     y = y / size;
     frameTo( x, y );
 
+    // test higher than 1
+    tileView.setScaleLimits( 0, 2 );
+
     // start small and allow zoom
     tileView.setScale( 0.3f );
 

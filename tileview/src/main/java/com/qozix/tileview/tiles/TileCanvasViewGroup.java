@@ -1,23 +1,20 @@
 package com.qozix.tileview.tiles;
 
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.graphics.BitmapProviderAssets;
+import com.qozix.tileview.widgets.ScalingLayout;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.TileCanvasDrawListener {
+public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView.TileCanvasDrawListener {
 
   private static final int RENDER_FLAG = 1;
 
@@ -48,24 +45,11 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
 
   private int mRenderBuffer = DEFAULT_RENDER_BUFFER;
 
-  private float mScale = 1;
-
-  private Rect mClipRect = new Rect();
-
   public TileCanvasViewGroup( Context context ) {
     super( context );
     setWillNotDraw( false );
     setBackgroundColor( 0xffff9900 );  // TODO:
     mTileRenderHandler = new TileRenderHandler( this );
-  }
-
-  public float getScale() {
-    return mScale;
-  }
-
-  public void setScale( float scale ) {
-    mScale = scale;
-    invalidate();
   }
 
   public boolean getTransitionsEnabled() {
@@ -107,12 +91,14 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     mRenderBuffer = renderBuffer;
   }
 
+  /*
   @Override
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
     setMeasuredDimension( width, height );
   }
+  */
 
   /**
    * The layout dimensions supplied to this ViewGroup will be exactly as large as the scaled
@@ -120,12 +106,17 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
    * is scaled, it's clip area is also scaled - offset this by providing dimensions scaled as
    * large as the smallest size the TileCanvasView might be.
    */
+  /*
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
     int availableWidth = r - l;
     int availableHeight = b - t;
-    int drawableWidth = (int) (availableWidth / mScale );
-    int drawableHeight = (int) (availableHeight / mScale );
+
+    //int drawableWidth = (int) (availableWidth / mScale );
+    //int drawableHeight = (int) (availableHeight / mScale );
+
+    int drawableWidth = availableWidth;
+    int drawableHeight = availableHeight;
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
@@ -133,12 +124,26 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
       }
     }
   }
+  */
 
+  /*
+  @Override
+  public void onDraw(Canvas canvas) {
+
+    canvas.save();
+    canvas.scale( mScale, mScale );
+    super.onDraw( canvas );
+    canvas.restore();
+  }
+  */
+
+  /*
   @Override
   public void onDraw(Canvas canvas) {
     canvas.scale( mScale, mScale );
     super.onDraw( canvas );
   }
+  */
 
   public void requestRender() {
     mRenderIsCancelled = false;

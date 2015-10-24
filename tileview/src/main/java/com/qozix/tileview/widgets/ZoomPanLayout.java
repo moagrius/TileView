@@ -5,6 +5,7 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -90,8 +91,8 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     // the container's children should be the size provided by setSize
     measureChildren(
-      MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY ),
-      MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY ) );
+      MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY ),
+      MeasureSpec.makeMeasureSpec( mScaledHeight, MeasureSpec.EXACTLY ) );
     // but the container should still measure normally
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
@@ -102,10 +103,11 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+    Log.d( "TileView", "ZoomPanLayout.onLayout: " + mScaledWidth + ", " + mScaledHeight );
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mBaseWidth - 100, mBaseHeight - 100 );
+        child.layout( 0, 0, mScaledWidth, mScaledHeight );
       }
     }
     if( changed ) {
@@ -114,10 +116,10 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   /**
-   * Determines whether the ZoomPanLayout should limit it's minimum mScale to no less than what
+   * Determines whether the ZoomPanLayout should limit it's minimum scale to no less than what
    * would be required to fill it's container.
    *
-   * @param shouldScaleToFit True to limit minimum mScale, false to allow arbitrary minimum mScale.
+   * @param shouldScaleToFit True to limit minimum scale, false to allow arbitrary minimum scale.
    */
   public void setShouldScaleToFit( boolean shouldScaleToFit ) {
     mShouldScaleToFit = shouldScaleToFit;
