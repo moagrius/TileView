@@ -103,7 +103,7 @@ public class RealMapTileViewActivity extends TileViewActivity {
     tileView.setScale( 0.3f );
 
     RelativeLayout icons = new RelativeLayout( this );
-    icons.setBackgroundColor( 0xff0000ff );
+    icons.setBackgroundColor( 0x660000ff );
     ImageView trollIcon = new ImageView( this );
     RelativeLayout.LayoutParams trollIconLayoutParams =
       new RelativeLayout.LayoutParams( RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT );
