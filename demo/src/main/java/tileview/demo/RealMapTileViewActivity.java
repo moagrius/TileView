@@ -103,7 +103,7 @@ public class RealMapTileViewActivity extends TileViewActivity {
     tileView.setScaleLimits( 0, 2 );
 
     // start small and allow zoom
-    tileView.setScale( 0.3f );
+    //tileView.setScale( 0.3f );
 
     RelativeLayout icons = new RelativeLayout( this );
     icons.setBackgroundColor( 0x660000ff );

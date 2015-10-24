@@ -6,7 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class ScalingLayout extends ViewGroup {
+public class ScalingLayout extends ViewGroup implements IScalingCanvas {
 
 	private float mScale = 1;
 
@@ -26,11 +26,15 @@ public class ScalingLayout extends ViewGroup {
 
 	@Override
 	protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
-    //measureChildren( widthMeasureSpec, heightMeasureSpec );
-/*
+
+    measureChildren( widthMeasureSpec, heightMeasureSpec );
+
     int availableWidth = MeasureSpec.getSize( widthMeasureSpec );
     int availableHeight = MeasureSpec.getSize( heightMeasureSpec );
-*/
+
+    Log.d( "TileView", "ScalingLayout.onMeasure: " + availableWidth + ", " + availableHeight );
+
+    /*
     ZoomPanLayout.LayoutParams layoutParams = (ZoomPanLayout.LayoutParams) getLayoutParams();
 
     // Views that scale must think they are as much bigger as they are than they would scale to
@@ -42,11 +46,14 @@ public class ScalingLayout extends ViewGroup {
       MeasureSpec.makeMeasureSpec( availableHeight, MeasureSpec.EXACTLY )
     );
 
+
     Log.d( "TileView", "ScalingLayout.onMeasure: "
       + "(" + MeasureSpec.getSize( widthMeasureSpec ) + ", " + MeasureSpec.getSize( heightMeasureSpec ) + ") vs "
       + "(" + layoutParams.scaledWidth + ", " + layoutParams.scaledHeight + ") vs "
       + "(" + layoutParams.baseWidth + ", " + layoutParams.baseHeight + ") vs "
       + "(" + availableWidth + ", " + availableHeight + ")");
+    */
+
 		setMeasuredDimension( availableWidth, availableHeight );
 	}
 
@@ -72,8 +79,9 @@ public class ScalingLayout extends ViewGroup {
 
   @Override
   public void onDraw( Canvas canvas ) {
-    Log.d( "TileView", "ScalingLayout.onDraw: " + canvas.getWidth() + ", " + canvas.getHeight() );
+    Log.d( "TileView", "ScalingLayout.onMeasure (before scale): " + canvas.getWidth() + ", " + canvas.getHeight() );
     canvas.scale( mScale, mScale );
+    Log.d( "TileView", "ScalingLayout.onMeasure (after scale): " + canvas.getWidth() + ", " + canvas.getHeight() );
     super.onDraw( canvas );
   }
 

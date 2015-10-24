@@ -5,7 +5,6 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -41,6 +40,9 @@ public class ZoomPanLayout extends ViewGroup implements
 
   private int mScaledWidth;
   private int mScaledHeight;
+
+  private int mBufferedWidth;
+  private int mBufferedHeight;
 
   private float mScale = 1;
 
@@ -92,8 +94,8 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     // the container's children should be the size provided by setSize
     measureChildren(
-      MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY ),  // TODO: AT_MOST
-      MeasureSpec.makeMeasureSpec( mScaledHeight, MeasureSpec.EXACTLY ) );
+      MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY ),  // TODO: AT_MOST
+      MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY ) );
     for( int i = 0; i < getChildCount(); i++ ){
       View child = getChildAt( i );
       LayoutParams layoutParams = (LayoutParams) child.getLayoutParams();
@@ -112,14 +114,15 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    int computedWidth = FloatMathHelper.unscale( mBaseWidth, mScale );
-    int computedHeight = FloatMathHelper.unscale( mBaseHeight, mScale );
-    Log.d( "TileView", "ZoomPanLayout.onLayout: " + computedWidth + ", " + computedHeight );
+    //Log.d( "TileView", "ZoomPanLayout.onLayout: " + mBaseWidth + ", " + mBaseHeight );
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        // use computed if the child scales its own canvas, no other way to make it think it's bigger (maybe clip?)
-        child.layout( 0, 0, computedWidth, computedHeight );
+        if( child instanceof IScalingCanvas ) {
+          child.layout( 0, 0, mBaseWidth - 100, mBaseHeight - 100 );
+        } else {
+          child.layout( 0, 0, mScaledWidth, mScaledHeight );
+        }
       }
     }
     if( changed ) {
@@ -244,8 +247,10 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   private void updateScaledDimensions() {
-    mScaledWidth = (int) ((mBaseWidth * mScale) + 0.5);
-    mScaledHeight = (int) ((mBaseHeight * mScale) + 0.5);
+    mScaledWidth = FloatMathHelper.scale( mBaseWidth, mScale );
+    mScaledHeight = FloatMathHelper.scale( mBaseHeight, mScale );
+    mBufferedWidth = FloatMathHelper.unscale( mBaseWidth, mScale );
+    mBufferedHeight = FloatMathHelper.unscale( mBaseHeight, mScale );
   }
 
   /**
