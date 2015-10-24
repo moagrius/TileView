@@ -26,13 +26,9 @@ public class ScalingLayout extends ViewGroup {
 
 	@Override
 	protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
-    //measureChildren( widthMeasureSpec, heightMeasureSpec );
-
+    measureChildren( widthMeasureSpec, heightMeasureSpec );
     int availableWidth = MeasureSpec.getSize( widthMeasureSpec );
     int availableHeight = MeasureSpec.getSize( heightMeasureSpec );
-    int childWidthSpec = MeasureSpec.makeMeasureSpec( (int) (availableWidth / mScale), MeasureSpec.AT_MOST );
-    int childHeightSpec = MeasureSpec.makeMeasureSpec( (int) (availableHeight / mScale ), MeasureSpec.AT_MOST );
-    measureChildren( childWidthSpec, childHeightSpec );
     Log.d( "TileView", "ScalingLayout.onMeasure: " + availableWidth + ", " + availableHeight );
 		setMeasuredDimension( availableWidth, availableHeight );
 	}
@@ -40,8 +36,8 @@ public class ScalingLayout extends ViewGroup {
 
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    int availableWidth = (int) (( r - l ) / mScale );
-    int availableHeight = (int) (( b - t ) / mScale );
+    int availableWidth = r - l;
+    int availableHeight = b - t;
     Log.d( "TileView", "ScalingLayout.onLayout: " + availableWidth + ", " + availableHeight );
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );

@@ -91,8 +91,8 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     // the container's children should be the size provided by setSize
     measureChildren(
-      MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY ),
-      MeasureSpec.makeMeasureSpec( mScaledHeight, MeasureSpec.EXACTLY ) );
+      MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY ),
+      MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY ) );
     // but the container should still measure normally
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
@@ -103,11 +103,11 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    Log.d( "TileView", "ZoomPanLayout.onLayout: " + mScaledWidth + ", " + mScaledHeight );
+    Log.d( "TileView", "ZoomPanLayout.onLayout: " + mBaseWidth + ", " + mBaseHeight );
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mScaledWidth, mScaledHeight );
+        child.layout( 0, 0, mBaseWidth, mBaseHeight );
       }
     }
     if( changed ) {
