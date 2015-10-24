@@ -264,10 +264,15 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   @Override
-  public void onCleanDrawComplete( TileCanvasView tileCanvasView ) {
+  public void onDrawComplete( TileCanvasView tileCanvasView ) {
     if( mTransitionsEnabled && tileCanvasView == mCurrentTileCanvasView ) {
       cleanup();
     }
+  }
+
+  @Override
+  public void onDrawPending( TileCanvasView tileCanvasView ) {
+    invalidate();
   }
 
   private static class TileRenderHandler extends Handler {

@@ -2,8 +2,6 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.support.v4.view.ViewCompat;
-import android.util.Log;
 import android.view.View;
 
 import java.util.HashSet;
@@ -16,7 +14,7 @@ public class TileCanvasView extends View {
 
   private TileCanvasDrawListener mTileCanvasDrawListener;
 
-  private boolean mHasBeenDirtySinceLastCleanDraw;
+  private boolean mHasHadPendingUpdatesSinceLastCompleteDraw;
 
   public TileCanvasView( Context context ) {
     super( context );
@@ -59,61 +57,66 @@ public class TileCanvasView extends View {
     invalidate();
   }
 
+  /**
+   * Draw tile bitmaps into the surface canvas displayed by this View.
+   * @param canvas The Canvas instance to draw tile bitmaps into.
+   * @return True if there are incomplete tile transitions pending, false otherwise.
+   */
   private boolean drawTiles( Canvas canvas ) {
-    boolean dirty = false;
+    boolean pending = false;
     for( Tile tile : mTiles ) {
-      dirty = tile.draw( canvas ) || dirty;
+      pending = tile.draw( canvas ) || pending;
     }
-    return dirty;
+    return pending;
   }
 
-  private void handleDrawState( boolean dirty ) {
-    if( dirty ) {
+  /**
+   * During a draw operation, if any tiles are transitioning in, the operation is considered pending,
+   * and another redraw is requested immediately (via invalidate).
+   *
+   * NOTE: the invalidate invocation in this method should not be necessary, since the
+   * TileCanvasViewGroup that contains this View should also be listening for onDrawPending,
+   * at which time it will call invalidate on itself.
+   *
+   * @param pending True if tile transitions states are not complete, and an immediate redraw is required.
+   */
+  private void handleDrawState( boolean pending ) {
+    if( pending ) {
       invalidate();
-      postInvalidate();
-      ViewCompat.postInvalidateOnAnimation( this );
-      mHasBeenDirtySinceLastCleanDraw = true;
+      mHasHadPendingUpdatesSinceLastCompleteDraw = true;
+      if( mTileCanvasDrawListener != null ) {
+        mTileCanvasDrawListener.onDrawPending( this );
+      }
     } else {
-      if( mHasBeenDirtySinceLastCleanDraw ) {
-        mHasBeenDirtySinceLastCleanDraw = false;
+      if( mHasHadPendingUpdatesSinceLastCompleteDraw ) {
+        mHasHadPendingUpdatesSinceLastCompleteDraw = false;
         if( mTileCanvasDrawListener != null ) {
-          mTileCanvasDrawListener.onCleanDrawComplete( this );
+          mTileCanvasDrawListener.onDrawComplete( this );
         }
       }
     }
   }
 
-  /*
   @Override
   public void onDraw( Canvas canvas ) {
-    canvas.scale( mScale, mScale );
-    boolean dirty = drawTiles( canvas );
     super.onDraw( canvas );
-    handleDrawState( dirty );
-  }
-  */
-
-  @Override
-  public void onDraw( Canvas canvas ) {
+    canvas.save();
     canvas.scale( mScale, mScale );
-    boolean dirty = drawTiles( canvas );
-    Log.d( "TileView", "TCV.onDraw, dirty=" + dirty );
-    //canvas.restore();
-    super.onDraw( canvas );
-    handleDrawState( dirty );
-    if( dirty ) {
-      invalidate();
-    }
+    boolean pending = drawTiles( canvas );
+    canvas.restore();
+    handleDrawState( pending );
   }
 
   /**
-   * Interface definition for a callback to be invoked when a "clean" draw occurs.
-   * The callback will only be invoked if transitions are enabled, and will occur
-   * the first time a "clean" draw is complete after a "dirty" draw (a dirty draw
-   * is defined as an onDraw invocation that requires a subsequent call to invalidate).
+   * Interface definition for callbacks to be invoked when drawing is complete.
+   * A "pending" draw is one that indicates tile transitions states are still pending and
+   * and immediate redraw should be requested.
+   * A "complete" draw callback will only be invoked if transitions are enabled, and will occur
+   * the first time a "complete" draw is complete after a "pending" draw.
    */
   public interface TileCanvasDrawListener {
-    void onCleanDrawComplete( TileCanvasView tileCanvasView );
+    void onDrawComplete( TileCanvasView tileCanvasView );
+    void onDrawPending( TileCanvasView tileCanvasView );
   }
 
 }
