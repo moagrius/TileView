@@ -5,7 +5,6 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -109,7 +108,6 @@ public class ZoomPanLayout extends ViewGroup implements
         child.layout( 0, 0, mScaledWidth, mScaledHeight );
       }
     }
-    Log.d( "TileView", "ZPL.onLayout, sending " + mScaledWidth + ", " + mScaledHeight );
     if( changed ) {
       calculateMinimumScaleToFit();
     }

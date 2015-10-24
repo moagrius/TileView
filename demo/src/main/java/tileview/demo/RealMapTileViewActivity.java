@@ -7,6 +7,7 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.qozix.tileview.TileView;
 
@@ -28,7 +29,7 @@ public class RealMapTileViewActivity extends TileViewActivity {
     TileView tileView = getTileView();
 
     // size and geolocation
-    tileView.setSize( 17934, 13452 );
+    tileView.setSize( 8967, 6726 );
 
     // we won't use a downsample here, so color it similarly to tiles
     tileView.setBackgroundColor( 0xFFe7e7e7 );
@@ -100,6 +101,18 @@ public class RealMapTileViewActivity extends TileViewActivity {
 
     // start small and allow zoom
     tileView.setScale( 0.3f );
+
+    RelativeLayout icons = new RelativeLayout( this );
+    icons.setBackgroundColor( 0xff0000ff );
+    ImageView trollIcon = new ImageView( this );
+    RelativeLayout.LayoutParams trollIconLayoutParams =
+      new RelativeLayout.LayoutParams( RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT );
+    trollIconLayoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT );
+    trollIconLayoutParams.addRule( RelativeLayout.ALIGN_PARENT_BOTTOM );
+    trollIcon.setImageResource( R.drawable.fantasy_troll );
+    icons.addView( trollIcon, trollIconLayoutParams );
+    tileView.addScalingViewGroup( icons );
+
 
   }
 

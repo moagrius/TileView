@@ -55,7 +55,7 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   public TileCanvasViewGroup( Context context ) {
     super( context );
     setWillNotDraw( false );
-    setBackgroundColor( 0xffff9900 );
+    setBackgroundColor( 0xffff9900 );  // TODO:
     mTileRenderHandler = new TileRenderHandler( this );
   }
 
@@ -114,16 +114,30 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
     setMeasuredDimension( width, height );
   }
 
+  /**
+   * The layout dimensions supplied to this ViewGroup will be exactly as large as the scaled
+   * width and height of the containing ZoomPanLayout (or TileView).  However, when the canvas
+   * is scaled, it's clip area is also scaled - offset this by providing dimensions scaled as
+   * large as the smallest size the TileCanvasView might be.
+   */
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
     int availableWidth = r - l;
     int availableHeight = b - t;
+    int drawableWidth = (int) (availableWidth / mScale );
+    int drawableHeight = (int) (availableHeight / mScale );
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, availableWidth, availableHeight );
+        child.layout( 0, 0, drawableWidth, drawableHeight );
       }
     }
+  }
+
+  @Override
+  public void onDraw(Canvas canvas) {
+    canvas.scale( mScale, mScale );
+    super.onDraw( canvas );
   }
 
   public void requestRender() {
@@ -178,12 +192,12 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
   public void clear() {
     suppressRender();
     cancelRender();
-    for( Tile m : mTilesScheduledToRender ) {
-      m.destroy();
+    for( Tile tile : mTilesScheduledToRender ) {
+      tile.destroy();
     }
     mTilesScheduledToRender.clear();
-    for( Tile m : mTilesAlreadyRendered ) {
-      m.destroy();
+    for( Tile tile : mTilesAlreadyRendered ) {
+      tile.destroy();
     }
     mTilesAlreadyRendered.clear();
   }
@@ -297,31 +311,6 @@ public class TileCanvasViewGroup extends ViewGroup implements TileCanvasView.Til
       cleanup();
     }
   }
-
-  /**
-   * The layout dimensions supplied to this ViewGroup will be exactly as large as the scaled
-   * width and height of the containing ZoomPanLayout (or TileView).  However, when the canvas
-   * is scaled, it's clip area is also scaled - this method will "unscale" the total clip area
-   * while preserving the visual transformation.
-   * @param canvas The canvas whose bounds are to be redefined.
-   */
-
-
-  /*
-  @Override
-  public void onDraw( Canvas canvas ) {
-    canvas.scale( mScale, mScale );
-    super.onDraw( canvas );
-  }
-  */
-
-
-  @Override
-  public void onDraw(Canvas canvas) {
-    canvas.scale( mScale, mScale );
-    super.onDraw( canvas );
-  }
-
 
   private static class TileRenderHandler extends Handler {
 
