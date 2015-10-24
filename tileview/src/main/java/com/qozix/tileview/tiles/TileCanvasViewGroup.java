@@ -90,59 +90,12 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     mRenderBuffer = renderBuffer;
   }
 
-  /*
-  @Override
-  protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
-    int width = MeasureSpec.getSize( widthMeasureSpec );
-    int height = MeasureSpec.getSize( heightMeasureSpec );
-    setMeasuredDimension( width, height );
-  }
-  */
-
   /**
    * The layout dimensions supplied to this ViewGroup will be exactly as large as the scaled
    * width and height of the containing ZoomPanLayout (or TileView).  However, when the canvas
    * is scaled, it's clip area is also scaled - offset this by providing dimensions scaled as
    * large as the smallest size the TileCanvasView might be.
    */
-  /*
-  @Override
-  protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    int availableWidth = r - l;
-    int availableHeight = b - t;
-
-    //int drawableWidth = (int) (availableWidth / mScale );
-    //int drawableHeight = (int) (availableHeight / mScale );
-
-    int drawableWidth = availableWidth;
-    int drawableHeight = availableHeight;
-    for( int i = 0; i < getChildCount(); i++ ) {
-      View child = getChildAt( i );
-      if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, drawableWidth, drawableHeight );
-      }
-    }
-  }
-  */
-
-  /*
-  @Override
-  public void onDraw(Canvas canvas) {
-
-    canvas.save();
-    canvas.scale( mScale, mScale );
-    super.onDraw( canvas );
-    canvas.restore();
-  }
-  */
-
-  /*
-  @Override
-  public void onDraw(Canvas canvas) {
-    canvas.scale( mScale, mScale );
-    super.onDraw( canvas );
-  }
-  */
 
   public void requestRender() {
     mRenderIsCancelled = false;
@@ -283,6 +236,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     if( mTileRenderListener != null ) {
       mTileRenderListener.onRenderComplete();
     }
+    invalidate();
     requestRender();
   }
 

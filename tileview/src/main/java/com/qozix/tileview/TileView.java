@@ -197,6 +197,8 @@ public class TileView extends ZoomPanLayout implements
    * Add a ViewGroup to the TileView at a z-index above tiles and paths but beneath
    * markers and callouts.  The ViewGroup will be laid out to the full dimensions of the largest
    * detail level, and will scale with the TileView.
+   * Note that only the drawing surface of the view is scaled, other operations that depend
+   * on dimensions are not (e.g., hit areas, invalidation tests).
    * @param viewGroup The ViewGroup to be added to the TileView, that will scale visually.
    */
   public void addScalingViewGroup( ViewGroup viewGroup ) {

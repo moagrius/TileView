@@ -102,16 +102,20 @@ public class ZoomPanLayout extends ViewGroup implements
     setMeasuredDimension( width, height );
   }
 
+  /*
+  ZoomPanChildren will always be laid out with the scaled dimenions - what is visible during
+  scroll operations.  Thus, a RelativeLayout added as a child that had views within it using
+  rules like ALIGN_PARENT_RIGHT would function as expected; similarly, an ImageView would be
+  stretched between the visible edges.
+  If children further operate on scale values, that should be accounted for
+  in the child's logic (see ScalingLayout).
+   */
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    /*
-    Children of ZoomPanLayout will be laid TODO
-    OVERRIDE .layout METHOD OF SCALING VIEWS
-     */
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mScaledWidth - 100, mScaledHeight - 100);
+        child.layout( 0, 0, mScaledWidth, mScaledHeight);
       }
     }
     if( changed ) {

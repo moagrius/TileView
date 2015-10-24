@@ -2,7 +2,7 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Rect;
+import android.support.v4.view.ViewCompat;
 import android.util.Log;
 import android.view.View;
 
@@ -70,6 +70,8 @@ public class TileCanvasView extends View {
   private void handleDrawState( boolean dirty ) {
     if( dirty ) {
       invalidate();
+      postInvalidate();
+      ViewCompat.postInvalidateOnAnimation( this );
       mHasBeenDirtySinceLastCleanDraw = true;
     } else {
       if( mHasBeenDirtySinceLastCleanDraw ) {
@@ -84,7 +86,6 @@ public class TileCanvasView extends View {
   /*
   @Override
   public void onDraw( Canvas canvas ) {
-    Log.d( "TileView", "TileCanvasView.onDraw: " + canvas.getWidth() + ", " + canvas.getHeight() );
     canvas.scale( mScale, mScale );
     boolean dirty = drawTiles( canvas );
     super.onDraw( canvas );
@@ -92,23 +93,17 @@ public class TileCanvasView extends View {
   }
   */
 
-  private Rect mClipRect = new Rect();
-
   @Override
   public void onDraw( Canvas canvas ) {
-    Log.d( "TileView", "TileCanvasView.onDraw (before): " + canvas.getWidth() + ", " + canvas.getHeight() );
     canvas.scale( mScale, mScale );
-    /*
-    canvas.getClipBounds( mClipRect );
-
-    mClipRect.bottom /= mScale;
-    mClipRect.right /= mScale;
-    canvas.clipRect( mClipRect );
-    Log.d( "TileView", "TileCanvasView.onDraw (after): " + canvas.getWidth() + ", " + canvas.getHeight() );
-    */
     boolean dirty = drawTiles( canvas );
+    Log.d( "TileView", "TCV.onDraw, dirty=" + dirty );
+    //canvas.restore();
     super.onDraw( canvas );
     handleDrawState( dirty );
+    if( dirty ) {
+      invalidate();
+    }
   }
 
   /**

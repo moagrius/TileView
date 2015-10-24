@@ -4,6 +4,13 @@ import android.graphics.Path;
 
 import java.util.List;
 
+/**
+ * Helper class to translate relative coordinates into absolute pixels.
+ * Note that these methods always take arguments x and y in that order;
+ * this may be counter-intuitive since coordinates are often expressed as lat (y), lng (x).
+ * When using translation methods of this class, pass latitude and longitude in the reverse
+ * order: translationMethod( longitude, latitude )
+ */
 public class CoordinateTranslater {
 
   private double mLeft;
@@ -50,11 +57,11 @@ public class CoordinateTranslater {
       return (int) x;
     }
     double factor = (x - mLeft) / mDiffX;
-    return FloatMathHelper.scale( mWidth, factor );
+    return FloatMathHelper.scale( mWidth, (float) factor );
   }
 
   public int translateAndScaleX( double x, float scale ) {
-    return FloatMathHelper.scale( translateX( x ), scale);
+    return FloatMathHelper.scale( translateX( x ), scale );
   }
 
   public int translateY( double y ) {
@@ -62,11 +69,11 @@ public class CoordinateTranslater {
       return (int) y;
     }
     double factor = (y - mTop) / mDiffY;
-    return FloatMathHelper.scale( mHeight, factor );
+    return FloatMathHelper.scale( mHeight, (float) factor );
   }
 
   public int translateAndScaleY( double y, float scale ) {
-    return FloatMathHelper.scale( translateY( y ), scale);
+    return FloatMathHelper.scale( translateY( y ), scale );
   }
 
   public boolean contains( double x, double y ) {
