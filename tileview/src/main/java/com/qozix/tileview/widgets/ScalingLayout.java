@@ -6,9 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.qozix.tileview.geom.FloatMathHelper;
-import com.qozix.tileview.view.IScalingCanvasView;
 
-public class ScalingLayout extends ViewGroup implements IScalingCanvasView {
+public class ScalingLayout extends ViewGroup {
 
 	private float mScale = 1;
 
@@ -26,16 +25,20 @@ public class ScalingLayout extends ViewGroup implements IScalingCanvasView {
 		return mScale;
 	}
 
+  /*
+   * When scaling a canvas, as happens in onDraw, the clip area will be reduced at a small scale,
+   * thus decreasing the drawable surface, but when scaled up, the canvas is still constrained
+   * by the original width and height of the backing bitmap, which are not scaled.  Offset those
+   * by dividing the measure and layout dimensions by the current scale.
+   */
+
 	@Override
 	protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
-    //measureChildren( widthMeasureSpec, heightMeasureSpec );
     int availableWidth = FloatMathHelper.unscale( MeasureSpec.getSize( widthMeasureSpec ), mScale );
     int availableHeight = FloatMathHelper.unscale( MeasureSpec.getSize( heightMeasureSpec ), mScale );
-
     measureChildren(
       MeasureSpec.makeMeasureSpec( availableWidth, MeasureSpec.EXACTLY ),
       MeasureSpec.makeMeasureSpec( availableHeight, MeasureSpec.EXACTLY ) );
-
 		setMeasuredDimension( availableWidth, availableHeight );
 	}
 

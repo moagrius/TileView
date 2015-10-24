@@ -50,11 +50,11 @@ public class CoordinateTranslater {
       return (int) x;
     }
     double factor = (x - mLeft) / mDiffX;
-    return (int) (0.5 + (mWidth * factor));
+    return FloatMathHelper.scale( mWidth, factor );
   }
 
   public int translateAndScaleX( double x, float scale ) {
-    return (int) (0.5 + translateX( x ) * scale);
+    return FloatMathHelper.scale( translateX( x ), scale);
   }
 
   public int translateY( double y ) {
@@ -62,11 +62,11 @@ public class CoordinateTranslater {
       return (int) y;
     }
     double factor = (y - mTop) / mDiffY;
-    return (int) (0.5 + (mHeight * factor));
+    return FloatMathHelper.scale( mHeight, factor );
   }
 
   public int translateAndScaleY( double y, float scale ) {
-    return (int) (0.5 + translateY( y ) * scale);
+    return FloatMathHelper.scale( translateY( y ), scale);
   }
 
   public boolean contains( double x, double y ) {

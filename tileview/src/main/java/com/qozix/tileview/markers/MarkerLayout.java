@@ -5,6 +5,8 @@ import android.graphics.Rect;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.qozix.tileview.geom.FloatMathHelper;
+
 public class MarkerLayout extends ViewGroup {
 
   private float mScale = 1;
@@ -16,7 +18,6 @@ public class MarkerLayout extends ViewGroup {
 
   public MarkerLayout( Context context ) {
     super( context );
-    setBackgroundColor( 0x4400ff00 );  // TODO:
   }
 
   /**
@@ -121,8 +122,8 @@ public class MarkerLayout extends ViewGroup {
         float widthOffset = actualWidth * widthMultiplier;
         float heightOffset = actualHeight * heightMultiplier;
         // get offset position
-        int scaledX = (int) (0.5 + (layoutParams.x * mScale));
-        int scaledY = (int) (0.5 + (layoutParams.y * mScale));
+        int scaledX = FloatMathHelper.scale( layoutParams.x, mScale );
+        int scaledY = FloatMathHelper.scale( layoutParams.y, mScale );
         // save computed values
         layoutParams.mLeft = (int) (scaledX + widthOffset);
         layoutParams.mTop = (int) (scaledY + heightOffset);

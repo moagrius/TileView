@@ -48,7 +48,6 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public TileCanvasViewGroup( Context context ) {
     super( context );
     setWillNotDraw( false );
-    setBackgroundColor( 0xffff9900 );  // TODO:
     mTileRenderHandler = new TileRenderHandler( this );
   }
 

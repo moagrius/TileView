@@ -1,5 +1,7 @@
 package com.qozix.tileview.hotspots;
 
+import com.qozix.tileview.geom.FloatMathHelper;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -35,10 +37,10 @@ public class HotSpotManager {
   }
 
   private HotSpot getMatch( int x, int y ) {
-    int scaledX = (int) (x / mScale + 0.5);
-    int scaledY = (int) (y / mScale + 0.5);
+    int scaledX = FloatMathHelper.unscale( x, mScale );
+    int scaledY = FloatMathHelper.unscale( y, mScale );
     Iterator<HotSpot> iterator = mHotSpots.descendingIterator();
-    while(iterator.hasNext()){
+    while( iterator.hasNext() ) {
       HotSpot hotSpot = iterator.next();
       if( hotSpot.contains( scaledX, scaledY ) ) {
         return hotSpot;

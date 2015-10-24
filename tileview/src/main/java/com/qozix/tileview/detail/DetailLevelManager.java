@@ -2,6 +2,8 @@ package com.qozix.tileview.detail;
 
 import android.graphics.Rect;
 
+import com.qozix.tileview.geom.FloatMathHelper;
+
 import java.util.Collections;
 import java.util.LinkedList;
 
@@ -134,8 +136,8 @@ public class DetailLevelManager {
         mCurrentDetailLevel = matchingLevel;
       }
     }
-    mScaledWidth = (int) (mBaseWidth * mScale + 0.5);
-    mScaledHeight = (int) (mBaseHeight * mScale + 0.5);
+    mScaledWidth = FloatMathHelper.scale( mBaseWidth, mScale );
+    mScaledHeight = FloatMathHelper.scale( mBaseHeight, mScale );
     if( detailLevelChanged ) {
       if( mDetailLevelChangeListener != null ) {
         mDetailLevelChangeListener.onDetailLevelChanged( mCurrentDetailLevel );

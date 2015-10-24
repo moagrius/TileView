@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelManager;
 import com.qozix.tileview.geom.CoordinateTranslater;
+import com.qozix.tileview.geom.FloatMathHelper;
 import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.hotspots.HotSpot;
 import com.qozix.tileview.hotspots.HotSpotManager;
@@ -482,8 +483,8 @@ public class TileView extends ZoomPanLayout implements
     ViewGroup.LayoutParams params = view.getLayoutParams();
     if( params instanceof MarkerLayout.LayoutParams ) {
       MarkerLayout.LayoutParams anchorLayoutParams = (MarkerLayout.LayoutParams) params;
-      int scaledX = (int) (anchorLayoutParams.x * getScale() + 0.5);
-      int scaledY = (int) (anchorLayoutParams.y * getScale() + 0.5);
+      int scaledX = FloatMathHelper.scale(anchorLayoutParams.x, getScale());
+      int scaledY = FloatMathHelper.scale(anchorLayoutParams.y, getScale());
       if( shouldAnimate ) {
         slideToAndCenter( scaledX, scaledY );
       } else {
