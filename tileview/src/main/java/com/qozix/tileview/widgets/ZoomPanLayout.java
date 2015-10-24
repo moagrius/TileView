@@ -91,8 +91,8 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     // the container's children should be the size provided by setSize
     measureChildren(
-      MeasureSpec.makeMeasureSpec( mBaseWidth, MeasureSpec.EXACTLY ),
-      MeasureSpec.makeMeasureSpec( mBaseHeight, MeasureSpec.EXACTLY ) );
+      MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY ),
+      MeasureSpec.makeMeasureSpec( mScaledHeight, MeasureSpec.EXACTLY ) );
     // but the container should still measure normally
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
