@@ -177,5 +177,6 @@ public class RealMapTileViewActivity extends TileViewActivity {
     points.add( new double[] {-75.1465050, 39.9501110} );
     points.add( new double[] {-75.1473460, 39.9436200} );
     points.add( new double[] {-75.1501570, 39.9480430} );
+    points.add( new double[] {SOUTH_EAST_LONGITUDE, SOUTH_EAST_LATITUDE} );
   }
 }

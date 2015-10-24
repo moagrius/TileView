@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 import android.widget.Scroller;
 
+import com.qozix.tileview.geom.FloatMathHelper;
 import com.qozix.tileview.view.TouchUpGestureDetector;
 
 import java.lang.ref.WeakReference;
@@ -91,8 +92,16 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     // the container's children should be the size provided by setSize
     measureChildren(
-      MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY ),
+      MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY ),  // TODO: AT_MOST
       MeasureSpec.makeMeasureSpec( mScaledHeight, MeasureSpec.EXACTLY ) );
+    for( int i = 0; i < getChildCount(); i++ ){
+      View child = getChildAt( i );
+      LayoutParams layoutParams = (LayoutParams) child.getLayoutParams();
+      layoutParams.baseWidth = mBaseWidth;
+      layoutParams.baseHeight = mBaseHeight;
+      layoutParams.scaledWidth = mScaledWidth;
+      layoutParams.scaledHeight = mScaledHeight;
+    }
     // but the container should still measure normally
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );
@@ -103,11 +112,14 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
-    Log.d( "TileView", "ZoomPanLayout.onLayout: " + mBaseWidth + ", " + mBaseHeight );
+    int computedWidth = FloatMathHelper.unscale( mBaseWidth, mScale );
+    int computedHeight = FloatMathHelper.unscale( mBaseHeight, mScale );
+    Log.d( "TileView", "ZoomPanLayout.onLayout: " + computedWidth + ", " + computedHeight );
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mBaseWidth, mBaseHeight );
+        // use computed if the child scales its own canvas, no other way to make it think it's bigger (maybe clip?)
+        child.layout( 0, 0, computedWidth, computedHeight );
       }
     }
     if( changed ) {
@@ -702,6 +714,43 @@ public class ZoomPanLayout extends ViewGroup implements
       currentScale );
     broadcastPinchUpdate();
     return true;
+  }
+
+  @Override
+  protected ViewGroup.LayoutParams generateDefaultLayoutParams() {
+    return new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 0, 0, 0, 0 );
+  }
+
+  @Override
+  protected boolean checkLayoutParams( ViewGroup.LayoutParams layoutParams ) {
+    return layoutParams instanceof LayoutParams;
+  }
+
+  @Override
+  protected ViewGroup.LayoutParams generateLayoutParams( ViewGroup.LayoutParams layoutParams ) {
+    return new LayoutParams( layoutParams );
+  }
+
+  /**
+   * Per-child layout information associated with AnchorLayout.
+   */
+  public static class LayoutParams extends ViewGroup.LayoutParams {
+    public int baseWidth;
+    public int baseHeight;
+    public int scaledWidth;
+    public int scaledHeight;
+
+    public LayoutParams( int width, int height, int baseWidth, int baseHeight, int scaledWidth, int scaledHeight ) {
+      super( width, height );
+      this.baseWidth = baseWidth;
+      this.baseHeight = baseHeight;
+      this.scaledWidth = scaledWidth;
+      this.scaledHeight = scaledHeight;
+    }
+
+    public LayoutParams( ViewGroup.LayoutParams source ) {
+      super( source );
+    }
   }
 
   private static class ZoomPanAnimator extends ValueAnimator implements
