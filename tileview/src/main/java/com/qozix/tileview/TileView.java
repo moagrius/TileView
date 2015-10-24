@@ -58,8 +58,8 @@ import java.util.List;
  * tileView.addDetailLevel( 0.500f, "path/to/tiles/500/%d-%d.jpg", 256, 256 );
  * tileView.addDetailLevel( 0.250f, "path/to/tiles/250/%d-%d.jpg", 256, 256 );
  * tileView.addDetailLevel( 0.125f, "path/to/tiles/125/%d-%d.jpg", 128, 128 );
- * tileView.addMarker( someView, 42.35848, -71.063736 );
- * tileView.addMarker( anotherView, 42.3665, -71.05224 );
+ * tileView.addMarker( someView, 42.35848, -71.063736, null, null );
+ * tileView.addMarker( anotherView, 42.3665, -71.05224, -1.0f, -0.5f );
  * tileView.setMarkerTapListener( someMarkerTapListenerImplementation );
  * }</pre>
  */
@@ -126,7 +126,8 @@ public class TileView extends ZoomPanLayout implements
 
   /**
    * Returns the DetailLevelManager instance used by the TileView to coordinate DetailLevels.
-   * @return
+   *
+   * @return The DetailLevelManager instance.
    */
   public DetailLevelManager getDetailLevelManager() {
     return mDetailLevelManager;
@@ -135,7 +136,8 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Returns the CoordinateTranslater instance used by the TileView to manage abritrary coordinate
    * systems.
-   * @return
+   *
+   * @return The CoordinateTranslater instance.
    */
   public CoordinateTranslater getCoordinateTranslater() {
     return mCoordinateTranslater;
@@ -144,6 +146,7 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Returns the HotSpotManager instance used by the TileView to detect and react to touch events
    * that intersect a user-defined region.
+   *
    * @return
    */
   public HotSpotManager getHotSpotManager() {
@@ -152,6 +155,7 @@ public class TileView extends ZoomPanLayout implements
 
   /**
    * Returns the CompositePathView instance used by the TileView to draw and scale paths.
+   *
    * @return
    */
   public CompositePathView getCompositePathView() {
@@ -160,6 +164,7 @@ public class TileView extends ZoomPanLayout implements
 
   /**
    * Returns the TileCanvasViewGroup instance used by the TileView to manage tile bitmap rendering.
+   *
    * @return
    */
   public TileCanvasViewGroup getTileCanvasViewGroup() {
@@ -169,6 +174,7 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Returns the MakerLayout instance used by the TileView to position and display Views used
    * as markers.
+   *
    * @return
    */
   public MarkerLayout getMarkerLayout() {
@@ -178,6 +184,7 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Returns the CalloutLayout instance used by the TileView to position and display Views used
    * as callouts.
+   *
    * @return
    */
   public CalloutLayout getCalloutLayout() {
@@ -187,6 +194,7 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Returns the ScalingLayout instance used by the TileView to allow insertion of arbitrary
    * Views and ViewGroups that will scale visually with the TileView.
+   *
    * @return
    */
   public ScalingLayout getScalingLayout() {
@@ -199,6 +207,7 @@ public class TileView extends ZoomPanLayout implements
    * detail level, and will scale with the TileView.
    * Note that only the drawing surface of the view is scaled, other operations that depend
    * on dimensions are not (e.g., hit areas, invalidation tests).
+   *
    * @param viewGroup The ViewGroup to be added to the TileView, that will scale visually.
    */
   public void addScalingViewGroup( ViewGroup viewGroup ) {
@@ -406,8 +415,9 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Scrolls and scales (with animation) the TileView to the specified x, y and scale provided.
    * The TileView will be centered to the coordinates passed.
-   * @param x The relative x position to move to.
-   * @param y The relative y position to move to.
+   *
+   * @param x     The relative x position to move to.
+   * @param y     The relative y position to move to.
    * @param scale The scale the TileView should be at when the animation is complete.
    */
   public void slideToAndCenterWithScale( double x, double y, float scale ) {
@@ -462,9 +472,9 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Moves an existing marker to another position.
    *
-   * @param view    The marker View to be repositioned.
-   * @param x       Relative x position the View instance should be positioned at.
-   * @param y       Relative y position the View instance should be positioned at.
+   * @param view The marker View to be repositioned.
+   * @param x    Relative x position the View instance should be positioned at.
+   * @param y    Relative y position the View instance should be positioned at.
    */
   public void moveMarker( View view, double x, double y ) {
     mMarkerLayout.moveMarker( view,
@@ -475,7 +485,7 @@ public class TileView extends ZoomPanLayout implements
   /**
    * Scroll the TileView so that the View passed is centered in the viewport.
    *
-   * @param view    The View marker that the TileView should center on.
+   * @param view          The View marker that the TileView should center on.
    * @param shouldAnimate True if the movement should use a transition effect.
    */
   public void moveToMarker( View view, boolean shouldAnimate ) {
@@ -485,8 +495,8 @@ public class TileView extends ZoomPanLayout implements
     ViewGroup.LayoutParams params = view.getLayoutParams();
     if( params instanceof MarkerLayout.LayoutParams ) {
       MarkerLayout.LayoutParams anchorLayoutParams = (MarkerLayout.LayoutParams) params;
-      int scaledX = FloatMathHelper.scale(anchorLayoutParams.x, getScale());
-      int scaledY = FloatMathHelper.scale(anchorLayoutParams.y, getScale());
+      int scaledX = FloatMathHelper.scale( anchorLayoutParams.x, getScale() );
+      int scaledY = FloatMathHelper.scale( anchorLayoutParams.y, getScale() );
       if( shouldAnimate ) {
         slideToAndCenter( scaledX, scaledY );
       } else {

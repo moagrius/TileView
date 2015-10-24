@@ -9,10 +9,6 @@ import java.util.LinkedList;
 
 public class DetailLevel implements Comparable<DetailLevel> {
 
-  private static final String ILLEGAL_STATE_EXCEPTION_MESSAGE = "Grid has not been computed; " +
-    "you must call computeCurrentState at some point priot to calling " +
-    "getVisibleTilesFromLastViewportComputation.";
-
   private float mScale;
   private int mTileWidth;
   private int mTileHeight;
@@ -36,35 +32,24 @@ public class DetailLevel implements Comparable<DetailLevel> {
    * @return True if there has been a change, false otherwise.
    */
   public boolean computeCurrentState() {
-
-    double relativeScale = getRelativeScale();
-
+    float relativeScale = getRelativeScale();
     int drawableWidth = mDetailLevelManager.getScaledWidth();
     int drawableHeight = mDetailLevelManager.getScaledHeight();
-
-    double offsetWidth = mTileWidth * relativeScale;
-    double offsetHeight = mTileHeight * relativeScale;
-
+    float offsetWidth = mTileWidth * relativeScale;
+    float offsetHeight = mTileHeight * relativeScale;
     Rect viewport = new Rect( mDetailLevelManager.getComputedViewport() );
-
     viewport.top = Math.max( viewport.top, 0 );
     viewport.left = Math.max( viewport.left, 0 );
     viewport.right = Math.min( viewport.right, drawableWidth );
     viewport.bottom = Math.min( viewport.bottom, drawableHeight );
-
     int rowStart = (int) Math.floor( viewport.top / offsetHeight );
     int rowEnd = (int) Math.ceil( viewport.bottom / offsetHeight );
     int columnStart = (int) Math.floor( viewport.left / offsetWidth );
     int columnEnd = (int) Math.ceil( viewport.right / offsetWidth );
-
     StateSnapshot stateSnapshot = new StateSnapshot( this, rowStart, rowEnd, columnStart, columnEnd );
-
     boolean sameState = stateSnapshot.equals( mLastStateSnapshot );
-
     mLastStateSnapshot = stateSnapshot;
-
     return !sameState;
-
   }
 
   /**
@@ -74,22 +59,17 @@ public class DetailLevel implements Comparable<DetailLevel> {
    */
 
   public LinkedList<Tile> getVisibleTilesFromLastViewportComputation() {
-
     if( mLastStateSnapshot == null ) {
-      throw new IllegalStateException( ILLEGAL_STATE_EXCEPTION_MESSAGE );
+      throw new StateNotComputedException();
     }
-
     LinkedList<Tile> intersections = new LinkedList<Tile>();
-
     for( int rowCurrent = mLastStateSnapshot.rowStart; rowCurrent < mLastStateSnapshot.rowEnd; rowCurrent++ ) {
       for( int columnCurrent = mLastStateSnapshot.columnStart; columnCurrent < mLastStateSnapshot.columnEnd; columnCurrent++ ) {
         Tile tile = new Tile( columnCurrent, rowCurrent, mTileWidth, mTileHeight, mData, this );
         intersections.add( tile );
       }
     }
-
     return intersections;
-
   }
 
   public float getScale() {
@@ -135,6 +115,14 @@ public class DetailLevel implements Comparable<DetailLevel> {
     return (((int) bits) ^ ((int) (bits >> 32)));
   }
 
+  public static class StateNotComputedException extends IllegalStateException {
+    public StateNotComputedException(){
+      super("Grid has not been computed; " +
+        "you must call computeCurrentState at some point priot to calling " +
+        "getVisibleTilesFromLastViewportComputation.");
+    }
+  }
+
   private static class StateSnapshot {
     public int rowStart;
     public int rowEnd;
@@ -142,12 +130,12 @@ public class DetailLevel implements Comparable<DetailLevel> {
     public int columnEnd;
     public DetailLevel detailLevel;
 
-    public StateSnapshot( DetailLevel level, int startRow, int endRow, int startColumn, int endColumn ) {
-      detailLevel = level;
-      rowStart = startRow;
-      rowEnd = endRow;
-      columnStart = startColumn;
-      columnEnd = endColumn;
+    public StateSnapshot( DetailLevel detailLevel, int rowStart, int rowEnd, int columnStart, int columnEnd ) {
+      this.detailLevel = detailLevel;
+      this.rowStart = rowStart;
+      this.rowEnd = rowEnd;
+      this.columnStart = columnStart;
+      this.columnEnd = columnEnd;
     }
 
     public boolean equals( Object o ) {
