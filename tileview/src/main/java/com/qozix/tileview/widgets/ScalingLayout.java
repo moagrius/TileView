@@ -49,6 +49,7 @@ public class ScalingLayout extends ViewGroup {
 
   @Override
   public void onDraw( Canvas canvas ) {
+    Log.d( "TileView", "ScalingLayout.onDraw: " + canvas.getWidth() + ", " + canvas.getHeight() );
     canvas.scale( mScale, mScale );
     super.onDraw( canvas );
   }
