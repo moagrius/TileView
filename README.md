@@ -1,24 +1,24 @@
-#TileView 2.0
+#Version 2.0
 
-*Version 2.0 released 10.25.15*
+**Version 2.0 released 10.25.15**
 
 Version 2 is a major version change and is not backwards compatible with 1.x versions.  The API has
 changed but will still be familiar to users of 1.x.
 
+Note that the original version of this library was written in early 2011.  Version 2 is the first
+major upgrade, and aims to provide a simpler API to a more robust and performant codebase.
+
 Major goals were:
-1.  Eliminate ImageView tiles.  In 1.x, each visible tile was an ImageView, while in version 2 a
-Tile just relates size and positioning information with a Bitmap.
-This has greatly increased performance.
-2.  Leverage the gestures framework.  Previously, all touch interactions were written from scratch -
- while performance didn't appear to suffer, behavior didn't always match what a user expected from
- an Android app.  Any gesture detector available was used in version 2.
- 
 
-The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
-with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
-built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
-coordinate system.
+1.  Optimize tiling.  Tiles are now simply POJOs that manage Bitmaps, and are no longer ImageView instances.
+2.  Leverage the gestures framework.  In order to behave more consistently with other Android widgets, several (all?) framework-provided gesture detector classes are used in version 2.
+3.  Leverage the threading framework.  Threading is managed by AsyncTasks leveraging a common ThreadPoolExecutor.
+4.  Simplify and expose.  The API provides fewer overloaded signatures, but public access to nearly all core classes.
+5.  Defer caching to the user.  Built-in caching has been removed.  The user can supply their own (or a third party) caching mechanism using the BitmapProvider interface.
+6.  General refactoring.  There are too many simplifications and optimization to mention, but each class and each method has been revisited.
+7.  Hooks hooks hooks!  While pan and zoom events are broadcast using a simple, familiar listener mechanism, and should be sufficient for most use-cases, public hooks exist for a large number of operations that can be overriden by subclasses for custom functionality.
 
+<!--
 #Version 2 Goals
 X1.  Eliminate strings from detail levels
 X1.  Eliminate ImageViews as Tiles
@@ -47,6 +47,7 @@ X1.  Remove TileSetSelector
 X1.  optimize data structures
 X1.  optimize tile set comparisons
 -1.  set downsample (addView imageView)?
+-->
 
 
 
@@ -58,8 +59,7 @@ X1.  optimize tile set comparisons
 
 
 
-
-
+<!--
   // android.view.View
   protected void onScrollChanged( int l, int t, int oldl, int oldt );
   // com.qozix.tileview.widgets.ZoomPanLayout
@@ -103,25 +103,15 @@ X1.  optimize tile set comparisons
   public void onAnimationEnd( Animator animator );
   public void onAnimationCancel( Animator animator );
   public void onAnimationRepeat( Animator animator );
+-->
 
 #TileView
-
-*Update: this repo has been updated to include a demo app,
-and the widget code as an Android Studio library module.
-All other `TileView` related repos will be deprecated.*
-
 The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
 with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
 built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
 coordinate system.
 
-<a target="_blank" href="http://www.youtube.com/watch?v=N9fzrZDqAZY">
-  <img src="http://img.youtube.com/vi/N9fzrZDqAZY/1.jpg" />
-</a><a target="_blank" href="http://www.youtube.com/watch?v=N9fzrZDqAZY">
-  <img src="http://img.youtube.com/vi/N9fzrZDqAZY/2.jpg" />
-</a><a target="_blank" href="http://www.youtube.com/watch?v=N9fzrZDqAZY">
-  <img src="http://img.youtube.com/vi/N9fzrZDqAZY/3.jpg" />
-</a>
+![Demo Gif](https://cloud.githubusercontent.com/assets/701344/10254372/da002dea-6908-11e5-920c-814b09c90c80.gif)
 
 ###Documentation
 Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html).
@@ -130,7 +120,7 @@ Wiki is [here](https://github.com/moagrius/TileView/wiki).
 ###Installation
 Gradle:
 ```
-compile 'com.qozix:tileview:1.0.15'
+compile 'com.qozix:tileview:2.0.0'
 ```
 
 ###Demo
@@ -143,7 +133,7 @@ Several use-cases are present; the `RealMapTileViewActivity` is the most substan
 at the 2nd column from left and 3rd row from top.
 1. Create a new application with a single activity ('Main').
 1. Save the image tiles to your `assets` directory.
-1. Add `compile 'com.qozix:tileview:1.0.15'` to your gradle dependencies.
+1. Add `compile 'com.qozix:tileview:2.0.0'` to your gradle dependencies.
 1. In the Main Activity, use this for `onCreate`:
 ```
 @Override
@@ -157,3 +147,4 @@ protected void onCreate( Bundle savedInstanceState ) {
 ```
 That's it.  You should have a tiled image that only renders the pieces of the image that are
 within the current viewport, and pans and zooms with gestures.
+
