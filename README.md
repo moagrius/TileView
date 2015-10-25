@@ -148,3 +148,61 @@ protected void onCreate( Bundle savedInstanceState ) {
 That's it.  You should have a tiled image that only renders the pieces of the image that are
 within the current viewport, and pans and zooms with gestures.
 
+###Basics
+
+####Markers
+
+A marker is just a View - any type of View - TextView, ImageView, RelativeLayout, whatever.  A marker
+does not scale, but it's position updates as the TileView scales, so it's always attached to the 
+original position.  Markers are always laid as as if passed WRAP_CONTENT on both axes.
+Markers can have anchor points supplied, which are applied to width and height
+as offsets - to have a marker center horizontally to a point, and align at the bottom edge (like
+a typical map pin would do), you'd pass -0.5f and -1.0f (thus, left position is offset by half the 
+width, and top is offset by the full height).
+
+Markers can have traditional touch handlers, like `View.OnClickListener`, but these usually consume
+the event, so a drag operation might be interrupted when a user's finger crossed a marker View
+that had a consuming listener.  Instead, consider `TileView.setMarkerTapListener`, which will
+react when a marker is tapped but will not consume the event.
+
+To use a View as a marker:
+```
+tileView.addMarker( someView, 250, 500, -0.5f, -1.0f );
+```
+
+####Callouts
+
+A callout might be better described as an "info window", and is functionally identical to a marker, 
+with 2 differences: 1, all callouts exist on a layer above markers, and 2, any touch event on the 
+containing TileView instance will remove all callouts.  This would be prevented if the event is consumed 
+(for example, by a `View.OnClickListener` on a button inside the Callout).  Callouts are often
+opened in response to a marker tap event.
+
+Callouts use roughly the same API as markers, above.
+
+####HotSpots
+
+A HotSpot represents a region on the TileView that should react when tapped.  The HotSpot class
+extends `android.graphics.Region` and will virtually scale with the TileView.  In addition to the
+Region API it inherits, a HotSpot also can accept a "tag" object (any arbitrary data structure),
+and a `HotSpotTapListener`.  HotSpot taps are not consumed and will not interfere with the touch
+events examined by the TileView.
+
+To create a HotSpot:
+```
+HotSpot hotSpot = new HotSpot();
+hotSpot.setTag( this );
+hotSpot.set( new Rect( 0, 0, 100, 100 ) );  // or any other API to define the region
+tileView.addHotSpot( hotSpot, new HotSpot.HotSpotTapListener(){
+  @Override
+  public void OnHotSpotTap( HotSpot hotSpot, int x, int y ) {
+    Activity activity = (Activity) hotSpot.getTag();
+    Log.d( "HotSpotTapped", "With access through the tag API to the Activity " + activity );
+  }
+});
+```
+
+####Paths
+
+
+
