@@ -7,7 +7,6 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 
 import com.qozix.tileview.TileView;
 
@@ -102,21 +101,8 @@ public class RealMapTileViewActivity extends TileViewActivity {
     // test higher than 1
     tileView.setScaleLimits( 0, 2 );
 
-    tileView.getTileCanvasViewGroup().setBackgroundResource( R.drawable.bg_gray_bordered );
-
     // start small and allow zoom
-    //tileView.setScale( 0.3f );
-
-    RelativeLayout icons = new RelativeLayout( this );
-    ImageView trollIcon = new ImageView( this );
-    RelativeLayout.LayoutParams trollIconLayoutParams =
-      new RelativeLayout.LayoutParams( RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT );
-    trollIconLayoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT );
-    trollIconLayoutParams.addRule( RelativeLayout.ALIGN_PARENT_BOTTOM );
-    trollIcon.setImageResource( R.drawable.fantasy_troll );
-    icons.addView( trollIcon, trollIconLayoutParams );
-    tileView.addScalingViewGroup( icons );
-
+    tileView.setScale( 0.3f );
 
   }
 
@@ -178,6 +164,5 @@ public class RealMapTileViewActivity extends TileViewActivity {
     points.add( new double[] {-75.1465050, 39.9501110} );
     points.add( new double[] {-75.1473460, 39.9436200} );
     points.add( new double[] {-75.1501570, 39.9480430} );
-    points.add( new double[] {SOUTH_EAST_LONGITUDE, SOUTH_EAST_LATITUDE} );
   }
 }

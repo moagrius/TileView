@@ -43,6 +43,7 @@ public class CompositePathView extends View {
 
   public void setScale( float scale ) {
     mScale = scale;
+    mMatrix.setScale( mScale, mScale );  // TODO: test this
     invalidate();
   }
 
@@ -84,7 +85,6 @@ public class CompositePathView extends View {
   @Override
   public void onDraw( Canvas canvas ) {
     if( mShouldDraw ) {
-      mMatrix.setScale( mScale, mScale );
       for( DrawablePath drawablePath : mDrawablePaths ) {
         mRecyclerPath.set( drawablePath.path );
         mRecyclerPath.transform( mMatrix );

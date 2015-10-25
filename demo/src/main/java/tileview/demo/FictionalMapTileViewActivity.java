@@ -1,11 +1,9 @@
 package tileview.demo;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 
 import com.qozix.tileview.TileView;
-import com.qozix.tileview.markers.MarkerLayout;
 
 public class FictionalMapTileViewActivity extends TileViewActivity {
 
@@ -42,14 +40,6 @@ public class FictionalMapTileViewActivity extends TileViewActivity {
 		// frame the troll
 		frameTo( 3267, 1896 );
 
-		// DEBUG
-    tileView.setMarkerTapListener( new MarkerLayout.MarkerTapListener() {
-      @Override
-      public void onMarkerTap( View view, int x, int y ) {
-        getTileView().setScale( 1 );
-      }
-    } );
-				
 	}
 	
 	private void placeMarker( int resId, double x, double y ) {
