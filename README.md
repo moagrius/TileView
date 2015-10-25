@@ -1,3 +1,24 @@
+#TileView 2.0
+
+*Version 2.0 released 10.25.15*
+
+Version 2 is a major version change and is not backwards compatible with 1.x versions.  The API has
+changed but will still be familiar to users of 1.x.
+
+Major goals were:
+1.  Eliminate ImageView tiles.  In 1.x, each visible tile was an ImageView, while in version 2 a
+Tile just relates size and positioning information with a Bitmap.
+This has greatly increased performance.
+2.  Leverage the gestures framework.  Previously, all touch interactions were written from scratch -
+ while performance didn't appear to suffer, behavior didn't always match what a user expected from
+ an Android app.  Any gesture detector available was used in version 2.
+ 
+
+The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images,
+with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers),
+built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or
+coordinate system.
+
 #Version 2 Goals
 X1.  Eliminate strings from detail levels
 X1.  Eliminate ImageViews as Tiles

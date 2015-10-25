@@ -11,16 +11,28 @@ public class ScalingLayout extends ViewGroup {
 
 	private float mScale = 1;
 
+  /**
+   *
+   * @param context
+   */
   public ScalingLayout( Context context ) {
 		super( context );
 		setWillNotDraw( false );
 	}
 
+  /**
+   *
+   * @param scale
+   */
 	public void setScale( float scale ) {
 		mScale = scale;
     invalidate();
 	}
 
+  /**
+   *
+   * @return
+   */
 	public float getScale() {
 		return mScale;
 	}

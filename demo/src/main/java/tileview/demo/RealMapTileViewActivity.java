@@ -51,7 +51,7 @@ public class RealMapTileViewActivity extends TileViewActivity {
     );
 
     // get the default paint and style it.  the same effect could be achieved by passing a custom Paint instnace
-    Paint paint = tileView.getPathPaint();
+    Paint paint = tileView.getDefaultPathPaint();
 
     // get metrics for programmatic DP
     DisplayMetrics metrics = getResources().getDisplayMetrics();

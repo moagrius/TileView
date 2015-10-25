@@ -39,8 +39,6 @@ public class ZoomPanLayout extends ViewGroup implements
   private int mBaseHeight;
   private int mScaledWidth;
   private int mScaledHeight;
-  private int mBufferedWidth;
-  private int mBufferedHeight;
 
   private float mScale = 1;
 
@@ -139,8 +137,8 @@ public class ZoomPanLayout extends ViewGroup implements
    * Note that if shouldScaleToFit is set to true, the minimum value set here will be ignored
    * Default values are 0 and 1.
    *
-   * @param min Minimum mScale the ZoomPanLayout should accept.
-   * @param max Maximum mScale the ZoomPanLayout should accept.
+   * @param min Minimum scale the ZoomPanLayout should accept.
+   * @param max Maximum scale the ZoomPanLayout should accept.
    */
   public void setScaleLimits( float min, float max ) {
     mMinScale = min;
@@ -150,7 +148,7 @@ public class ZoomPanLayout extends ViewGroup implements
 
   /**
    * Sets the size (width and height) of the ZoomPanLayout
-   * as it should be rendered at a mScale of 1f (100%).
+   * as it should be rendered at a scale of 1f (100%).
    *
    * @param width  Width of the underlying image, not the view or viewport.
    * @param height Height of the underlying image, not the view or viewport.
@@ -198,27 +196,10 @@ public class ZoomPanLayout extends ViewGroup implements
     return mScaledHeight;
   }
 
-  private float getConstrainedDestinationScale( float scale ) {
-    float currentMinumumScale = mShouldScaleToFit ? mEffectiveMinScale : mMinScale;
-    scale = Math.max( scale, currentMinumumScale );
-    scale = Math.min( scale, mMaxScale );
-    return scale;
-  }
-
-  private void constrainScrollToLimits() {
-    int x = getScrollX();
-    int y = getScrollY();
-    int constrainedX = getConstrainedScrollX( x );
-    int constrainedY = getConstrainedScrollY( y );
-    if( x != constrainedX || y != constrainedY ) {
-      scrollTo( constrainedX, constrainedY );
-    }
-  }
-
   /**
-   * Sets the mScale (0-1) of the ZoomPanLayout.
+   * Sets the scale (0-1) of the ZoomPanLayout.
    *
-   * @param scale The new value of the ZoomPanLayout mScale.
+   * @param scale The new value of the ZoomPanLayout scale.
    */
   public void setScale( float scale ) {
     scale = getConstrainedDestinationScale( scale );
@@ -233,34 +214,9 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   /**
-   * Provide this method to be overriden by subclasses, e.g., onScrollChanged.
-   */
-  public void onScaleChanged( float currentScale, float previousScale ) {
-    // noop
-  }
-
-  private void updateScaledDimensions() {
-    mScaledWidth = FloatMathHelper.scale( mBaseWidth, mScale );
-    mScaledHeight = FloatMathHelper.scale( mBaseHeight, mScale );
-    /*
-    When a canvas is scaled, as happens during onDraw of ScalingLayout and TileCanvasView,
-    the width and height are scaled smaller, but do not scale larger than the original width
-    and height, even if clipRect is set or unioned.  This works around the abbreviated clip
-    on canvases scaled larger than 1.0
-     */
-    if( mScale > 1 ) {
-      mBufferedWidth = FloatMathHelper.unscale( mBaseWidth, mScale );
-      mBufferedHeight = FloatMathHelper.unscale( mBaseHeight, mScale );
-    } else {
-      mBufferedWidth = mBaseWidth;
-      mBufferedHeight = mBaseHeight;
-    }
-  }
-
-  /**
-   * Retrieves the current mScale of the ZoomPanLayout
+   * Retrieves the current scale of the ZoomPanLayout.
    *
-   * @return (double) the current mScale of the ZoomPanLayout
+   * @return The current scale of the ZoomPanLayout.
    */
   public float getScale() {
     return mScale;
@@ -285,18 +241,18 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   /**
-   * Returns whether the ZoomPanLayout is currently being slid.
+   * Returns whether the ZoomPanLayout is currently operating a scroll tween.
    *
-   * @return true if the ZoomPanLayout is currently sliding, false otherwise.
+   * @return True if the ZoomPanLayout is currently scrolling, false otherwise.
    */
   public boolean isSliding() {
     return mIsSliding;
   }
 
   /**
-   * Returns whether the ZoomPanLayout is currently being mScale tweened.
+   * Returns whether the ZoomPanLayout is currently operating a scale tween.
    *
-   * @return true if the ZoomPanLayout is currently tweening, false otherwise.
+   * @return True if the ZoomPanLayout is currently scaling, false otherwise.
    */
   public boolean isScaling() {
     return mIsScaling;
@@ -305,21 +261,25 @@ public class ZoomPanLayout extends ViewGroup implements
   /**
    * Returns the Scroller instance used to manage dragging and flinging.
    *
-   * @return (Scroller) The Scroller instance use to manage dragging and flinging.
+   * @return The Scroller instance use to manage dragging and flinging.
    */
   public Scroller getScroller() {
     return mScroller;
   }
 
   /**
-   * @return
+   * Returns the duration zoom and pan animations will use.
+   *
+   * @return The duration zoom and pan animations will use.
    */
   public int getAnimationDuration() {
     return mAnimationDuration;
   }
 
   /**
-   * @param animationDuration
+   * Set the duration zoom and pan animation will use.
+   *
+   * @param animationDuration The duration animations will use.
    */
   public void setAnimationDuration( int animationDuration ) {
     mAnimationDuration = animationDuration;
@@ -329,30 +289,20 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   /**
-   * @return
-   */
-  protected ZoomPanAnimator getAnimator() {
-    if( mZoomPanAnimator == null ) {
-      mZoomPanAnimator = new ZoomPanAnimator( this );
-      mZoomPanAnimator.setDuration( mAnimationDuration );
-    }
-    return mZoomPanAnimator;
-  }
-
-  /**
-   * Adds a ZoomPanListener to the ZoomPanLayout, which will receive events relating to zoom and pan actions.
+   * Adds a ZoomPanListener to the ZoomPanLayout, which will receive notification of actions
+   * relating to zoom and pan events.
    *
-   * @param listener Listener to add.
+   * @param zoomPanListener ZoomPanListener implementation to add.
    * @return True when the listener set did not already contain the Listener, false otherwise.
    */
-  public boolean addZoomPanListener( ZoomPanListener listener ) {
-    return mZoomPanListeners.add( listener );
+  public boolean addZoomPanListener( ZoomPanListener zoomPanListener ) {
+    return mZoomPanListeners.add( zoomPanListener );
   }
 
   /**
    * Removes a ZoomPanListener from the ZoomPanLayout
    *
-   * @param listener Listener to remove.
+   * @param listener ZoomPanListener to remove.
    * @return True if the Listener was removed, false otherwise.
    */
   public boolean removeZoomPanListener( ZoomPanListener listener ) {
@@ -367,6 +317,120 @@ public class ZoomPanLayout extends ViewGroup implements
    */
   public void scrollToAndCenter( int x, int y ) {
     scrollTo( x - getHalfWidth(), y - getHalfHeight() );
+  }
+
+  /**
+   * Set the scale of the ZoomPanLayout while maintaining the current center point.
+   *
+   * @param scale The new value of the ZoomPanLayout scale.
+   */
+  public void setScaleFromCenter( float scale ) {
+    setScaleFromPosition( getHalfWidth(), getHalfHeight(), scale );
+  }
+
+  /**
+   * Scrolls the ZoomPanLayout to the x and y values provided using scrolling animation.
+   *
+   * @param x Horizontal destination point.
+   * @param y Vertical destination point.
+   */
+  public void slideTo( int x, int y ) {
+    getAnimator().animatePan( x, y );
+  }
+
+  /**
+   * Scrolls and centers the ZoomPanLayout to the x and y values provided using scrolling animation.
+   *
+   * @param x Horizontal destination point.
+   * @param y Vertical destination point.
+   */
+  public void slideToAndCenter( int x, int y ) {
+    slideTo( x - getHalfWidth(), y - getHalfHeight() );
+  }
+
+  /**
+   * Animates the ZoomPanLayout to the scale provided, and centers the viewport to the position
+   * supplied.
+   *
+   * @param x Horizontal destination point.
+   * @param y Vertical destination point.
+   * @param scale The final scale value the ZoomPanLayout should animate to.
+   */
+  public void slideToAndCenterWithScale( int x, int y, float scale ) {
+    getAnimator().animateZoomPan( x - getHalfWidth(), y - getHalfHeight(), scale );
+  }
+
+  /**
+   * Scales the ZoomPanLayout with animated progress, without maintaining scroll position.
+   *
+   * @param destination The final scale value the ZoomPanLayout should animate to.
+   */
+  public void smoothScaleTo( float destination ) {
+    getAnimator().animateZoom( destination );
+  }
+
+  /**
+   * Animates the ZoomPanLayout to the scale provided, while maintaining position determined by
+   * the focal point provided.
+   *
+   * @param focusX The horizontal focal point to maintain, relative to the screen (as supplied by MotionEvent.getX).
+   * @param focusY The vertical focal point to maintain, relative to the screen (as supplied by MotionEvent.getY).
+   * @param scale The final scale value the ZoomPanLayout should animate to.
+   */
+  public void smoothScaleFromFocalPoint( int focusX, int focusY, float scale ) {
+    scale = getConstrainedDestinationScale( scale );
+    if( scale == mScale ) {
+      return;
+    }
+    int x = getOffsetScrollXFromScale( focusX, scale );
+    int y = getOffsetScrollYFromScale( focusY, scale );
+    getAnimator().animateZoomPan( x, y, scale );
+  }
+
+  /**
+   * Animate the scale of the ZoomPanLayout while maintaining the current center point.
+   *
+   * @param scale The final scale value the ZoomPanLayout should animate to.
+   */
+  public void smoothScaleFromCenter( float scale ) {
+    smoothScaleFromFocalPoint( getHalfWidth(), getHalfHeight(), scale );
+  }
+
+  /**
+   * Provide this method to be overriden by subclasses, e.g., onScrollChanged.
+   */
+  public void onScaleChanged( float currentScale, float previousScale ) {
+    // noop
+  }
+
+  private float getConstrainedDestinationScale( float scale ) {
+    float currentMinumumScale = mShouldScaleToFit ? mEffectiveMinScale : mMinScale;
+    scale = Math.max( scale, currentMinumumScale );
+    scale = Math.min( scale, mMaxScale );
+    return scale;
+  }
+
+  private void constrainScrollToLimits() {
+    int x = getScrollX();
+    int y = getScrollY();
+    int constrainedX = getConstrainedScrollX( x );
+    int constrainedY = getConstrainedScrollY( y );
+    if( x != constrainedX || y != constrainedY ) {
+      scrollTo( constrainedX, constrainedY );
+    }
+  }
+
+  private void updateScaledDimensions() {
+    mScaledWidth = FloatMathHelper.scale( mBaseWidth, mScale );
+    mScaledHeight = FloatMathHelper.scale( mBaseHeight, mScale );
+  }
+
+  protected ZoomPanAnimator getAnimator() {
+    if( mZoomPanAnimator == null ) {
+      mZoomPanAnimator = new ZoomPanAnimator( this );
+      mZoomPanAnimator.setDuration( mAnimationDuration );
+    }
+    return mZoomPanAnimator;
   }
 
   private int getOffsetScrollXFromScale( int offsetX, float scale ) {
@@ -390,70 +454,6 @@ public class ZoomPanLayout extends ViewGroup implements
     int y = getOffsetScrollYFromScale( offsetY, scale );
     scrollTo( x, y );
     setScale( scale );
-  }
-
-  /**
-   * Set the scale of the ZoomPanLayout while maintaining the current center point
-   *
-   * @param scale The new value of the ZoomPanLayout mScale.
-   */
-  public void setScaleFromCenter( float scale ) {
-    setScaleFromPosition( getHalfWidth(), getHalfHeight(), scale );
-  }
-
-  /**
-   * Scrolls the ZoomPanLayout to the x and y values provided using scrolling animation.
-   *
-   * @param x Horizontal destination point.
-   * @param y Vertical destination point.
-   */
-  public void slideTo( int x, int y ) {
-    getAnimator().animatePan( x, y );
-  }
-
-  /**
-   * Scrolls and centers the ZoomPanLayout to the x and y values specified by {@param point} Point using scrolling animation
-   *
-   * @param x Horizontal destination point.
-   * @param y Vertical destination point.
-   */
-  public void slideToAndCenter( int x, int y ) {
-    slideTo( x - getHalfWidth(), y - getHalfHeight() );
-  }
-
-  public void slideToAndCenterWithScale( int x, int y, float scale ) {
-    getAnimator().animateZoomPan( x - getHalfWidth(), y - getHalfHeight(), scale );
-  }
-
-  /**
-   * Scales the ZoomPanLayout with animated progress, without maintaining scroll position.
-   *
-   * @param destination The final scale value the ZoomPanLayout should animate to.
-   */
-  public void smoothScaleTo( float destination ) {
-    getAnimator().animateZoom( destination );
-  }
-
-  /**
-   * from point *on screen*, as is returned by MotionEvent.getX/Y
-   *
-   * @param focusX
-   * @param focusY
-   * @param scale
-   */
-  public void smoothScaleFromFocalPoint( int focusX, int focusY, float scale ) {
-    scale = getConstrainedDestinationScale( scale );
-    if( scale == mScale ) {
-      return;
-    }
-    int x = getOffsetScrollXFromScale( focusX, scale );
-    int y = getOffsetScrollYFromScale( focusY, scale );
-    getAnimator().animateZoomPan( x, y, scale );
-  }
-
-  public void smoothScaleFromCenter( float scale ) {
-    smoothScaleFromFocalPoint( getHalfWidth(), getHalfHeight(), scale );
-
   }
 
   @Override
@@ -723,43 +723,6 @@ public class ZoomPanLayout extends ViewGroup implements
       currentScale );
     broadcastPinchUpdate();
     return true;
-  }
-
-  @Override
-  protected ViewGroup.LayoutParams generateDefaultLayoutParams() {
-    return new LayoutParams( LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 0, 0, 0, 0 );
-  }
-
-  @Override
-  protected boolean checkLayoutParams( ViewGroup.LayoutParams layoutParams ) {
-    return layoutParams instanceof LayoutParams;
-  }
-
-  @Override
-  protected ViewGroup.LayoutParams generateLayoutParams( ViewGroup.LayoutParams layoutParams ) {
-    return new LayoutParams( layoutParams );
-  }
-
-  /**
-   * Per-child layout information associated with AnchorLayout.
-   */
-  public static class LayoutParams extends ViewGroup.LayoutParams {
-    public int baseWidth;
-    public int baseHeight;
-    public int scaledWidth;
-    public int scaledHeight;
-
-    public LayoutParams( int width, int height, int baseWidth, int baseHeight, int scaledWidth, int scaledHeight ) {
-      super( width, height );
-      this.baseWidth = baseWidth;
-      this.baseHeight = baseHeight;
-      this.scaledWidth = scaledWidth;
-      this.scaledHeight = scaledHeight;
-    }
-
-    public LayoutParams( ViewGroup.LayoutParams source ) {
-      super( source );
-    }
   }
 
   private static class ZoomPanAnimator extends ValueAnimator implements

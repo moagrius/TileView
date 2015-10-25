@@ -275,6 +275,17 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     invalidate();
   }
 
+  public void destroy(){
+    clear();
+    for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
+      tileGroup.clearTiles();
+    }
+    mTileCanvasViewHashMap.clear();
+    if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {
+      mTileRenderHandler.removeMessages( RENDER_FLAG );
+    }
+  }
+
   private static class TileRenderHandler extends Handler {
 
     private final WeakReference<TileCanvasViewGroup> mTileManagerWeakReference;
