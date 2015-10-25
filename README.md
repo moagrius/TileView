@@ -204,5 +204,23 @@ tileView.addHotSpot( hotSpot, new HotSpot.HotSpotTapListener(){
 
 ####Paths
 
+TileView uses `DrawablePath` instances to draw paths above the tile layer.  Paths will transform
+with the TileView as it scales, but do not deform - that's to say that a 10DP wide stroke will
+always be 10DP wide, but the points of the path will be scaled with the TileView.
 
+`DrawablePath` instances are objects that relate an instance of `android.graphics.Path` with an 
+instance of `android.graphics.Paint` - there is no additional direct access API.  Scaling is 
+managed by a singel instance of `CompositePathView`, which also supplies a default `Paint` 
+instance that's used if any individual `DrawablePath` has a `null` value for it `paint` property.
 
+Paths are not Views, and cannot be clicked.  It is possible, however, to use the same `Path` 
+instance on a `HotSpot` and a `DrawablePath`.
+
+To add a path:
+
+```
+DrawablePath drawablePath = new DrawablePath();
+drawablePath.path = // generate a Path using the standard android.graphics.Path API
+drawablePath.paint = // generate a Paint instance use the standard android.graphics.Paint API
+tileView.addPath( drawablePath );
+```

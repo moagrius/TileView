@@ -18,6 +18,9 @@ public class ScalingLayout extends ViewGroup {
   public ScalingLayout( Context context ) {
 		super( context );
 		setWillNotDraw( false );
+
+
+
 	}
 
   /**

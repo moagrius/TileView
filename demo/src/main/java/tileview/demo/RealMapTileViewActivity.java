@@ -102,6 +102,8 @@ public class RealMapTileViewActivity extends TileViewActivity {
     // test higher than 1
     tileView.setScaleLimits( 0, 2 );
 
+    tileView.getTileCanvasViewGroup().setBackgroundResource( R.drawable.bg_gray_bordered );
+
     // start small and allow zoom
     //tileView.setScale( 0.3f );
 

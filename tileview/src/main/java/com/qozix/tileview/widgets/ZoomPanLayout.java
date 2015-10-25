@@ -113,7 +113,7 @@ public class ZoomPanLayout extends ViewGroup implements
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mScaledWidth, mScaledHeight);
+        child.layout( 0, 0, mScaledWidth - 50, mScaledHeight - 50);
       }
     }
     if( changed ) {
