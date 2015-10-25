@@ -3,12 +3,11 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion 22
     buildToolsVersion "21.1.2"
-
     defaultConfig {
         minSdkVersion 11
         targetSdkVersion 22
-        versionCode 19
-        versionName "1.0.16"
+        versionCode 20
+        versionName "2.0.0"
     }
     buildTypes {
         release {
@@ -19,14 +18,12 @@ android {
     lintOptions {
         abortOnError false
     }
-
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:22.0.0'
-    compile 'com.jakewharton:disklrucache:2.0.2'
 }
 
 apply from: 'aar-release.gradle'
