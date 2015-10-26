@@ -217,7 +217,7 @@ Again, implement your own `BitmapProvider`.  You could roll your own using `URL`
 tileView.addDetailLevel( 1.0f, "http://example.com/tiles/%d-%d.png" );
 ```
 
-###...add my custom View to the TileView, so that it scales?
+####...add my custom View to the TileView, so that it scales?
 Create a layout, add whatever views you want to it, and pass the layout to `TileView.addScalingViewGroup`:
 
 ```
@@ -230,7 +230,7 @@ relativeLayout.addView( logo, logoLayoutParams );
 tileView.addScalingViewGroup( relativeLayout );
 ```
 
-###...add my custom View to the TileView, so that it does *not* scale?
+####...add my custom View to the TileView, so that it does *not* scale?
 TileView is a ViewGroup, and views can be added normally.  No scaling behavior is passed directly, so unless you do something to make it scale, it will behave as would any other View, although the dimensions passed to it will reflect the size defined by the `setSize` API, not the dimensions of the TileView on screen.
 
 Create a layout, add whatever views you want to it, and add it using `addView`:
@@ -245,7 +245,7 @@ relativeLayout.addView( logo, logoLayoutParams );
 tileView.addView( relativeLayout );
 ```
 
-###...add a down-sampled image beneath the tile layer?
+####...add a down-sampled image beneath the tile layer?
 Since TileView is a ViewGroup, and it will lay out it's children according to the dimension supplied by the `setSize` API, adding a standard ImageView at index 0 with the image source a small version of the tiled composite image will create the down-sampled effect.  Generally, the image should be low resolution and file size (images smaller than 500 pixels square should be OK).
 
 ```
@@ -253,3 +253,6 @@ ImageView downSample = new ImageView( this );
 downSample.setImageResource( R.drawable.downsampled_image );
 tileView.addView( downSample, 0 );
 ```
+
+###Contributing
+See [here](https://github.com/moagrius/TileView/wiki/Contributing).
