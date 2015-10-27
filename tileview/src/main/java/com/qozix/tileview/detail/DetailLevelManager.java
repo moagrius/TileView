@@ -176,6 +176,12 @@ public class DetailLevelManager {
     return match;
   }
 
+  public void invalidateAll(){
+    for( DetailLevel detailLevel : mDetailLevelLinkedList ){
+      detailLevel.invalidate();
+    }
+  }
+
   public interface DetailLevelChangeListener {
     void onDetailLevelChanged( DetailLevel detailLevel );
   }

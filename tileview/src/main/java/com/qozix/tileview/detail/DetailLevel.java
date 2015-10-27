@@ -72,6 +72,13 @@ public class DetailLevel implements Comparable<DetailLevel> {
     return intersections;
   }
 
+  /**
+   * Ensures that computeCurrentState will return true, indicating a change has occured.
+   */
+  public void invalidate(){
+    mLastStateSnapshot = null;
+  }
+
   public float getScale() {
     return mScale;
   }

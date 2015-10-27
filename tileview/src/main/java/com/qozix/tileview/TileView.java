@@ -663,6 +663,7 @@ public class TileView extends ZoomPanLayout implements
     mTileCanvasViewGroup.clear();
     mRenderThrottleHandler.clear();
     mCompositePathView.setShouldDraw( false );
+    mDetailLevelManager.invalidateAll();
     setWillNotDraw( true );
   }
 
@@ -685,9 +686,9 @@ public class TileView extends ZoomPanLayout implements
   public void resume() {
     setWillNotDraw( false );
     updateViewport();
-    mTileCanvasViewGroup.updateTileSet( mDetailLevelManager.getCurrentDetailLevel() );
-    mTileCanvasViewGroup.requestRender();
     mCompositePathView.setShouldDraw( true );
+    mTileCanvasViewGroup.updateTileSet( mDetailLevelManager.getCurrentDetailLevel() );
+    requestRender();
     requestLayout();
   }
 
