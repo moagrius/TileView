@@ -83,14 +83,16 @@ public class CoordinateTranslater {
       && x <= mRight;
   }
 
-  public Path pathFromPositions( List<double[]> positions ) {
+  public Path pathFromPositions( List<double[]> positions, boolean shouldClose ) {
     Path path = new Path();
     double[] start = positions.remove( 0 );
     path.moveTo( translateX( start[0] ), translateY( start[1] ) );
     for( double[] position : positions ) {
       path.lineTo( translateX( position[0] ), translateY( position[1] ) );
     }
-    path.close();
+    if( shouldClose ) {
+      path.close();
+    }
     return path;
   }
 

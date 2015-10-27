@@ -578,7 +578,7 @@ public class TileView extends ZoomPanLayout implements
    * @return HotSpot the hotspot created with this method.
    */
   public HotSpot addHotSpot( List<double[]> positions, HotSpot.HotSpotTapListener listener ) {
-    Path path = mCoordinateTranslater.pathFromPositions( positions );
+    Path path = mCoordinateTranslater.pathFromPositions( positions, true );
     RectF bounds = new RectF();
     path.computeBounds( bounds, true );
     Rect rect = new Rect();
@@ -631,7 +631,7 @@ public class TileView extends ZoomPanLayout implements
    * @return The DrawablePath instance passed to the TileView.
    */
   public CompositePathView.DrawablePath drawPath( List<double[]> positions, Paint paint ) {
-    Path path = mCoordinateTranslater.pathFromPositions( positions );
+    Path path = mCoordinateTranslater.pathFromPositions( positions, false );
     return mCompositePathView.addPath( path, paint );
   }
 
