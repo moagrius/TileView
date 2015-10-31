@@ -16,14 +16,14 @@ public class TouchUpGestureDetector {
   public boolean onTouchEvent( MotionEvent event ) {
     if( event.getActionMasked() == MotionEvent.ACTION_UP ) {
       if( mOnTouchUpListener != null ) {
-        return mOnTouchUpListener.onTouchUp();
+        return mOnTouchUpListener.onTouchUp( event );
       }
     }
     return true;
   }
 
   public interface OnTouchUpListener {
-    boolean onTouchUp();
+    boolean onTouchUp( MotionEvent event );
   }
 }
 

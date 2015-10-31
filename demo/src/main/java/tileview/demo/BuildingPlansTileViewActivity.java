@@ -17,16 +17,16 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		
 		// multiple references
 		TileView tileView = getTileView();
-		
+
 		// size of original image at 100% mScale
 		tileView.setSize( 2736, 2880 );
-		
+
 		// detail levels
 		tileView.addDetailLevel( 1.000f, "tiles/plans/1000/%d_%d.jpg");
 		tileView.addDetailLevel( 0.500f, "tiles/plans/500/%d_%d.jpg");
 		tileView.addDetailLevel( 0.250f, "tiles/plans/250/%d_%d.jpg");
 		tileView.addDetailLevel( 0.125f, "tiles/plans/125/%d_%d.jpg");
-		
+
 		// let's use 0-1 positioning...
 		tileView.defineBounds( 0, 0, 1, 1 );
 		

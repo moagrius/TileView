@@ -116,9 +116,7 @@ public class ZoomPanLayout extends ViewGroup implements
         child.layout( 0, 0, mScaledWidth - 50, mScaledHeight - 50);
       }
     }
-    if( changed ) {
-      calculateMinimumScaleToFit();
-    }
+    calculateMinimumScaleToFit();
   }
 
   /**
@@ -693,7 +691,7 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   @Override
-  public boolean onTouchUp() {
+  public boolean onTouchUp( MotionEvent event ) {
     if( mIsDragging ) {
       mIsDragging = false;
       broadcastDragEnd();
