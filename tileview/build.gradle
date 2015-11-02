@@ -7,7 +7,7 @@ android {
         minSdkVersion 11
         targetSdkVersion 22
         versionCode 22
-        versionName "2.0.2"
+        versionName "2.0.3"
     }
     buildTypes {
         release {
