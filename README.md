@@ -19,7 +19,7 @@ Major goals were:
 #TileView
 The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images, with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers), built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or coordinate system.
 
-![Demo](https://cloud.githubusercontent.com/assets/701344/10953383/6155fc7a-830d-11e5-84cb-35ab343aa2a4.gif)
+![Demo](https://cloud.githubusercontent.com/assets/701344/10954033/d20843bc-8310-11e5-83ad-4e062b9b1be0.gif)
 
 ###Documentation
 Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html).  Wiki is [here](https://github.com/moagrius/TileView/wiki).
@@ -56,7 +56,7 @@ That's it.  You should have a tiled image that only renders the pieces of the im
 ###Basics
 
 ####DetailLevels
-![detail-levels](https://cloud.githubusercontent.com/assets/701344/10953382/615448d0-830d-11e5-93b4-1691fbe5fef2.gif)
+![detail-levels](https://cloud.githubusercontent.com/assets/701344/10954031/d2059c3e-8310-11e5-821d-26dd8691d4d3.gif)
 A TileView instance can have any number of detail levels, which is a single image made up of many tiles.  These tiles are positioned appropriately to show the portion of the image that the device's viewport is displayed - other tiles are recyled (and their memory freed) as they move out of the visible area.  Detail levels often showing the same content at different magnifications, but may show different details as well - for example, a detail level showing a larger area will probably label features differently than a detail level showing a smaller area (imagine a TileView representing the United States may show the Rocky Mountains at a very low detail level, while a higher detail level may show individual streets or addresses.
 
 Each detail level is passed a float value, indicating the scale value that it represents (e.g., a detail level passed 0.5f scale would be displayed when the TileView was zoomed out by 50%). Additionally, each detail level is passed an aribtrary data object that is attached to each tile and can provide instructions on how to generate the tile's bitmap.
@@ -68,7 +68,7 @@ A Tile is a class instance that represents a Bitmap which is a portion of the to
 Each TileView uses a `BitmapProvider` implementation to generate tile bitmaps.  The interface defines a single method: `public Bitmap getBitmap( Tile tile, Context context );`.  This method is called each time a bitmap is required, and has access to the Tile instance for that position and detail level, and a Context object to access system resources.  The `BitmapProvider` implementation can generate the bitmap in any way it chooses - assets, resources, http requests, dynamically drawn, SVG, decoded regions, etc.  The default implementation, `BitmapProviderAssets`, parses a String (the data object passed to the DetailLevel) and returns a bitmap found by file name in the app's assets directory.
 
 ####Markers & Callouts
-![markers-callouts](https://cloud.githubusercontent.com/assets/701344/10953379/61517dbc-830d-11e5-9ba0-c8aa5b9966d3.gif)
+![markers-callouts](https://cloud.githubusercontent.com/assets/701344/10954032/d207ffc4-8310-11e5-926d-038549987d47.gif)
 A marker is just a View - any type of View - TextView, ImageView, RelativeLayout, whatever.  A marker does not scale, but it's position updates as the TileView scales, so it's always attached to the original position.  Markers are always laid as as if passed WRAP_CONTENT on both axes.  Markers can have anchor points supplied, which are applied to width and height as offsets - to have a marker center horizontally to a point, and align at the bottom edge (like a typical map pin would do), you'd pass -0.5f and -1.0f (thus, left position is offset by half the width, and top is offset by the full height).
 
 Markers can have traditional touch handlers, like `View.OnClickListener`, but these usually consume the event, so a drag operation might be interrupted when a user's finger crossed a marker View that had a consuming listener.  Instead, consider `TileView.setMarkerTapListener`, which will react when a marker is tapped but will not consume the event.
@@ -101,7 +101,7 @@ tileView.addHotSpot( hotSpot, new HotSpot.HotSpotTapListener(){
 ```
 
 ####Paths
-![paths](https://cloud.githubusercontent.com/assets/701344/10953381/6153865c-830d-11e5-96e3-e15bf4b936f3.gif)
+![paths](https://cloud.githubusercontent.com/assets/701344/10954035/d20aee5a-8310-11e5-9027-ff06bc921a23.gif)
 TileView uses `DrawablePath` instances to draw paths above the tile layer.  Paths will transform with the TileView as it scales, but do not deform - that's to say that a 10DP wide stroke will always be 10DP wide, but the points of the path will be scaled with the TileView. 
 
 `DrawablePath` instances are objects that relate an instance of `android.graphics.Path` with an instance of `android.graphics.Paint` - there is no additional direct access API.  Scaling is managed by a singel instance of `CompositePathView`, which also supplies a default `Paint` instance that's used if any individual `DrawablePath` has a `null` value for it `paint` property.
@@ -146,9 +146,9 @@ public void onScaleChanged( float scale, float previous );
 public void onPanBegin( int x, int y, Origination origin );
 public void onPanUpdate( int x, int y, Origination origin );
 public void onPanEnd( int x, int y, Origination origin );
-public void onZoomBegin( float scale, float focusX, float focusY, Origination origin );
-public void onZoomUpdate( float scale, float focusX, float focusY, Origination origin );
-public void onZoomEnd( float scale, float focusX, float focusY, Origination origin );
+public void onZoomBegin( float scale, Origination origin) ;
+public void onZoomUpdate( float scale, Origination origin );
+public void onZoomEnd( float scale, Origination origin );
 public void onDetailLevelChanged( DetailLevel detailLevel );
 public boolean onSingleTapConfirmed( MotionEvent event );
 public void onRenderStart();
@@ -216,7 +216,7 @@ tileView.addDetailLevel( 1.0f, "http://example.com/tiles/%d-%d.png" );
 ```
 
 ####...add my custom View to the TileView, so that it scales?
-![scaling-layout](https://cloud.githubusercontent.com/assets/701344/10953385/616f5da0-830d-11e5-803d-f5cdc3b25599.gif)
+![scaling-layout](https://cloud.githubusercontent.com/assets/701344/10954036/d235f41a-8310-11e5-810f-d55e58477ec3.gif)
 Create a layout, add whatever views you want to it, and pass the layout to `TileView.addScalingViewGroup`:
 
 ```
@@ -230,7 +230,7 @@ tileView.addScalingViewGroup( relativeLayout );
 ```
 
 ####...add my custom View to the TileView, so that it does *not* scale?
-![non-scaling-child](https://cloud.githubusercontent.com/assets/701344/10953380/6151e09a-830d-11e5-97b2-e7a5c1074a28.gif)
+![non-scaling-child](https://cloud.githubusercontent.com/assets/701344/10954034/d20a704c-8310-11e5-8962-20f393ac098a.gif)
 TileView is a ViewGroup, and views can be added normally.  No scaling behavior is passed directly, so unless you do something to make it scale, it will behave as would any other View, although the dimensions passed to it will reflect the size defined by the `setSize` API, not the dimensions of the TileView on screen.
 
 Create a layout, add whatever views you want to it, and add it using `addView`:
@@ -246,7 +246,7 @@ tileView.addView( relativeLayout );
 ```
 
 ####...add a down-sampled image beneath the tile layer?
-![downsample](https://cloud.githubusercontent.com/assets/701344/10953378/61513fc8-830d-11e5-99d0-cca7be7287d8.gif)
+![downsample](https://cloud.githubusercontent.com/assets/701344/10954030/d20326de-8310-11e5-8d4d-a42b262c2a8c.gif)
 Since TileView is a ViewGroup, and it will lay out it's children according to the dimension supplied by the `setSize` API, adding a standard ImageView at index 0 with the image source a small version of the tiled composite image will create the down-sampled effect.  Generally, the image should be low resolution and file size (images smaller than 500 pixels square should be OK).
 
 ```
