@@ -89,9 +89,13 @@ public class ZoomPanLayout extends ViewGroup implements
   @Override
   protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     // the container's children should be the size provided by setSize
-    measureChildren(
-      MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY ),
-      MeasureSpec.makeMeasureSpec( mScaledHeight, MeasureSpec.EXACTLY ) );
+    // don't use measureChildren because that grabs the child's LayoutParams
+    int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec( mScaledWidth, MeasureSpec.EXACTLY );
+    int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec( mScaledHeight, MeasureSpec.EXACTLY );
+    for( int i = 0; i < getChildCount(); i++){
+      View child = getChildAt( i );
+      child.measure( childWidthMeasureSpec, childHeightMeasureSpec );
+    }
     // but the layout itself should report normal (on screen) dimensions
     int width = MeasureSpec.getSize( widthMeasureSpec );
     int height = MeasureSpec.getSize( heightMeasureSpec );

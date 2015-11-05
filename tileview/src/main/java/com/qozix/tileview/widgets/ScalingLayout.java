@@ -51,9 +51,14 @@ public class ScalingLayout extends ViewGroup {
 	protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
     int availableWidth = FloatMathHelper.unscale( MeasureSpec.getSize( widthMeasureSpec ), mScale );
     int availableHeight = FloatMathHelper.unscale( MeasureSpec.getSize( heightMeasureSpec ), mScale );
-    measureChildren(
-      MeasureSpec.makeMeasureSpec( availableWidth, MeasureSpec.EXACTLY ),
-      MeasureSpec.makeMeasureSpec( availableHeight, MeasureSpec.EXACTLY ) );
+    // the container's children should be the size provided by setSize
+    // don't use measureChildren because that grabs the child's LayoutParams
+    int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec( availableWidth, MeasureSpec.EXACTLY );
+    int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec( availableHeight, MeasureSpec.EXACTLY );
+    for( int i = 0; i < getChildCount(); i++){
+      View child = getChildAt( i );
+      child.measure( childWidthMeasureSpec, childHeightMeasureSpec );
+    }
 		setMeasuredDimension( availableWidth, availableHeight );
 	}
 
