@@ -85,9 +85,10 @@ public class CoordinateTranslater {
 
   public Path pathFromPositions( List<double[]> positions, boolean shouldClose ) {
     Path path = new Path();
-    double[] start = positions.remove( 0 );
+    double[] start = positions.get( 0 );
     path.moveTo( translateX( start[0] ), translateY( start[1] ) );
-    for( double[] position : positions ) {
+    for( int i = 1; i < positions.size(); i++ ) {
+      double[] position = positions.get( i );
       path.lineTo( translateX( position[0] ), translateY( position[1] ) );
     }
     if( shouldClose ) {

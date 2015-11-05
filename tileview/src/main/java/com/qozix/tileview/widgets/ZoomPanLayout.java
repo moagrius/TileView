@@ -384,8 +384,8 @@ public class ZoomPanLayout extends ViewGroup implements
     if( scale == mScale ) {
       return;
     }
-    int x = getOffsetScrollXFromScale( focusX, scale );
-    int y = getOffsetScrollYFromScale( focusY, scale );
+    int x = getOffsetScrollXFromScale( focusX, scale, mScale );
+    int y = getOffsetScrollYFromScale( focusY, scale, mScale );
     getAnimator().animateZoomPan( x, y, scale );
   }
 
@@ -435,15 +435,15 @@ public class ZoomPanLayout extends ViewGroup implements
     return mZoomPanAnimator;
   }
 
-  private int getOffsetScrollXFromScale( int offsetX, float scale ) {
+  private int getOffsetScrollXFromScale( int offsetX, float destinationScale, float currentScale ) {
     int scrollX = getScrollX() + offsetX;
-    float deltaScale = scale / mScale;
+    float deltaScale = destinationScale / currentScale;
     return (int) (scrollX * deltaScale) - offsetX;
   }
 
-  private int getOffsetScrollYFromScale( int offsetY, float scale ) {
+  private int getOffsetScrollYFromScale( int offsetY, float destinationScale, float currentScale ) {
     int scrollY = getScrollY() + offsetY;
-    float deltaScale = scale / mScale;
+    float deltaScale = destinationScale / currentScale;
     return (int) (scrollY * deltaScale) - offsetY;
   }
 
@@ -452,10 +452,15 @@ public class ZoomPanLayout extends ViewGroup implements
     if( scale == mScale ) {
       return;
     }
-    int x = getOffsetScrollXFromScale( offsetX, scale );
-    int y = getOffsetScrollYFromScale( offsetY, scale );
-    scrollTo( x, y );
+    int x = getOffsetScrollXFromScale( offsetX, scale, mScale );
+    int y = getOffsetScrollYFromScale( offsetY, scale, mScale );
+
     setScale( scale );
+
+    x = getConstrainedScrollX( x );
+    y = getConstrainedScrollY( y );
+
+    scrollTo( x, y );
   }
 
   @Override
