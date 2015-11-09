@@ -49,10 +49,10 @@ public class TileCanvasView extends View {
     }
   }
 
-  public void clearTiles() {
+  public void clearTiles( boolean shouldRecycle ) {
     HashSet<Tile> condemned = (HashSet<Tile>) mTiles.clone();
     for( Tile tile : condemned ) {
-      tile.destroy();
+      tile.destroy( shouldRecycle );
     }
     invalidate();
   }

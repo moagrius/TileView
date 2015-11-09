@@ -37,6 +37,8 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   private boolean mRenderIsSuppressed = false;
   private boolean mIsRendering = false;
 
+  private boolean mShouldRecycleBitmaps = true;
+
   private boolean mTransitionsEnabled = true;
   private int mTransitionDuration = DEFAULT_TRANSITION_DURATION;
 
@@ -89,6 +91,15 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public void setRenderBuffer( int renderBuffer ) {
     mRenderBuffer = renderBuffer;
   }
+
+  public boolean getShouldRecycleBitmaps() {
+    return mShouldRecycleBitmaps;
+  }
+
+  public void setShouldRecycleBitmaps( boolean shouldRecycleBitmaps ) {
+    mShouldRecycleBitmaps = shouldRecycleBitmaps;
+  }
+
 
   /**
    * The layout dimensions supplied to this ViewGroup will be exactly as large as the scaled
@@ -150,11 +161,11 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     suppressRender();
     cancelRender();
     for( Tile tile : mTilesScheduledToRender ) {
-      tile.destroy();
+      tile.destroy( mShouldRecycleBitmaps );
     }
     mTilesScheduledToRender.clear();
     for( Tile tile : mTilesAlreadyRendered ) {
-      tile.destroy();
+      tile.destroy( mShouldRecycleBitmaps );
     }
     mTilesAlreadyRendered.clear();
   }
@@ -202,13 +213,13 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     LinkedList<Tile> condemned = new LinkedList<Tile>( mTilesAlreadyRendered );
     condemned.removeAll( mTilesScheduledToRender );
     for( Tile tile : condemned ) {
-      tile.destroy();
+      tile.destroy( mShouldRecycleBitmaps );
     }
     mTilesAlreadyRendered.removeAll( condemned );
     mCurrentTileCanvasView.invalidate();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       if( mCurrentTileCanvasView != tileGroup ) {
-        tileGroup.clearTiles();
+        tileGroup.clearTiles( mShouldRecycleBitmaps );
       }
     }
     invalidate();
@@ -278,7 +289,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public void destroy(){
     clear();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
-      tileGroup.clearTiles();
+      tileGroup.clearTiles( mShouldRecycleBitmaps );
     }
     mTileCanvasViewHashMap.clear();
     if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {

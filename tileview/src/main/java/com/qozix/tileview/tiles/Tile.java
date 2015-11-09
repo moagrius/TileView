@@ -140,8 +140,8 @@ public class Tile {
     mParentTileCanvasView = tileCanvasView;
   }
 
-  void destroy() {
-    if( mBitmap != null && !mBitmap.isRecycled() ) {
+  void destroy( boolean shouldRecycle ) {
+    if( shouldRecycle && mBitmap != null && !mBitmap.isRecycled() ) {
       mBitmap.recycle();
     }
     mBitmap = null;

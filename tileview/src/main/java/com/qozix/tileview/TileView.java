@@ -285,6 +285,18 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
+   * Instructs Tile instances to recycle (or not).  This can be useful if using a caching system
+   * that re-uses bitmaps and expects them to not have been recycled.
+   *
+   * The default value is true.
+   *
+   * @param shouldRecycleBitmaps True if bitmaps should call Bitmap.recycle when they are removed from view.
+   */
+  public void setShouldRecycleBitmaps( boolean shouldRecycleBitmaps ) {
+    mTileCanvasViewGroup.setShouldRecycleBitmaps( shouldRecycleBitmaps );
+  }
+
+  /**
    * Defines the total size, in pixels, of the tile set at 100% scale.
    * The TileView wills pan within it's layout dimensions, with the content (scrollable)
    * size defined by this method.
