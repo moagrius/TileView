@@ -121,6 +121,7 @@ public class ZoomPanLayout extends ViewGroup implements
       }
     }
     calculateMinimumScaleToFit();
+    constrainScrollToLimits();
   }
 
   /**
@@ -491,7 +492,9 @@ public class ZoomPanLayout extends ViewGroup implements
       float recalculatedMinScale = Math.max( minimumScaleX, minimumScaleY );
       if( recalculatedMinScale != mEffectiveMinScale ) {
         mEffectiveMinScale = recalculatedMinScale;
-        setScale( mScale );
+        if( mScale < mEffectiveMinScale ){
+          setScale( mEffectiveMinScale );
+        }
       }
     }
   }
