@@ -495,7 +495,7 @@ public class TileView extends ZoomPanLayout implements
    * @param shouldAnimate True if the movement should use a transition effect.
    */
   public void moveToMarker( View view, boolean shouldAnimate ) {
-    if( mMarkerLayout.indexOfChild( view ) > -1 ) {
+    if( mMarkerLayout.indexOfChild( view ) == -1 ) {
       throw new IllegalStateException( "The view passed is not an existing marker" );
     }
     ViewGroup.LayoutParams params = view.getLayoutParams();
