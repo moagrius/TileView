@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.qozix.tileview.TileView;
+import com.qozix.tileview.markers.MarkerLayout;
 
 import java.util.ArrayList;
 
@@ -79,9 +80,11 @@ public class RealMapTileViewActivity extends TileViewActivity {
       // give it a standard marker icon - this indicator points down and is centered, so we'll use appropriate anchors
       marker.setImageResource( Math.random() < 0.75 ? R.drawable.map_marker_normal : R.drawable.map_marker_featured );
       // on tap show further information about the area indicated
-      // this could be done using a MarkerEventListener as well, which would prevent the touch
-      // event from being consumed and would not interrupt dragging
-      marker.setOnClickListener( markerClickListener );
+      // this could be done using a OnClickListener, which is a little more "snappy", since
+      // MarkerTapListener uses GestureDetector.onSingleTapConfirmed, which has a delay of 300ms to
+      // confirm it's not the start of a double-tap. But this would prevent the touch event from
+      // being consumed and would not interrupt dragging
+      tileView.getMarkerLayout().setMarkerTapListener( markerTapListener );
       // add it to the view tree
       tileView.addMarker( marker, point[0], point[1], null, null );
     }
@@ -106,10 +109,10 @@ public class RealMapTileViewActivity extends TileViewActivity {
 
   }
 
-  private View.OnClickListener markerClickListener = new View.OnClickListener() {
+  private MarkerLayout.MarkerTapListener markerTapListener = new MarkerLayout.MarkerTapListener() {
 
     @Override
-    public void onClick( View view ) {
+    public void onMarkerTap( View view, int x, int y ) {
       // get reference to the TileView
       TileView tileView = getTileView();
       // we saved the coordinate in the marker's tag
