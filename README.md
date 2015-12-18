@@ -30,6 +30,14 @@ Gradle:
 compile 'com.qozix:tileview:2.0.7'
 ```
 
+The library is hosted on jcenter, and is not currently available from maven.
+
+```
+repositories {  
+   jcenter()  
+}
+```
+
 ###Demo
 A demo application, built in Android Studio, is available in the `demo` folder of this repository.  Several use-cases are present; the `RealMapTileViewActivity` is the most substantive.
 
