@@ -76,7 +76,7 @@ public class RealMapTileViewActivity extends TileViewActivity {
       // any view will do...
       ImageView marker = new ImageView( this );
       // save the coordinate for centering and callout positioning
-      marker.setTag(point);
+      marker.setTag( point );
       // give it a standard marker icon - this indicator points down and is centered, so we'll use appropriate anchors
       marker.setImageResource( Math.random() < 0.75 ? R.drawable.map_marker_normal : R.drawable.map_marker_featured );
       // on tap show further information about the area indicated
