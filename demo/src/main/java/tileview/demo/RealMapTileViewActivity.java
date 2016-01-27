@@ -82,8 +82,8 @@ public class RealMapTileViewActivity extends TileViewActivity {
       // on tap show further information about the area indicated
       // this could be done using a OnClickListener, which is a little more "snappy", since
       // MarkerTapListener uses GestureDetector.onSingleTapConfirmed, which has a delay of 300ms to
-      // confirm it's not the start of a double-tap. But this would prevent the touch event from
-      // being consumed and would not interrupt dragging
+      // confirm it's not the start of a double-tap. But this would consume the touch event and
+      // interrupt dragging
       tileView.getMarkerLayout().setMarkerTapListener( markerTapListener );
       // add it to the view tree
       tileView.addMarker( marker, point[0], point[1], null, null );
