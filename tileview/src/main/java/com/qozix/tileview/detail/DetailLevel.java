@@ -53,9 +53,9 @@ public class DetailLevel implements Comparable<DetailLevel> {
   }
 
   /**
-   * Returns a list of Tile instances desribing the currently visible viewport.
+   * Returns a list of Tile instances describing the currently visible viewport.
    *
-   * @return List of Tile instances desribing the currently visible viewport.
+   * @return List of Tile instances describing the currently visible viewport.
    */
 
   public LinkedList<Tile> getVisibleTilesFromLastViewportComputation() {
@@ -73,7 +73,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
   }
 
   /**
-   * Ensures that computeCurrentState will return true, indicating a change has occured.
+   * Ensures that computeCurrentState will return true, indicating a change has occurred.
    */
   public void invalidate(){
     mLastStateSnapshot = null;
@@ -125,7 +125,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
   public static class StateNotComputedException extends IllegalStateException {
     public StateNotComputedException(){
       super("Grid has not been computed; " +
-        "you must call computeCurrentState at some point priot to calling " +
+        "you must call computeCurrentState at some point prior to calling " +
         "getVisibleTilesFromLastViewportComputation.");
     }
   }
