@@ -82,6 +82,8 @@ public class TileView extends ZoomPanLayout implements
 
   private RenderThrottleHandler mRenderThrottleHandler;
 
+  private boolean mShouldRenderWhilePanning = false;
+
   /**
    * Constructor to use when creating a TileView from code.
    *
@@ -704,6 +706,20 @@ public class TileView extends ZoomPanLayout implements
     requestLayout();
   }
 
+  /**
+   * Allows the TileView to render tiles while panning.
+   *
+   * @param shouldRender True if it should render while panning.
+   */
+  public void setShouldRenderWhilePanning( boolean shouldRender ) {
+    mShouldRenderWhilePanning = shouldRender;
+    if( shouldRender ) {
+      mTileCanvasViewGroup.setRenderBuffer( TileCanvasViewGroup.FAST_RENDER_BUFFER );
+    } else {
+      mTileCanvasViewGroup.setRenderBuffer( TileCanvasViewGroup.DEFAULT_RENDER_BUFFER );
+    }
+  }
+
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
     super.onLayout( changed, l, t, r, b );
@@ -723,7 +739,11 @@ public class TileView extends ZoomPanLayout implements
   protected void onScrollChanged( int l, int t, int oldl, int oldt ) {
     super.onScrollChanged( l, t, oldl, oldt );
     updateViewport();
-    requestThrottledRender();
+    if( mShouldRenderWhilePanning ) {
+      requestRender();
+    } else {
+      requestThrottledRender();
+    }
   }
 
   @Override
@@ -750,7 +770,7 @@ public class TileView extends ZoomPanLayout implements
 
   @Override
   public void onPanEnd( int x, int y, Origination origin ) {
-    requestSafeRender();
+    requestRender();
   }
 
   @Override
