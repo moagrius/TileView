@@ -706,7 +706,9 @@ public class ZoomPanLayout extends ViewGroup implements
   public boolean onTouchUp( MotionEvent event ) {
     if( mIsDragging ) {
       mIsDragging = false;
-      broadcastDragEnd();
+      if( !mIsFlinging ) {
+        broadcastDragEnd();
+      }
     }
     return true;
   }

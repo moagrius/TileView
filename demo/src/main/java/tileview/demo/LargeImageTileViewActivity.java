@@ -34,6 +34,9 @@ public class LargeImageTileViewActivity extends TileViewActivity {
 		
 		// frame to center
 		frameTo( 0.5, 0.5 );
+
+		// render while panning
+		tileView.setShouldRenderWhilePanning( true );
 		
 	}
 }
