@@ -713,11 +713,8 @@ public class TileView extends ZoomPanLayout implements
    */
   public void setShouldRenderWhilePanning( boolean shouldRender ) {
     mShouldRenderWhilePanning = shouldRender;
-    if( shouldRender ) {
-      mTileCanvasViewGroup.setRenderBuffer( TileCanvasViewGroup.FAST_RENDER_BUFFER );
-    } else {
-      mTileCanvasViewGroup.setRenderBuffer( TileCanvasViewGroup.DEFAULT_RENDER_BUFFER );
-    }
+    int buffer = shouldRender ? TileCanvasViewGroup.FAST_RENDER_BUFFER : TileCanvasViewGroup.DEFAULT_RENDER_BUFFER;
+    mTileCanvasViewGroup.setRenderBuffer( buffer );
   }
 
   @Override
