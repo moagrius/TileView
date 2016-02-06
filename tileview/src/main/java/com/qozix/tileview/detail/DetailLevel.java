@@ -57,7 +57,6 @@ public class DetailLevel implements Comparable<DetailLevel> {
    *
    * @return List of Tile instances describing the currently visible viewport.
    */
-
   public LinkedList<Tile> getVisibleTilesFromLastViewportComputation() {
     if( mLastStateSnapshot == null ) {
       throw new StateNotComputedException();

@@ -22,7 +22,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public static final int FAST_RENDER_BUFFER = 10;
   private static final int DEFAULT_TRANSITION_DURATION = 200;
 
-  private LinkedList<Tile> mTilesScheduledToRender = new LinkedList<Tile>();
+  private LinkedList<Tile> mTilesVisible = new LinkedList<Tile>();
   private LinkedList<Tile> mTilesAlreadyRendered = new LinkedList<Tile>();
 
   private BitmapProvider mBitmapProvider;
@@ -161,10 +161,10 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public void clear() {
     suppressRender();
     cancelRender();
-    for( Tile tile : mTilesScheduledToRender ) {
+    for( Tile tile : mTilesVisible ) {
       tile.destroy( mShouldRecycleBitmaps );
     }
-    mTilesScheduledToRender.clear();
+    mTilesVisible.clear();
     for( Tile tile : mTilesAlreadyRendered ) {
       tile.destroy( mShouldRecycleBitmaps );
     }
@@ -202,7 +202,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     if( !changed ) {
       return;
     }
-    mTilesScheduledToRender = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
+    mTilesVisible = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
     if( mLastRunTileRenderTask != null && mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
       mLastRunTileRenderTask.cancel( true );
     }
@@ -212,7 +212,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   private void cleanup() {
     LinkedList<Tile> condemned = new LinkedList<Tile>( mTilesAlreadyRendered );
-    condemned.removeAll( mTilesScheduledToRender );
+    condemned.removeAll( mTilesVisible );
     for( Tile tile : condemned ) {
       tile.destroy( mShouldRecycleBitmaps );
     }
@@ -253,7 +253,9 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   LinkedList<Tile> getRenderList() {
-    return (LinkedList<Tile>) mTilesScheduledToRender.clone();
+    LinkedList<Tile> renderList = (LinkedList<Tile>) mTilesVisible.clone();
+    renderList.removeAll( mTilesAlreadyRendered );
+    return renderList;
   }
 
   void generateTileBitmap( Tile tile ) {
@@ -261,9 +263,6 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   void addTileToCurrentTileCanvasView( Tile tile ) {
-    if( mTilesAlreadyRendered.contains( tile ) ) {
-      return;
-    }
     tile.setTransitionsEnabled( mTransitionsEnabled );
     tile.setTransitionDuration( mTransitionDuration );
     tile.stampTime();
