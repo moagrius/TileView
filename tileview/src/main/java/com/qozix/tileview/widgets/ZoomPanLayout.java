@@ -3,6 +3,7 @@ package com.qozix.tileview.widgets;
 import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
@@ -379,15 +380,23 @@ public class ZoomPanLayout extends ViewGroup implements
    * @param focusX The horizontal focal point to maintain, relative to the screen (as supplied by MotionEvent.getX).
    * @param focusY The vertical focal point to maintain, relative to the screen (as supplied by MotionEvent.getY).
    * @param scale The final scale value the ZoomPanLayout should animate to.
+   * @param origination The optional origination of the scale change (can be null). Values from {@link com.qozix.tileview.widgets.ZoomPanLayout.ZoomPanListener.Origination}
    */
-  public void smoothScaleFromFocalPoint( int focusX, int focusY, float scale ) {
+  public void smoothScaleFromFocalPoint( int focusX, int focusY, float scale, @Nullable ZoomPanListener.Origination origination ) {
     scale = getConstrainedDestinationScale( scale );
     if( scale == mScale ) {
       return;
     }
     int x = getOffsetScrollXFromScale( focusX, scale, mScale );
     int y = getOffsetScrollYFromScale( focusY, scale, mScale );
-    getAnimator().animateZoomPan( x, y, scale );
+    getAnimator().animateZoomPan( x, y, scale, origination );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void smoothScaleFromFocalPoint( int focusX, int focusY, float scale) {
+    smoothScaleFromFocalPoint( focusX, focusY, scale, null );
   }
 
   /**
@@ -625,6 +634,12 @@ public class ZoomPanLayout extends ViewGroup implements
     }
   }
 
+  private void broadcastDoubleTapZoomBegin() {
+    for( ZoomPanListener listener : mZoomPanListeners ) {
+      listener.onZoomBegin( mScale, ZoomPanListener.Origination.DOUBLE_TAP );
+    }
+  }
+
   private void broadcastProgrammaticZoomUpdate() {
     for( ZoomPanListener listener : mZoomPanListeners ) {
       listener.onZoomUpdate( mScale, null );
@@ -693,7 +708,7 @@ public class ZoomPanLayout extends ViewGroup implements
   public boolean onDoubleTap( MotionEvent event ) {
     float destination = mScale >= mMaxScale ? mMinScale : mScale * 2;
     destination = getConstrainedDestinationScale( destination );
-    smoothScaleFromFocalPoint( (int) event.getX(), (int) event.getY(), destination );
+    smoothScaleFromFocalPoint( (int) event.getX(), (int) event.getY(), destination, ZoomPanListener.Origination.DOUBLE_TAP );
     return true;
   }
 
@@ -746,6 +761,7 @@ public class ZoomPanLayout extends ViewGroup implements
     private ZoomPanState mEndState = new ZoomPanState();
     private boolean mHasPendingZoomUpdates;
     private boolean mHasPendingPanUpdates;
+    private ZoomPanListener.Origination mOrigination;
 
     public ZoomPanAnimator( ZoomPanLayout zoomPanLayout ) {
       super();
@@ -778,15 +794,20 @@ public class ZoomPanLayout extends ViewGroup implements
       return false;
     }
 
-    public void animateZoomPan( int x, int y, float scale ) {
+    public void animateZoomPan( int x, int y, float scale, @Nullable ZoomPanListener.Origination origination ) {
       ZoomPanLayout zoomPanLayout = mZoomPanLayoutWeakReference.get();
       if( zoomPanLayout != null ) {
+        mOrigination = origination;
         mHasPendingZoomUpdates = setupZoomAnimation( scale );
         mHasPendingPanUpdates = setupPanAnimation( x, y );
         if( mHasPendingPanUpdates || mHasPendingZoomUpdates ) {
           start();
         }
       }
+    }
+
+    public void animateZoomPan( int x, int y, float scale ) {
+      animateZoomPan( x, y, scale, null );
     }
 
     public void animateZoom( float scale ) {
@@ -834,7 +855,11 @@ public class ZoomPanLayout extends ViewGroup implements
       if( zoomPanLayout != null ) {
         if( mHasPendingZoomUpdates ) {
           zoomPanLayout.mIsScaling = true;
-          zoomPanLayout.broadcastProgrammaticZoomBegin();
+          if( mOrigination == ZoomPanListener.Origination.DOUBLE_TAP ) {
+            zoomPanLayout.broadcastDoubleTapZoomBegin();
+          } else {
+            zoomPanLayout.broadcastProgrammaticZoomBegin();
+          }
         }
         if( mHasPendingPanUpdates ) {
           zoomPanLayout.mIsSliding = true;
@@ -888,7 +913,8 @@ public class ZoomPanLayout extends ViewGroup implements
     enum Origination {
       DRAG,
       FLING,
-      PINCH
+      PINCH,
+      DOUBLE_TAP
     }
     void onPanBegin( int x, int y, Origination origin );
     void onPanUpdate( int x, int y, Origination origin );

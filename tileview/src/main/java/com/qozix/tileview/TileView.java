@@ -772,7 +772,9 @@ public class TileView extends ZoomPanLayout implements
 
   @Override
   public void onZoomBegin( float scale, Origination origin ) {
-    mDetailLevelManager.lockDetailLevel();
+    if( !Origination.DOUBLE_TAP.equals( origin ) ) {
+      mDetailLevelManager.lockDetailLevel();
+    }
     mDetailLevelManager.setScale( scale );
   }
 
@@ -790,7 +792,6 @@ public class TileView extends ZoomPanLayout implements
 
   @Override
   public void onDetailLevelChanged( DetailLevel detailLevel ) {
-    requestRender();
     mTileCanvasViewGroup.updateTileSet( detailLevel );
   }
 

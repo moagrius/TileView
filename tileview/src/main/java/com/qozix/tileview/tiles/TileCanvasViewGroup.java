@@ -31,6 +31,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   private TileRenderTask mLastRunTileRenderTask;
 
   private DetailLevel mDetailLevelToRender;
+  private DetailLevel mLastRequestedDetailLevel;
   private DetailLevel mLastRenderedDetailLevel;
   private TileCanvasView mCurrentTileCanvasView;
 
@@ -144,10 +145,10 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     if( mDetailLevelToRender == null ) {
       return;
     }
-    if( mDetailLevelToRender.equals( mLastRenderedDetailLevel ) ) {
+    if( mDetailLevelToRender.equals( mLastRequestedDetailLevel ) ) {
       return;
     }
-    mLastRenderedDetailLevel = mDetailLevelToRender;
+    mLastRequestedDetailLevel = mDetailLevelToRender;
     mCurrentTileCanvasView = getCurrentTileCanvasView();
     mCurrentTileCanvasView.bringToFront();
     cancelRender();
@@ -199,7 +200,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   private void beginRenderTask() {
     boolean changed = mDetailLevelToRender.computeCurrentState();
-    if( !changed ) {
+    if( !changed && mDetailLevelToRender.equals( mLastRenderedDetailLevel ) ) {
       return;
     }
     mTilesVisible = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
@@ -248,8 +249,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     if( mTileRenderListener != null ) {
       mTileRenderListener.onRenderComplete();
     }
-    invalidate();
-    requestRender();
+    mLastRenderedDetailLevel = mDetailLevelToRender;
   }
 
   LinkedList<Tile> getRenderList() {
