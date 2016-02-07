@@ -27,7 +27,7 @@ Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tile
 ###Installation
 Gradle:
 ```
-compile 'com.qozix:tileview:2.1.0'
+compile 'com.qozix:tileview:2.0.10'
 ```
 
 The library is hosted on jcenter, and is not currently available from maven.
@@ -47,7 +47,7 @@ A demo application, built in Android Studio, is available in the `demo` folder o
 at the 2nd column from left and 3rd row from top.
 1. Create a new application with a single activity ('Main').
 1. Save the image tiles to your `assets` directory.
-1. Add `compile 'com.qozix:tileview:2.1.0'` to your gradle dependencies.
+1. Add `compile 'com.qozix:tileview:2.0.10'` to your gradle dependencies.
 1. In the Main Activity, use this for `onCreate`:
 ```
 @Override
