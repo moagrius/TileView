@@ -3,6 +3,7 @@ package com.qozix.tileview.tiles;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 
 import com.qozix.tileview.detail.DetailLevel;
@@ -28,8 +29,6 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   private BitmapProvider mBitmapProvider;
   private HashMap<Float, TileCanvasView> mTileCanvasViewHashMap = new HashMap<Float, TileCanvasView>();
 
-  private TileRenderTask mLastRunTileRenderTask;
-
   private DetailLevel mDetailLevelToRender;
   private DetailLevel mLastRenderedDetailLevel;
   private TileCanvasView mCurrentTileCanvasView;
@@ -48,10 +47,13 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   private int mRenderBuffer = DEFAULT_RENDER_BUFFER;
 
+  private TileRenderPoolExecutor mPoolExecutor;
+
   public TileCanvasViewGroup( Context context ) {
-    super( context );
+    super(context);
     setWillNotDraw( false );
     mTileRenderHandler = new TileRenderHandler( this );
+    mPoolExecutor = TileRenderPoolExecutor.getsInstance();
   }
 
   public boolean getTransitionsEnabled() {
@@ -116,7 +118,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
       return;
     }
     if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {
-      mTileRenderHandler.sendEmptyMessageDelayed( RENDER_FLAG, mRenderBuffer );
+      mTileRenderHandler.sendEmptyMessageDelayed(RENDER_FLAG, mRenderBuffer);
     }
   }
 
@@ -126,10 +128,10 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
    */
   public void cancelRender() {
     mRenderIsCancelled = true;
-    if( mLastRunTileRenderTask != null && mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
-      mLastRunTileRenderTask.cancel( true );
+    if(mPoolExecutor!=null){
+      mPoolExecutor.clearQueue();
+      //TODO cancel running threads
     }
-    mLastRunTileRenderTask = null;
   }
 
   /**
@@ -203,11 +205,10 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
       return;
     }
     mTilesVisible = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
-    if( mLastRunTileRenderTask != null && mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
-      mLastRunTileRenderTask.cancel( true );
+    if(mPoolExecutor!=null){
+      mPoolExecutor.clearQueue();
     }
-    mLastRunTileRenderTask = new TileRenderTask( this );
-    mLastRunTileRenderTask.executeOnExecutor( AsyncTask.THREAD_POOL_EXECUTOR );
+    mPoolExecutor.queue(this, getRenderList());
   }
 
   private void cleanup() {
@@ -233,6 +234,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     }
   }
 
+  //TODO
   void onRenderTaskCancelled() {
     if( mTileRenderListener != null ) {
       mTileRenderListener.onRenderCancelled();
@@ -242,14 +244,19 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   void onRenderTaskPostExecute() {
     mIsRendering = false;
-    if( !mTransitionsEnabled ) {
-      cleanup();
-    }
-    if( mTileRenderListener != null ) {
-      mTileRenderListener.onRenderComplete();
-    }
-    invalidate();
-    requestRender();
+    mTileRenderHandler.post(new Runnable() {
+      @Override
+      public void run() {
+        if (!mTransitionsEnabled ) {
+          cleanup();
+        }
+        if( mTileRenderListener != null ) {
+          mTileRenderListener.onRenderComplete();
+        }
+        invalidate();
+        requestRender();
+      }
+    });
   }
 
   LinkedList<Tile> getRenderList() {
@@ -262,12 +269,18 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     tile.generateBitmap( getContext(), getBitmapProvider() );
   }
 
-  void addTileToCurrentTileCanvasView( Tile tile ) {
-    tile.setTransitionsEnabled( mTransitionsEnabled );
-    tile.setTransitionDuration( mTransitionDuration );
-    tile.stampTime();
-    mTilesAlreadyRendered.add( tile );
-    mCurrentTileCanvasView.addTile( tile );
+  void addTileToCurrentTileCanvasView( final Tile tile ) {
+    mTileRenderHandler.post(new Runnable() {
+      @Override
+      public void run() {
+        tile.setTransitionsEnabled( mTransitionsEnabled );
+        tile.setTransitionDuration( mTransitionDuration );
+        tile.stampTime();
+        mTilesAlreadyRendered.add( tile );
+        mCurrentTileCanvasView.addTile( tile );
+      }
+    });
+
   }
 
   boolean getRenderIsCancelled() {
@@ -302,7 +315,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     private final WeakReference<TileCanvasViewGroup> mTileManagerWeakReference;
 
     public TileRenderHandler( TileCanvasViewGroup tileCanvasViewGroup ) {
-      super();
+      super(Looper.getMainLooper());
       mTileManagerWeakReference = new WeakReference<TileCanvasViewGroup>( tileCanvasViewGroup );
     }
 
@@ -324,6 +337,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     void onRenderComplete();
   }
 
+  @Deprecated
   static class TileRenderTask extends AsyncTask<Void, Tile, Void> {
 
     private final WeakReference<TileCanvasViewGroup> mTileManagerWeakReference;
