@@ -22,6 +22,7 @@ public class InternetTileViewActivity extends TileViewActivity {
         // by disabling transitions, we won't see a flicker of background color when moving between tile sets
         tileView.setTransitionsEnabled( false );
 
+        /*//Tile 01
         // size of original image at 100% mScale
         tileView.setSize( 3840, 2160);
 
@@ -29,7 +30,16 @@ public class InternetTileViewActivity extends TileViewActivity {
         tileView.addDetailLevel( 1.000f, "https://s3.amazonaws.com/tileview/tile01/100/tile_%d_%d.png");
         tileView.addDetailLevel( 0.750f, "https://s3.amazonaws.com/tileview/tile01/75/tile_%d_%d.png");
         tileView.addDetailLevel( 0.500f, "https://s3.amazonaws.com/tileview/tile01/50/tile_%d_%d.png");
-        tileView.addDetailLevel( 0.250f, "https://s3.amazonaws.com/tileview/tile01/25/tile_%d_%d.png");
+        tileView.addDetailLevel( 0.250f, "https://s3.amazonaws.com/tileview/tile01/25/tile_%d_%d.png");*/
+
+        // size of original image at 100% mScale
+        tileView.setSize( 8192, 4608);
+
+        // detail levels
+        tileView.addDetailLevel( 1.000f, "https://s3.amazonaws.com/tileview/tile02/100/tile_%d_%d.jpg");
+        tileView.addDetailLevel( 0.750f, "https://s3.amazonaws.com/tileview/tile02/75/tile_%d_%d.jpg");
+        tileView.addDetailLevel( 0.500f, "https://s3.amazonaws.com/tileview/tile02/50/tile_%d_%d.jpg");
+        tileView.addDetailLevel( 0.250f, "https://s3.amazonaws.com/tileview/tile02/25/tile_%d_%d.jpg");
 
         // set mScale to 0, but keep scaleToFit true, so it'll be as small as possible but still match the container
         tileView.setScale( 0 );
