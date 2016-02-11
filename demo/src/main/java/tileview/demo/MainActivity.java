@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
 		implementations.put( R.id.show_plans, BuildingPlansTileViewActivity.class );
 		implementations.put( R.id.show_fiction, FictionalMapTileViewActivity.class );
 		implementations.put( R.id.show_map, RealMapTileViewActivity.class );
+		implementations.put( R.id.show_internet, InternetTileViewActivity.class );
 
 		for (Map.Entry<Integer, Class<?>> entry : implementations.entrySet()) {
 			TextView label = (TextView) findViewById( entry.getKey() );
