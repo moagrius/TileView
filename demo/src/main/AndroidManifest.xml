@@ -20,7 +20,7 @@
         <activity android:name=".FictionalMapTileViewActivity" />
         <activity android:name=".LargeImageTileViewActivity" />
         <activity android:name=".RealMapTileViewActivity" />
-        <activity android:name=".InternetTileViewActivity" />
+        <activity android:name=".RealMapInternetTileViewActivity" />
     </application>
 
 </manifest>

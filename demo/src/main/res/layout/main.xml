@@ -76,7 +76,7 @@
             android:layout_height="wrap_content"
             android:textSize="20sp"
             android:gravity="center"
-            android:text="Download Assets" />
+            android:text="Real Map Http" />
         
     </LinearLayout>
     

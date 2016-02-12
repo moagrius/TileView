@@ -1,4 +1,4 @@
-package tileview.demo;
+package tileview.demo.provider;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -15,9 +15,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
 
-/**
- * Created by bruno on 11/02/16.
- */
 public class BitmapHttpProvider implements BitmapProvider {
     private static final BitmapFactory.Options OPTIONS = new BitmapFactory.Options();
     public static final String TAG = BitmapHttpProvider.class.getSimpleName();
@@ -27,12 +24,12 @@ public class BitmapHttpProvider implements BitmapProvider {
     }
 
     @Override
-    public Bitmap getBitmap(Tile tile, Context context) {
+    public Bitmap getBitmap( Tile tile, Context context ) {
         Object data = tile.getData();
-        if(data instanceof String){
+        if( data instanceof String ){
             String fileName = String.format(Locale.getDefault(), (String)data, tile.getColumn(), tile.getRow());
             try {
-                URL url = new URL(fileName);
+                URL url = new URL( fileName );
                 try {
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                     InputStream input = connection.getInputStream();
@@ -46,12 +43,10 @@ public class BitmapHttpProvider implements BitmapProvider {
                         }
                     }
                 } catch ( IOException e ) {
-                    Log.e(TAG, "IOException", e);
-                    // io error/
+                    Log.e( TAG, "IOException", e );
                 }
             } catch ( MalformedURLException e1 ) {
-                Log.e(TAG, "MalformedURLException", e1);
-                // bad url
+                Log.e( TAG, "MalformedURLException", e1 );
             }
         }
         return null;
