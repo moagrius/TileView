@@ -16,39 +16,39 @@ import java.net.URL;
 import java.util.Locale;
 
 public class BitmapHttpProvider implements BitmapProvider {
-    private static final BitmapFactory.Options OPTIONS = new BitmapFactory.Options();
-    public static final String TAG = BitmapHttpProvider.class.getSimpleName();
+  private static final BitmapFactory.Options OPTIONS = new BitmapFactory.Options();
+  public static final String TAG = BitmapHttpProvider.class.getSimpleName();
 
-    static {
-        OPTIONS.inPreferredConfig = Bitmap.Config.RGB_565;
-    }
+  static {
+    OPTIONS.inPreferredConfig = Bitmap.Config.RGB_565;
+  }
 
-    @Override
-    public Bitmap getBitmap( Tile tile, Context context ) {
-        Object data = tile.getData();
-        if( data instanceof String ){
-            String fileName = String.format(Locale.getDefault(), (String)data, tile.getColumn(), tile.getRow());
+  @Override
+  public Bitmap getBitmap( Tile tile, Context context ) {
+    Object data = tile.getData();
+    if( data instanceof String ){
+      String fileName = String.format( Locale.getDefault(), (String)data, tile.getColumn(), tile.getRow() );
+      try {
+        URL url = new URL( fileName );
+        try {
+          HttpURLConnection connection = ( HttpURLConnection ) url.openConnection();
+          InputStream input = connection.getInputStream();
+          if ( input != null ) {
             try {
-                URL url = new URL( fileName );
-                try {
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    InputStream input = connection.getInputStream();
-                    if ( input != null ) {
-                        try {
-                            return BitmapFactory.decodeStream( input, null, OPTIONS );
-                        } catch ( OutOfMemoryError oom ) {
-                            // oom - you can try sleeping (this method won't be called in the UI thread) or try again (or give up)
-                        } catch ( Exception e ) {
-                            // unknown error decoding bitmap
-                        }
-                    }
-                } catch ( IOException e ) {
-                    Log.e( TAG, "IOException", e );
-                }
-            } catch ( MalformedURLException e1 ) {
-                Log.e( TAG, "MalformedURLException", e1 );
+              return BitmapFactory.decodeStream( input, null, OPTIONS );
+            } catch ( OutOfMemoryError oom ) {
+              // oom - you can try sleeping (this method won't be called in the UI thread) or try again (or give up)
+            } catch ( Exception e ) {
+              // unknown error decoding bitmap
             }
+          }
+        } catch ( IOException e ) {
+          Log.e( TAG, "IOException " + fileName, e );
         }
-        return null;
+      } catch ( MalformedURLException e1 ) {
+        Log.e( TAG, "MalformedURLException " + fileName, e1 );
+      }
     }
+    return null;
+  }
 }
