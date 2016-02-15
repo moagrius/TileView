@@ -1,7 +1,5 @@
 package com.qozix.tileview.tiles;
 
-import android.util.Log;
-
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
@@ -18,9 +16,10 @@ public class TileRenderPoolExecutor {
   private static final int CORE_POOL_SIZE = Runtime.getRuntime().availableProcessors();
   private static final int MAXIMUM_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
-  private final ThreadPoolExecutor mExecutor;
+  private final CustomThreadPoolExecutor mExecutor;
   private final BlockingQueue<Runnable> mQueue;
   private final BlockingQueue<Future> mFutureList;
+  private WeakReference<TileCanvasViewGroup> mViewGroup;
 
   private static TileRenderPoolExecutor sInstance = null;
 
@@ -31,7 +30,7 @@ public class TileRenderPoolExecutor {
 
   public TileRenderPoolExecutor() {
     mQueue = new LinkedBlockingDeque<>();
-    mExecutor = new ThreadPoolExecutor( CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mQueue );
+    mExecutor = new CustomThreadPoolExecutor( CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mQueue );
     mFutureList = new LinkedBlockingDeque<>();
   }
 
@@ -51,19 +50,13 @@ public class TileRenderPoolExecutor {
     }
   }
 
-  public void clear(){
-    synchronized ( this ) {
-      mQueue.clear();
-      mFutureList.clear();
-    }
-  }
-
-  public void queue(TileCanvasViewGroup tileCanvasViewGroup, LinkedList<Tile> tiles) {
+  public void queue(TileCanvasViewGroup viewGroup, LinkedList<Tile> tiles) {
     if( tiles != null && tiles.size() > 0) {
-      tileCanvasViewGroup.onRenderTaskPreExecute();
+      mViewGroup = new WeakReference<>( viewGroup );
+      viewGroup.onRenderTaskPreExecute();
       int size = tiles.size();
-      for( int i=0 ; i<size ; i++ ) {
-        mFutureList.add(mExecutor.submit( new TileRenderRunnable(tileCanvasViewGroup, tiles.get(i), i == size - 1 ) ) );
+      for( int i = 0 ; i < size ; i++ ) {
+        mFutureList.add(mExecutor.submit( new TileRenderRunnable( viewGroup, tiles.get( i ) ) ) );
       }
     }
   }
@@ -71,12 +64,10 @@ public class TileRenderPoolExecutor {
   static class TileRenderRunnable implements Runnable {
     private final WeakReference<TileCanvasViewGroup> mTileCanvasViewGroup;
     private final WeakReference<Tile> mTile;
-    private final boolean mIsLast;
 
-    public TileRenderRunnable( TileCanvasViewGroup tileCanvasViewGroup, Tile tile, boolean last ) {
+    public TileRenderRunnable( TileCanvasViewGroup tileCanvasViewGroup, Tile tile) {
       this.mTileCanvasViewGroup = new WeakReference<>(tileCanvasViewGroup);
       this.mTile = new WeakReference<>( tile );
-      this.mIsLast = last;
     }
 
     @Override
@@ -101,16 +92,23 @@ public class TileRenderPoolExecutor {
           }
 
           tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
-
-          if( mIsLast ){
-            if( thread.isInterrupted() ){
-              tileCanvasViewGroup.onRenderTaskCancelled();
-              return;
-            }
-
-            tileCanvasViewGroup.onRenderTaskPostExecute();
-          }
         }
+      }
+    }
+  }
+
+  private class CustomThreadPoolExecutor extends ThreadPoolExecutor{
+    public CustomThreadPoolExecutor( int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue ) {
+      super( corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue );
+    }
+
+    @Override
+    protected void afterExecute( Runnable r, Throwable t ) {
+      super.afterExecute( r, t );
+//      getActiveCount() == 1 to make sure it is going to execute only for the last thread to run
+      if( mQueue != null && mQueue.size() == 0 && mViewGroup != null && mViewGroup.get() != null && getActiveCount() == 1) {
+        mViewGroup.get().onRenderTaskPostExecute();
+        mFutureList.clear();
       }
     }
   }
