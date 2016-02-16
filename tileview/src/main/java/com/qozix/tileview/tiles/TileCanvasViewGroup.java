@@ -278,8 +278,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
         mTilesAlreadyRendered.add( tile );
         mCurrentTileCanvasView.addTile( tile );
       }
-    });
-
+    } );
   }
 
   boolean getRenderIsCancelled() {

@@ -7,11 +7,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import android.os.Process;
 
 public class TileRenderPoolExecutor {
   // Sets the amount of time an idle thread will wait for a task before terminating
-  private static final int KEEP_ALIVE_TIME = 5;
-  private static final TimeUnit KEEP_ALIVE_TIME_UNIT;
+  private static final int KEEP_ALIVE_TIME = 1;
+  private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
 
   private static final int CORE_POOL_SIZE = Runtime.getRuntime().availableProcessors();
   private static final int MAXIMUM_POOL_SIZE = Runtime.getRuntime().availableProcessors();
@@ -23,18 +24,16 @@ public class TileRenderPoolExecutor {
 
   private static TileRenderPoolExecutor sInstance = null;
 
-  static {
-    KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
-    sInstance = new TileRenderPoolExecutor();
-  }
-
-  public TileRenderPoolExecutor() {
+  private TileRenderPoolExecutor() {
     mQueue = new LinkedBlockingDeque<>();
     mExecutor = new CustomThreadPoolExecutor( CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mQueue );
     mFutureList = new LinkedBlockingDeque<>();
   }
 
   public static TileRenderPoolExecutor getsInstance() {
+    if(sInstance==null){
+      sInstance = new TileRenderPoolExecutor();
+    }
     return sInstance;
   }
 
@@ -66,13 +65,13 @@ public class TileRenderPoolExecutor {
     private final WeakReference<Tile> mTile;
 
     public TileRenderRunnable( TileCanvasViewGroup viewGroup, Tile tile) {
-      this.mTileCanvasViewGroup = new WeakReference<>( viewGroup );
-      this.mTile = new WeakReference<>( tile );
+      mTileCanvasViewGroup = new WeakReference<>( viewGroup );
+      mTile = new WeakReference<>( tile );
     }
 
     @Override
     public void run() {
-      android.os.Process.setThreadPriority( android.os.Process.THREAD_PRIORITY_BACKGROUND );
+      Process.setThreadPriority( Process.THREAD_PRIORITY_BACKGROUND );
       final Thread thread = Thread.currentThread();
 
       TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroup.get();
