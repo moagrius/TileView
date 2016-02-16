@@ -53,9 +53,8 @@ public class TileRenderPoolExecutor {
     if( tiles != null && tiles.size() > 0) {
       mViewGroup = new WeakReference<>( viewGroup );
       viewGroup.onRenderTaskPreExecute();
-      int size = tiles.size();
-      for( int i = 0 ; i < size ; i++ ) {
-        mFutureList.add( mExecutor.submit( new TileRenderRunnable( viewGroup, tiles.get( i ) ) ) );
+      for ( Tile tile : tiles ){
+        mFutureList.add( mExecutor.submit( new TileRenderRunnable( viewGroup, tile ) ) );
       }
     }
   }
