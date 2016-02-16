@@ -22,19 +22,10 @@ public class TileRenderPoolExecutor {
   private final BlockingQueue<Future> mFutureList;
   private WeakReference<TileCanvasViewGroup> mViewGroup;
 
-  private static TileRenderPoolExecutor sInstance = null;
-
-  private TileRenderPoolExecutor() {
+  public TileRenderPoolExecutor() {
     mQueue = new LinkedBlockingDeque<>();
     mExecutor = new CustomThreadPoolExecutor( CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mQueue );
     mFutureList = new LinkedBlockingDeque<>();
-  }
-
-  public static TileRenderPoolExecutor getsInstance() {
-    if(sInstance==null){
-      sInstance = new TileRenderPoolExecutor();
-    }
-    return sInstance;
   }
 
   public void cancel() {

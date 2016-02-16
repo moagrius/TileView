@@ -52,7 +52,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     super(context);
     setWillNotDraw( false );
     mTileRenderHandler = new TileRenderHandler( this );
-    mPoolExecutor = TileRenderPoolExecutor.getsInstance();
+    mPoolExecutor = new TileRenderPoolExecutor();
   }
 
   public boolean getTransitionsEnabled() {
