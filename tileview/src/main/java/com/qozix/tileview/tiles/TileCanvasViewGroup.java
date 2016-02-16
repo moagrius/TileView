@@ -118,7 +118,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
       return;
     }
     if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {
-      mTileRenderHandler.sendEmptyMessageDelayed(RENDER_FLAG, mRenderBuffer);
+      mTileRenderHandler.sendEmptyMessageDelayed( RENDER_FLAG, mRenderBuffer );
     }
   }
 
@@ -128,7 +128,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
    */
   public void cancelRender() {
     mRenderIsCancelled = true;
-    if(mPoolExecutor!=null){
+    if( mPoolExecutor != null ){
       mPoolExecutor.cancel();
     }
   }
@@ -243,7 +243,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   void onRenderTaskPostExecute() {
     mIsRendering = false;
-    mTileRenderHandler.post(new Runnable() {
+    mTileRenderHandler.post( new Runnable() {
       @Override
       public void run() {
         if ( !mTransitionsEnabled ) {
@@ -255,7 +255,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
         invalidate();
         requestRender();
       }
-    });
+    } );
   }
 
   LinkedList<Tile> getRenderList() {
@@ -269,7 +269,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   void addTileToCurrentTileCanvasView( final Tile tile ) {
-    mTileRenderHandler.post(new Runnable() {
+    mTileRenderHandler.post( new Runnable() {
       @Override
       public void run() {
         tile.setTransitionsEnabled( mTransitionsEnabled );
@@ -314,8 +314,8 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     private final WeakReference<TileCanvasViewGroup> mTileManagerWeakReference;
 
     public TileRenderHandler( TileCanvasViewGroup tileCanvasViewGroup ) {
-      super(Looper.getMainLooper());
-      mTileManagerWeakReference = new WeakReference<TileCanvasViewGroup>( tileCanvasViewGroup );
+      super( Looper.getMainLooper() );
+      mTileManagerWeakReference = new WeakReference<>( tileCanvasViewGroup );
     }
 
     @Override

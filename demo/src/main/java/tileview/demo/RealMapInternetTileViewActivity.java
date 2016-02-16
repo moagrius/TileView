@@ -17,15 +17,15 @@ public class RealMapInternetTileViewActivity extends TileViewActivity {
     tileView.setBitmapProvider( new BitmapHttpProvider() );
 
     // by disabling transitions, we won't see a flicker of background color when moving between tile sets
-    tileView.setTransitionsEnabled(false);
+    tileView.setTransitionsEnabled( false );
 
     // size and geolocation
-    tileView.setSize(8967, 6726);
+    tileView.setSize( 8967, 6726 );
 
     // we won't use a downsample here, so color it similarly to tiles
     tileView.setBackgroundColor( 0xFFe7e7e7 );
 
-    tileView.addDetailLevel(0.0125f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-62500-%d_%d.jpg");
+    tileView.addDetailLevel( 0.0125f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-62500-%d_%d.jpg" );
     tileView.addDetailLevel( 0.2500f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-125000-%d_%d.jpg" );
     tileView.addDetailLevel( 0.5000f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-250000-%d_%d.jpg" );
     tileView.addDetailLevel( 1.0000f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-500000-%d_%d.jpg" );

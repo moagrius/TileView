@@ -27,7 +27,7 @@ public class BitmapHttpProvider implements BitmapProvider {
   public Bitmap getBitmap( Tile tile, Context context ) {
     Object data = tile.getData();
     if( data instanceof String ){
-      String fileName = String.format( Locale.getDefault(), (String)data, tile.getColumn(), tile.getRow() );
+      String fileName = String.format( Locale.getDefault(), ( String ) data, tile.getColumn(), tile.getRow() );
       try {
         URL url = new URL( fileName );
         try {
@@ -38,8 +38,6 @@ public class BitmapHttpProvider implements BitmapProvider {
               return BitmapFactory.decodeStream( input, null, OPTIONS );
             } catch ( OutOfMemoryError oom ) {
               // oom - you can try sleeping (this method won't be called in the UI thread) or try again (or give up)
-            } catch ( Exception e ) {
-              // unknown error decoding bitmap
             }
           }
         } catch ( IOException e ) {

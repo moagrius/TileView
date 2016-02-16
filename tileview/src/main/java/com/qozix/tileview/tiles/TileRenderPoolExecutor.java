@@ -42,7 +42,7 @@ public class TileRenderPoolExecutor {
     synchronized ( this ) {
       for ( Future f : mFutureList ) {
         if( !f.isDone() ){
-          f.cancel(true);
+          f.cancel( true );
         }
       }
       mQueue.clear();
@@ -50,13 +50,13 @@ public class TileRenderPoolExecutor {
     }
   }
 
-  public void queue(TileCanvasViewGroup viewGroup, LinkedList<Tile> tiles) {
+  public void queue( TileCanvasViewGroup viewGroup, LinkedList<Tile> tiles ) {
     if( tiles != null && tiles.size() > 0) {
       mViewGroup = new WeakReference<>( viewGroup );
       viewGroup.onRenderTaskPreExecute();
       int size = tiles.size();
       for( int i = 0 ; i < size ; i++ ) {
-        mFutureList.add(mExecutor.submit( new TileRenderRunnable( viewGroup, tiles.get( i ) ) ) );
+        mFutureList.add( mExecutor.submit( new TileRenderRunnable( viewGroup, tiles.get( i ) ) ) );
       }
     }
   }
@@ -65,14 +65,14 @@ public class TileRenderPoolExecutor {
     private final WeakReference<TileCanvasViewGroup> mTileCanvasViewGroup;
     private final WeakReference<Tile> mTile;
 
-    public TileRenderRunnable( TileCanvasViewGroup tileCanvasViewGroup, Tile tile) {
-      this.mTileCanvasViewGroup = new WeakReference<>(tileCanvasViewGroup);
+    public TileRenderRunnable( TileCanvasViewGroup viewGroup, Tile tile) {
+      this.mTileCanvasViewGroup = new WeakReference<>( viewGroup );
       this.mTile = new WeakReference<>( tile );
     }
 
     @Override
     public void run() {
-      android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+      android.os.Process.setThreadPriority( android.os.Process.THREAD_PRIORITY_BACKGROUND );
       final Thread thread = Thread.currentThread();
 
       TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroup.get();
@@ -86,7 +86,7 @@ public class TileRenderPoolExecutor {
 
         if( !tileCanvasViewGroup.getRenderIsCancelled() && tile != null ){
           tileCanvasViewGroup.generateTileBitmap( tile );
-          if (thread.isInterrupted()){
+          if ( thread.isInterrupted() ){
             tileCanvasViewGroup.onRenderTaskCancelled();
             return;
           }
