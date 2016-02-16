@@ -62,6 +62,21 @@
     		android:textSize="20sp"
     		android:gravity="center"
     		android:text="Real Map" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#FFCCCCCC"
+            />
+
+        <TextView
+            android:padding="20dp"
+            android:id="@+id/show_internet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:text="Real Map Http" />
         
     </LinearLayout>
     
