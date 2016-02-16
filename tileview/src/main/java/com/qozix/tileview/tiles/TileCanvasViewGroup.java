@@ -1,7 +1,6 @@
 package com.qozix.tileview.tiles;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -243,19 +242,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   void onRenderTaskPostExecute() {
     mIsRendering = false;
-    mTileRenderHandler.post( new Runnable() {
-      @Override
-      public void run() {
-        if ( !mTransitionsEnabled ) {
-          cleanup();
-        }
-        if( mTileRenderListener != null ) {
-          mTileRenderListener.onRenderComplete();
-        }
-        invalidate();
-        requestRender();
-      }
-    } );
+    mTileRenderHandler.post( mRenderPostExecuteRunnable );
   }
 
   LinkedList<Tile> getRenderList() {
@@ -269,16 +256,15 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   void addTileToCurrentTileCanvasView( final Tile tile ) {
-    mTileRenderHandler.post( new Runnable() {
-      @Override
-      public void run() {
-        tile.setTransitionsEnabled( mTransitionsEnabled );
-        tile.setTransitionDuration( mTransitionDuration );
-        tile.stampTime();
-        mTilesAlreadyRendered.add( tile );
-        mCurrentTileCanvasView.addTile( tile );
-      }
-    } );
+    mTileRenderHandler.post( new PrepareTileForRenderRunnable( tile ) );
+  }
+
+  private void prepareTileForRender( Tile tile ){
+    tile.setTransitionsEnabled( mTransitionsEnabled );
+    tile.setTransitionDuration( mTransitionDuration );
+    tile.stampTime();
+    mTilesAlreadyRendered.add( tile );
+    mCurrentTileCanvasView.addTile( tile );
   }
 
   boolean getRenderIsCancelled() {
@@ -334,4 +320,34 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     void onRenderCancelled();
     void onRenderComplete();
   }
+
+  private class PrepareTileForRenderRunnable implements Runnable{
+    private WeakReference<Tile> mTile;
+
+    public PrepareTileForRenderRunnable( Tile tile ) {
+      mTile = new WeakReference<>( tile );
+    }
+
+    @Override
+    public void run() {
+      if ( mTile != null && mTile.get() != null) {
+        prepareTileForRender( mTile.get() );
+      }
+    }
+  }
+
+  // This runnable is required to run on UI thread
+  private Runnable mRenderPostExecuteRunnable =  new Runnable() {
+    @Override
+    public void run() {
+      if ( !mTransitionsEnabled ) {
+        cleanup();
+      }
+      if( mTileRenderListener != null ) {
+        mTileRenderListener.onRenderComplete();
+      }
+      invalidate();
+      requestRender();
+    }
+  };
 }
