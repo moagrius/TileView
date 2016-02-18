@@ -31,7 +31,7 @@ public class TileRenderPoolExecutor {
 
   public void cancel() {
     synchronized ( this ) {
-      if( ( mViewGroup != null && mViewGroup.get() != null ) && ( mQueue.size()>0 || mExecutor.getActiveCount() > 0 ) ){
+      if( isViewGroupValid() && ( mQueue.size()>0 || mExecutor.getActiveCount() > 0 ) ){
         mViewGroup.get().onRenderTaskCancelled();
       }
 
@@ -61,6 +61,10 @@ public class TileRenderPoolExecutor {
         mFutureList.add( mExecutor.submit( new TileRenderRunnable( viewGroup, tile ) ) );
       }
     }
+  }
+
+  private boolean isViewGroupValid(){
+    return mViewGroup != null && mViewGroup.get() != null;
   }
 
   static class TileRenderRunnable implements Runnable {
@@ -107,7 +111,7 @@ public class TileRenderPoolExecutor {
     protected void afterExecute( Runnable r, Throwable t ) {
       super.afterExecute( r, t );
       //getActiveCount() == 1 to make sure it is going to execute only for the last thread to run
-      if( mQueue != null && mQueue.size() == 0 && mViewGroup != null && mViewGroup.get() != null && getActiveCount() == 1 ) {
+      if( mQueue != null && mQueue.size() == 0 && isViewGroupValid() && getActiveCount() == 1 ) {
         mViewGroup.get().onRenderTaskPostExecute();
         mFutureList.clear();
       }
