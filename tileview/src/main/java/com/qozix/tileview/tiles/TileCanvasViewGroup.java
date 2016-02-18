@@ -169,6 +169,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
       tile.destroy( mShouldRecycleBitmaps );
     }
     mTilesAlreadyRendered.clear();
+    mPoolExecutor.cancel();
   }
 
   private float getCurrentDetailLevelScale() {
@@ -284,6 +285,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   public void destroy(){
+    mPoolExecutor.shutDown();
     clear();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       tileGroup.clearTiles( mShouldRecycleBitmaps );

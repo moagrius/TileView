@@ -1,5 +1,7 @@
 package com.qozix.tileview.tiles;
 
+import android.os.Process;
+
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
@@ -7,7 +9,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import android.os.Process;
 
 public class TileRenderPoolExecutor {
   // Sets the amount of time an idle thread will wait for a task before terminating
@@ -30,6 +31,10 @@ public class TileRenderPoolExecutor {
 
   public void cancel() {
     synchronized ( this ) {
+      if( isViewGroupValid() && ( mQueue.size()>0 || mExecutor.getActiveCount() > 0 ) ){
+        mViewGroup.get().onRenderTaskCancelled();
+      }
+
       for ( Future f : mFutureList ) {
         if( !f.isDone() ){
           f.cancel( true );
@@ -40,47 +45,58 @@ public class TileRenderPoolExecutor {
     }
   }
 
+  public void shutDown(){
+    cancel();
+    mExecutor.shutdownNow();
+  }
+
   public void queue( TileCanvasViewGroup viewGroup, LinkedList<Tile> tiles ) {
-    if( tiles != null && tiles.size() > 0) {
+    if( tiles != null && tiles.size() > 0 ) {
       mViewGroup = new WeakReference<>( viewGroup );
       viewGroup.onRenderTaskPreExecute();
       for ( Tile tile : tiles ){
+        if( mExecutor.isShutdown() || mExecutor.isTerminating() || mExecutor.isTerminated() ){
+          return;
+        }
         mFutureList.add( mExecutor.submit( new TileRenderRunnable( viewGroup, tile ) ) );
       }
     }
+  }
+
+  private boolean isViewGroupValid(){
+    return mViewGroup != null && mViewGroup.get() != null;
   }
 
   static class TileRenderRunnable implements Runnable {
     private final WeakReference<TileCanvasViewGroup> mTileCanvasViewGroup;
     private final WeakReference<Tile> mTile;
 
-    public TileRenderRunnable( TileCanvasViewGroup viewGroup, Tile tile) {
+    public TileRenderRunnable( TileCanvasViewGroup viewGroup, Tile tile ) {
       mTileCanvasViewGroup = new WeakReference<>( viewGroup );
       mTile = new WeakReference<>( tile );
     }
 
     @Override
     public void run() {
-      Process.setThreadPriority( Process.THREAD_PRIORITY_BACKGROUND );
+      Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND );
       final Thread thread = Thread.currentThread();
 
-      TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroup.get();
+      TileCanvasViewGroup viewGroup = mTileCanvasViewGroup.get();
       Tile tile = mTile.get();
 
-      if( tileCanvasViewGroup != null ){
+      if( viewGroup != null ){
         if( thread.isInterrupted() ){
-          tileCanvasViewGroup.onRenderTaskCancelled();
           return;
         }
 
-        if( !tileCanvasViewGroup.getRenderIsCancelled() && tile != null ){
-          tileCanvasViewGroup.generateTileBitmap( tile );
-          if ( thread.isInterrupted() ){
-            tileCanvasViewGroup.onRenderTaskCancelled();
+        if( !viewGroup.getRenderIsCancelled() && tile != null ){
+          viewGroup.generateTileBitmap(tile);
+
+          if( tile.getBitmap() == null || thread.isInterrupted() || viewGroup.getRenderIsCancelled() ){
             return;
           }
 
-          tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
+          viewGroup.addTileToCurrentTileCanvasView( tile );
         }
       }
     }
@@ -94,8 +110,8 @@ public class TileRenderPoolExecutor {
     @Override
     protected void afterExecute( Runnable r, Throwable t ) {
       super.afterExecute( r, t );
-//      getActiveCount() == 1 to make sure it is going to execute only for the last thread to run
-      if( mQueue != null && mQueue.size() == 0 && mViewGroup != null && mViewGroup.get() != null && getActiveCount() == 1) {
+      //getActiveCount() == 1 to make sure it is going to execute only for the last thread to run
+      if( mQueue != null && mQueue.size() == 0 && isViewGroupValid() && getActiveCount() == 1 ) {
         mViewGroup.get().onRenderTaskPostExecute();
         mFutureList.clear();
       }
