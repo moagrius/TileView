@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="tileview.demo" >
-    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -20,7 +19,6 @@
         <activity android:name=".FictionalMapTileViewActivity" />
         <activity android:name=".LargeImageTileViewActivity" />
         <activity android:name=".RealMapTileViewActivity" />
-        <activity android:name=".RealMapInternetTileViewActivity" />
     </application>
 
 </manifest>
