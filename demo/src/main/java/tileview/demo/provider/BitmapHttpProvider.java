@@ -3,6 +3,7 @@ package tileview.demo.provider;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.tiles.Tile;
@@ -40,10 +41,10 @@ public class BitmapHttpProvider implements BitmapProvider {
             }
           }
         } catch ( IOException e ) {
-//          Log.e( TAG, "IOException " + fileName, e );
+          Log.e( TAG, "IOException " + fileName, e );
         }
       } catch ( MalformedURLException e1 ) {
-//        Log.e( TAG, "MalformedURLException " + fileName, e1 );
+        Log.e( TAG, "MalformedURLException " + fileName, e1 );
       }
     }
     return null;
