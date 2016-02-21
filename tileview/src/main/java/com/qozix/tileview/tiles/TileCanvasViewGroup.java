@@ -47,13 +47,13 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   private int mRenderBuffer = DEFAULT_RENDER_BUFFER;
 
-  private TileRenderPoolExecutor mPoolExecutor;
+  private TileRenderPoolManager mPoolExecutor;
 
   public TileCanvasViewGroup( Context context ) {
     super(context);
     setWillNotDraw( false );
     mTileRenderHandler = new TileRenderHandler( this );
-    mPoolExecutor = new TileRenderPoolExecutor();
+    mPoolExecutor = new TileRenderPoolManager();
   }
 
   public boolean getTransitionsEnabled() {
@@ -296,7 +296,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   public void destroy(){
-    mPoolExecutor.shutDown();
+    mPoolExecutor.shutdown();
     clear();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       tileGroup.clearTiles( mShouldRecycleBitmaps );
