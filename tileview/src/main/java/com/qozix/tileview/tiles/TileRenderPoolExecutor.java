@@ -1,12 +1,16 @@
 package com.qozix.tileview.tiles;
 
 import android.os.Process;
+import android.util.Log;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +26,8 @@ public class TileRenderPoolExecutor {
   private final BlockingQueue<Runnable> mQueue;
   private final BlockingQueue<Future> mFutureList;
   private WeakReference<TileCanvasViewGroup> mViewGroup;
+  
+  private HashMap<Future, Runnable> mFutureRunnableHashMap = new HashMap<>();
 
   public TileRenderPoolExecutor() {
     mQueue = new LinkedBlockingDeque<>();
@@ -37,7 +43,19 @@ public class TileRenderPoolExecutor {
 
       for ( Future f : mFutureList ) {
         if( !f.isDone() ){
-          f.cancel( true );
+          try {
+            if( f instanceof FutureTaskWithRunnableReference ) {
+              FutureTaskWithRunnableReference futureTaskWithRunnableReference = (FutureTaskWithRunnableReference) f;
+              Runnable runnable = futureTaskWithRunnableReference.getRunnable();
+              if( runnable instanceof TileRenderRunnable ) {
+                TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) runnable;
+                tileRenderRunnable.mCancelled = true;
+              }
+            }
+            f.cancel( true );  // TODO: this is the money
+          } catch( Exception e ) {
+            Log.d( "DEBUG", "Future.cancel" );
+          }
         }
       }
       mQueue.clear();
@@ -67,7 +85,12 @@ public class TileRenderPoolExecutor {
     return mViewGroup != null && mViewGroup.get() != null;
   }
 
+  // TODO: http://www.javaspecialists.eu/archive/Issue056.html
+
   static class TileRenderRunnable implements Runnable {
+
+    private boolean mCancelled = false;
+
     private final WeakReference<TileCanvasViewGroup> mTileCanvasViewGroup;
     private final WeakReference<Tile> mTile;
 
@@ -76,23 +99,42 @@ public class TileRenderPoolExecutor {
       mTile = new WeakReference<>( tile );
     }
 
+    public void cancel(){
+      mCancelled = true;
+    }
+
     @Override
     public void run() {
-      Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND );
+
+      if( mCancelled ) {
+        return;
+      }
+
+      Process.setThreadPriority(Process.THREAD_PRIORITY_DISPLAY );
+
       final Thread thread = Thread.currentThread();
 
       TileCanvasViewGroup viewGroup = mTileCanvasViewGroup.get();
       Tile tile = mTile.get();
 
       if( viewGroup != null ){
+
         if( thread.isInterrupted() ){
           return;
         }
 
         if( !viewGroup.getRenderIsCancelled() && tile != null ){
-          viewGroup.generateTileBitmap(tile);
 
-          if( tile.getBitmap() == null || thread.isInterrupted() || viewGroup.getRenderIsCancelled() ){
+          try {
+            viewGroup.generateTileBitmap( tile );
+
+          } catch( Exception e ) {
+            // catch anything that happened during decode, which is a possibility because there may be a variety of long running operations occuring in the decode method, e.g., http requests
+            Log.d( "DEBUG", "TileRenderRunnable.run" );
+            return;
+          }
+          if( mCancelled || tile.getBitmap() == null || thread.isInterrupted() || viewGroup.getRenderIsCancelled() ){
+            tile.destroy( true );
             return;
           }
 
@@ -102,9 +144,25 @@ public class TileRenderPoolExecutor {
     }
   }
 
+  private static class FutureTaskWithRunnableReference<T> extends FutureTask<T> {
+    public WeakReference<Runnable> mRunnableWeakReference;
+    public FutureTaskWithRunnableReference(Runnable runnable, T value ) {
+      super( runnable, value );
+      mRunnableWeakReference = new WeakReference<>( runnable );
+    }
+    public Runnable getRunnable(){
+      return mRunnableWeakReference.get();
+    }
+  }
+
   private class CustomThreadPoolExecutor extends ThreadPoolExecutor{
     public CustomThreadPoolExecutor( int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue ) {
       super( corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue );
+    }
+
+    @Override
+    protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
+      return new FutureTaskWithRunnableReference<T>(runnable, value);
     }
 
     @Override

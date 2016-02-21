@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.graphics.BitmapProvider;
@@ -253,14 +254,24 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   void generateTileBitmap( Tile tile ) {
-    tile.generateBitmap( getContext(), getBitmapProvider() );
+    try {
+      tile.generateBitmap( getContext(), getBitmapProvider() );
+    } catch( Exception e ) {
+      Log.d( "DEBUG", "TileCanvasViewGroup.generateTileBitmap" );
+    }
   }
 
   void addTileToCurrentTileCanvasView( final Tile tile ) {
+    if( !mTilesVisible.contains( tile ) ) {
+      return;
+    }
     mTileRenderHandler.post( new PrepareTileForRenderRunnable( tile ) );
   }
 
   private void prepareTileForRender( Tile tile ){
+    if( !mTilesVisible.contains( tile ) ){
+      return;
+    }
     tile.setTransitionsEnabled( mTransitionsEnabled );
     tile.setTransitionDuration( mTransitionDuration );
     tile.stampTime();
