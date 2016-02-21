@@ -21,7 +21,6 @@ public class TileRenderPoolManager {
 
   private final TileRenderThreadPoolExecutor mTileRenderThreadPoolExecutor;
   private final BlockingQueue<Runnable> mRunnableLinkedBlockingDeque = new LinkedBlockingDeque<>();
-  private final BlockingQueue<Future> mFutureLinkedBlockingDeque = new LinkedBlockingDeque<>();
   private final HashMap<Future, TileRenderRunnable> mFutureTileRenderRunnableHashMap = new HashMap<>();
   private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
 
@@ -43,7 +42,7 @@ public class TileRenderPoolManager {
           tileCanvasViewGroup.onRenderTaskCancelled();
         }
       }
-      for( Future future : mFutureLinkedBlockingDeque ) {
+      for( Future future : mFutureTileRenderRunnableHashMap.keySet() ) {
         if( !future.isDone() ) {
           if( mFutureTileRenderRunnableHashMap.containsKey( future ) ) {
             TileRenderRunnable tileRenderRunnable = mFutureTileRenderRunnableHashMap.get( future );
@@ -53,7 +52,6 @@ public class TileRenderPoolManager {
         }
       }
       mRunnableLinkedBlockingDeque.clear();
-      mFutureLinkedBlockingDeque.clear();
       mFutureTileRenderRunnableHashMap.clear();
     }
   }
@@ -63,18 +61,17 @@ public class TileRenderPoolManager {
     mTileRenderThreadPoolExecutor.shutdownNow();
   }
 
-  public void queue( TileCanvasViewGroup viewGroup, LinkedList<Tile> tiles ) {
-    if( tiles != null && tiles.size() > 0 ) {
-      mTileCanvasViewGroupWeakReference = new WeakReference<>( viewGroup );
-      viewGroup.onRenderTaskPreExecute();
-      for( Tile tile : tiles ) {
+  public void queue( TileCanvasViewGroup tileCanvasViewGroup, LinkedList<Tile> tileLinkedList ) {
+    if( tileLinkedList != null && tileLinkedList.size() > 0 ) {
+      mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
+      tileCanvasViewGroup.onRenderTaskPreExecute();
+      for( Tile tile : tileLinkedList ) {
         if( mTileRenderThreadPoolExecutor.isShutdownOrTerminating() ) {
           return;
         }
-        TileRenderRunnable tileRenderRunnable = new TileRenderRunnable( viewGroup, tile );
+        TileRenderRunnable tileRenderRunnable = new TileRenderRunnable( tileCanvasViewGroup, tile );
         Future future = mTileRenderThreadPoolExecutor.submit( tileRenderRunnable );
         mFutureTileRenderRunnableHashMap.put( future, tileRenderRunnable );
-        mFutureLinkedBlockingDeque.add( future );
       }
     }
   }
@@ -84,7 +81,7 @@ public class TileRenderPoolManager {
     private final WeakReference<TileCanvasViewGroup> mTileCanvasViewGroup;
     private final WeakReference<Tile> mTileWeakReference;
 
-    private boolean mCancelled = false;
+    private volatile boolean mCancelled = false;
 
     public TileRenderRunnable( TileCanvasViewGroup viewGroup, Tile tile ) {
       mTileCanvasViewGroup = new WeakReference<>( viewGroup );
@@ -143,7 +140,7 @@ public class TileRenderPoolManager {
     protected void afterExecute( Runnable runnable, Throwable throwable ) {
       super.afterExecute( runnable, throwable );
       if( mRunnableLinkedBlockingDeque.size() == 0 && getActiveCount() == 1 ) {
-        mFutureLinkedBlockingDeque.clear();
+        mFutureTileRenderRunnableHashMap.clear();
         TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroupWeakReference.get();
         if( tileCanvasViewGroup != null ) {
           tileCanvasViewGroup.onRenderTaskPostExecute();

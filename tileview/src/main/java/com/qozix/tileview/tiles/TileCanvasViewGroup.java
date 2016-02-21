@@ -245,6 +245,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   void onRenderTaskPostExecute() {
     mIsRendering = false;
     mTileRenderHandler.post( mRenderPostExecuteRunnable );
+    Log.d( "DEBUG", "onRenderTaskPostExecute" );
   }
 
   LinkedList<Tile> getRenderList() {
