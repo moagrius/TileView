@@ -13,7 +13,6 @@ public class TileViewActivity extends Activity {
 	public void onCreate( Bundle savedInstanceState ) {
 		super.onCreate( savedInstanceState );
 		tileView = new TileView( this );
-    tileView.setBackgroundColor( 0xffff9900 );
 		setContentView( tileView );
 	}
 	

@@ -25,7 +25,7 @@ public class RealMapInternetTileViewActivity extends TileViewActivity {
     tileView.setSize( 8967, 6726 );
 
     // we won't use a downsample here, so color it similarly to tiles
-    tileView.setBackgroundColor( 0xFFFF9900 );
+    tileView.setBackgroundColor( 0xFFe7e7e7 );
 
     tileView.addDetailLevel( 0.0125f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-62500-%d_%d.jpg" );
     tileView.addDetailLevel( 0.2500f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-125000-%d_%d.jpg" );

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.util.Log;
 import android.view.animation.AnimationUtils;
 
 import com.qozix.tileview.detail.DetailLevel;
@@ -134,11 +133,7 @@ public class Tile {
     if( mBitmap != null ) {
       return;
     }
-    try {
-      mBitmap = bitmapProvider.getBitmap( this, context );
-    } catch( Exception e ) {
-      Log.d( "DEBUG", "Tile.generateBitmap" );
-    }
+    mBitmap = bitmapProvider.getBitmap( this, context );
   }
 
   void setParentTileCanvasView( TileCanvasView tileCanvasView ) {

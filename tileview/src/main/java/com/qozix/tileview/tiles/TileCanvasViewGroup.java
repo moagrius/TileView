@@ -255,11 +255,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   void generateTileBitmap( Tile tile ) {
-    try {
-      tile.generateBitmap( getContext(), getBitmapProvider() );
-    } catch( Exception e ) {
-      Log.d( "DEBUG", "TileCanvasViewGroup.generateTileBitmap" );
-    }
+    tile.generateBitmap( getContext(), getBitmapProvider() );
   }
 
   void addTileToCurrentTileCanvasView( final Tile tile ) {
