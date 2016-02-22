@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.graphics.BitmapProvider;
@@ -245,7 +244,6 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   void onRenderTaskPostExecute() {
     mIsRendering = false;
     mTileRenderHandler.post( mRenderPostExecuteRunnable );
-    Log.d( "DEBUG", "onRenderTaskPostExecute" );
   }
 
   LinkedList<Tile> getRenderList() {
