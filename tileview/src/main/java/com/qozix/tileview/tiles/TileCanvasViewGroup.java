@@ -10,6 +10,7 @@ import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.graphics.BitmapProviderAssets;
 import com.qozix.tileview.widgets.ScalingLayout;
 
+import java.io.InterruptedIOException;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -46,13 +47,13 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   private int mRenderBuffer = DEFAULT_RENDER_BUFFER;
 
-  private TileRenderPoolManager mPoolExecutor;
+  private TileRenderPoolManager mTileRenderPoolManager;
 
   public TileCanvasViewGroup( Context context ) {
     super(context);
     setWillNotDraw( false );
     mTileRenderHandler = new TileRenderHandler( this );
-    mPoolExecutor = new TileRenderPoolManager();
+    mTileRenderPoolManager = new TileRenderPoolManager();
   }
 
   public boolean getTransitionsEnabled() {
@@ -127,8 +128,8 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
    */
   public void cancelRender() {
     mRenderIsCancelled = true;
-    if( mPoolExecutor != null ){
-      mPoolExecutor.cancel();
+    if( mTileRenderPoolManager != null ){
+      mTileRenderPoolManager.cancel();
     }
   }
 
@@ -169,7 +170,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
       tile.destroy( mShouldRecycleBitmaps );
     }
     mTilesAlreadyRendered.clear();
-    mPoolExecutor.cancel();
+    mTileRenderPoolManager.cancel();
   }
 
   private float getCurrentDetailLevelScale() {
@@ -205,9 +206,10 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     }
     mTilesVisible = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
 
-    if( mPoolExecutor != null ){
-      mPoolExecutor.cancel();
-      mPoolExecutor.queue( this, getRenderList() );
+    // TODO: we're cancelling and restarting the same tiles repeatedly.  we need to get intersection from renderlist
+    if( mTileRenderPoolManager != null ){
+      mTileRenderPoolManager.cancel();
+      mTileRenderPoolManager.queue( this, getRenderList() );
     }
   }
 
@@ -252,14 +254,11 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     return renderList;
   }
 
-  void generateTileBitmap( Tile tile ) {
+  void generateTileBitmap( Tile tile ) throws InterruptedIOException {
     tile.generateBitmap( getContext(), getBitmapProvider() );
   }
 
   void addTileToCurrentTileCanvasView( final Tile tile ) {
-    if( !mTilesVisible.contains( tile ) ) {
-      return;
-    }
     mTileRenderHandler.post( new PrepareTileForRenderRunnable( tile ) );
   }
 
@@ -291,7 +290,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   public void destroy(){
-    mPoolExecutor.shutdown();
+    mTileRenderPoolManager.shutdown();
     clear();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       tileGroup.clearTiles( mShouldRecycleBitmaps );

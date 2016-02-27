@@ -2,9 +2,11 @@ package com.qozix.tileview.tiles;
 
 import android.os.Process;
 
+import java.io.InterruptedIOException;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -42,13 +44,11 @@ public class TileRenderPoolManager {
           tileCanvasViewGroup.onRenderTaskCancelled();
         }
       }
-      for( Future future : mFutureTileRenderRunnableHashMap.keySet() ) {
+      for( Map.Entry<Future, TileRenderRunnable> entry : mFutureTileRenderRunnableHashMap.entrySet() ) {
+        Future future = entry.getKey();
         if( !future.isDone() ) {
-          if( mFutureTileRenderRunnableHashMap.containsKey( future ) ) {
-            TileRenderRunnable tileRenderRunnable = mFutureTileRenderRunnableHashMap.get( future );
-            tileRenderRunnable.cancel();
-          }
-          future.cancel( true );
+          TileRenderRunnable tileRenderRunnable = entry.getValue();
+          tileRenderRunnable.cancel();
         }
       }
       mRunnableLinkedBlockingDeque.clear();
@@ -115,6 +115,9 @@ public class TileRenderPoolManager {
       }
       try {
         tileCanvasViewGroup.generateTileBitmap( tile );
+      } catch( InterruptedIOException e ) {
+        Thread.currentThread().interrupt();
+        return;
       } catch( Exception e ) {
         return;
       }
