@@ -47,13 +47,13 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   private int mRenderBuffer = DEFAULT_RENDER_BUFFER;
 
-  private TileRenderPoolManager mTileRenderPoolManager;
+  private TileRenderPoolExecutor mTileRenderPoolExecutor;
 
   public TileCanvasViewGroup( Context context ) {
     super(context);
     setWillNotDraw( false );
     mTileRenderHandler = new TileRenderHandler( this );
-    mTileRenderPoolManager = new TileRenderPoolManager();
+    mTileRenderPoolExecutor = new TileRenderPoolExecutor();
   }
 
   public boolean getTransitionsEnabled() {
@@ -128,8 +128,8 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
    */
   public void cancelRender() {
     mRenderIsCancelled = true;
-    if( mTileRenderPoolManager != null ){
-      mTileRenderPoolManager.cancel();
+    if( mTileRenderPoolExecutor != null ){
+      mTileRenderPoolExecutor.cancel();
     }
   }
 
@@ -170,7 +170,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
       tile.destroy( mShouldRecycleBitmaps );
     }
     mTilesAlreadyRendered.clear();
-    mTileRenderPoolManager.cancel();
+    mTileRenderPoolExecutor.cancel();
   }
 
   private float getCurrentDetailLevelScale() {
@@ -207,8 +207,8 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     mTilesVisible = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
 
     // TODO: we're cancelling and restarting the same tiles repeatedly.  we need to get intersection from renderlist
-    if( mTileRenderPoolManager != null ){
-      mTileRenderPoolManager.queue( this, getRenderList() );
+    if( mTileRenderPoolExecutor != null ){
+      mTileRenderPoolExecutor.queue( this, getRenderList() );
     }
   }
 
@@ -289,7 +289,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   public void destroy(){
-    mTileRenderPoolManager.shutdown();
+    mTileRenderPoolExecutor.shutdownNow();
     clear();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       tileGroup.clearTiles( mShouldRecycleBitmaps );
