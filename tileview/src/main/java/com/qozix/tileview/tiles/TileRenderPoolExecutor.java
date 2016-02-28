@@ -48,7 +48,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
         Log.d( "DEBUG", "render cancelled event dispatched" );
       }
     }
-    //getQueue().clear();
+    getQueue().clear();
     mCancelledTileRenderTasks.addAll( mExecutingTileRenderTasks );
     mExecutingTileRenderTasks.clear();
     stopCancelledTasks();
@@ -79,7 +79,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       Log.d( "DEBUG", "TileRenderPoolExecutor.queue, before intersection: " + mExecutingTileRenderTasks.size() + ", " + mCancelledTileRenderTasks.size() );
       List<TileRenderTask> completeTasks = new LinkedList<>();
       for( TileRenderTask tileRenderTask : mExecutingTileRenderTasks ) {
-        if( tileRenderTask.runnable.isDone()){
+        if( tileRenderTask.runnable.isDone()){  // todo: check future too?
           completeTasks.add( tileRenderTask );
         } else {
           if( renderList.contains( tileRenderTask.tile ) ) {
@@ -105,7 +105,6 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
           task.runnable = new TileRenderRunnable();
           task.runnable.setTile( tile );
           task.runnable.setTileCanvasViewGroup( tileCanvasViewGroup );
-          task.runnable.setTileRenderPoolExecutor( this );
           task.future = submit( task.runnable );
           mExecutingTileRenderTasks.add( task );
         }
@@ -113,41 +112,29 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     }
   }
 
-  private TileRenderTask getTaskByTile( Tile tile ) {
-    if( tile != null ) {
-      for( TileRenderTask tileRenderTask : mExecutingTileRenderTasks ) {
-        if( tile.equals( tileRenderTask.tile ) ) {
-          return tileRenderTask;
-        }
-      }
-    }
-    return null;
-  }
-
-  public void removeTaskFromCurrentlyExecutingList( TileRenderTask tileRenderTask ) {
-    synchronized( this ) {
-      Log.d( "DEBUG", "should be removing task: " + mExecutingTileRenderTasks.size() );
-      mExecutingTileRenderTasks.remove( tileRenderTask );
-      Log.d( "DEBUG", "task should have been removed: " + mExecutingTileRenderTasks.size() );
-    }
-  }
-
   public boolean isShutdownOrTerminating() {
     return isShutdown() || isTerminating() || isTerminated();
   }
 
+
   @Override
   protected void afterExecute( Runnable runnable, Throwable throwable ) {
     synchronized( this ) {
-      Log.d( "DEBUG", "afterExecute" );
       super.afterExecute( runnable, throwable );
+      Log.d( "DEBUG", "runnable is TileRenderRunnable: " + (runnable instanceof Future ));
+      for( TileRenderTask task : mExecutingTileRenderTasks ) {
+        if( task.future == runnable ) {
+          Log.d( "DEBUG", "future returned by afterExecute is the same one watched in execution list" );
+          break;
+        }
+      }
       if( getQueue().size() == 0 && getActiveCount() == 1 ) {
+        Log.d( "DEBUG", "last task done" );
         mExecutingTileRenderTasks.clear();
         TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroupWeakReference.get();
         if( tileCanvasViewGroup != null ) {
           tileCanvasViewGroup.onRenderTaskPostExecute();
           Log.d( "DEBUG", "afterExecute should send onRenderTaskPostExecute" );
-          Log.d( "DEBUG", "executing tasks: " + mExecutingTileRenderTasks.size() );
         }
       }
     }
@@ -168,7 +155,6 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
   private static class TileRenderRunnable implements Runnable {
 
-    private WeakReference<TileRenderPoolExecutor> mTileRenderPoolExecutorWeakReference;
     private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
     private WeakReference<Tile> mTileWeakReference;
 
@@ -185,16 +171,6 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
     public void markComplete() {
       mComplete = true;
-      /*
-      TileRenderPoolExecutor tileRenderPoolExecutor = getTileRenderPoolExecutor();
-      if( tileRenderPoolExecutor != null ) {
-        Tile tile = getTile();
-        if( tile != null ) {
-          TileRenderTask tileRenderTask = tileRenderPoolExecutor.getTaskByTile( tile );
-          tileRenderPoolExecutor.removeTaskFromCurrentlyExecutingList( tileRenderTask );
-        }
-      }
-      */
     }
 
     public boolean isComplete(){
@@ -203,17 +179,6 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
     public boolean isDone(){
       return mCancelled || mComplete;
-    }
-
-    public void setTileRenderPoolExecutor( TileRenderPoolExecutor tileRenderPoolExecutor ) {
-      mTileRenderPoolExecutorWeakReference = new WeakReference<>( tileRenderPoolExecutor );
-    }
-
-    public TileRenderPoolExecutor getTileRenderPoolExecutor() {
-      if( mTileRenderPoolExecutorWeakReference != null ) {
-        return mTileRenderPoolExecutorWeakReference.get();
-      }
-      return null;
     }
 
     public void setTileCanvasViewGroup( TileCanvasViewGroup tileCanvasViewGroup ) {
