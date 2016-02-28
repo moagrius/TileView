@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.view.View;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,7 +12,7 @@ public class TileCanvasView extends View {
 
   private float mScale = 1;
 
-  private HashSet<Tile> mTiles = new HashSet<Tile>();
+  private Set<Tile> mTiles = (Set<Tile>) Collections.synchronizedSet(new HashSet<Tile>());
 
   private TileCanvasDrawListener mTileCanvasDrawListener;
 
@@ -55,8 +56,7 @@ public class TileCanvasView extends View {
   }
 
   public void clearTiles( boolean shouldRecycle ) {
-    HashSet<Tile> condemned = (HashSet<Tile>) mTiles.clone();
-    for( Tile tile : condemned ) {
+    for( Tile tile : mTiles ) {
       tile.destroy( shouldRecycle );
     }
     invalidate();

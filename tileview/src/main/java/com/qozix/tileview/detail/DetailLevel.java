@@ -5,7 +5,8 @@ import android.support.annotation.NonNull;
 
 import com.qozix.tileview.tiles.Tile;
 
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DetailLevel implements Comparable<DetailLevel> {
 
@@ -57,11 +58,11 @@ public class DetailLevel implements Comparable<DetailLevel> {
    *
    * @return List of Tile instances describing the currently visible viewport.
    */
-  public LinkedList<Tile> getVisibleTilesFromLastViewportComputation() {
+  public Set<Tile> getVisibleTilesFromLastViewportComputation() {
     if( mLastStateSnapshot == null ) {
       throw new StateNotComputedException();
     }
-    LinkedList<Tile> intersections = new LinkedList<Tile>();
+    Set<Tile> intersections = new HashSet<>();
     for( int rowCurrent = mLastStateSnapshot.rowStart; rowCurrent < mLastStateSnapshot.rowEnd; rowCurrent++ ) {
       for( int columnCurrent = mLastStateSnapshot.columnStart; columnCurrent < mLastStateSnapshot.columnEnd; columnCurrent++ ) {
         Tile tile = new Tile( columnCurrent, rowCurrent, mTileWidth, mTileHeight, mData, this );

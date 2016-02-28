@@ -9,6 +9,7 @@ import java.io.InterruptedIOException;
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -34,7 +35,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     );
   }
 
-  public void queue( TileCanvasViewGroup tileCanvasViewGroup, List<Tile> renderList ) {
+  public void queue( TileCanvasViewGroup tileCanvasViewGroup, Set<Tile> renderList ) {
     synchronized( this ) {
       List<String> positions = new LinkedList<>();
       for( Tile tile : renderList ) {

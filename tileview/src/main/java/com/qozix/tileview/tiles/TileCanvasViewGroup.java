@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.graphics.BitmapProvider;
@@ -13,7 +14,9 @@ import com.qozix.tileview.widgets.ScalingLayout;
 import java.io.InterruptedIOException;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
 public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView.TileCanvasDrawListener {
 
@@ -23,7 +26,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public static final int FAST_RENDER_BUFFER = 10;
   private static final int DEFAULT_TRANSITION_DURATION = 200;
 
-  private LinkedList<Tile> mTilesVisible = new LinkedList<>();
+  private TileManager mTileManager = new TileManager();
 
   private BitmapProvider mBitmapProvider;
   private HashMap<Float, TileCanvasView> mTileCanvasViewHashMap = new HashMap<>();
@@ -161,10 +164,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public void clear() {
     suppressRender();
     cancelRender();
-    for( Tile tile : mTilesVisible ) {
-      tile.destroy( mShouldRecycleBitmaps );
-    }
-    mTilesVisible.clear();
+    mTileManager.tilesInCurrentViewport.clear();
     mCurrentTileCanvasView.clearTiles( mShouldRecycleBitmaps );
   }
 
@@ -199,8 +199,10 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     if( !changed ) {
       return;
     }
-    mTilesVisible = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
-
+    Set<Tile> visibleTiles = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
+    Log.d( "DEBUG", "size of tile set from DetailLevel: " + visibleTiles.size() );
+    mTileManager.reconcile( visibleTiles );
+    Log.d( "DEBUG", "size of tile set in manager: " + mTileManager.tilesInCurrentViewport.size() );
     // TODO: we're cancelling and restarting the same tiles repeatedly.  we need to get intersection from renderlist
     if( mTileRenderPoolExecutor != null ){
       mTileRenderPoolExecutor.queue( this, getRenderList() );
@@ -208,12 +210,12 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   private void cleanup() {
-    LinkedList<Tile> condemned = new LinkedList<>( mCurrentTileCanvasView.getTiles() );
-    condemned.removeAll( mTilesVisible );
+    LinkedList<Tile> condemned = new LinkedList<>( mTileManager.tilesAlreadyRendered );
+    condemned.removeAll( mTileManager.tilesInCurrentViewport );
     for( Tile tile : condemned ) {
       tile.destroy( mShouldRecycleBitmaps );
     }
-    mCurrentTileCanvasView.getTiles().removeAll( condemned );
+    mTileManager.tilesAlreadyRendered.removeAll( condemned );
     mCurrentTileCanvasView.invalidate();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       if( mCurrentTileCanvasView != tileGroup ) {
@@ -242,10 +244,10 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     mTileRenderHandler.post( mRenderPostExecuteRunnable );
   }
 
-  LinkedList<Tile> getRenderList() {
-    LinkedList<Tile> renderList = (LinkedList<Tile>) mTilesVisible.clone();
-    renderList.removeAll( mCurrentTileCanvasView.getTiles() );
-    return renderList;
+  Set<Tile> getRenderList() {
+    Set<Tile> renderSet = new HashSet<>( mTileManager.tilesInCurrentViewport );
+    renderSet.removeAll( mTileManager.tilesAlreadyRendered );
+    return renderSet;
   }
 
   void generateTileBitmap( Tile tile ) throws InterruptedIOException {
@@ -257,12 +259,13 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   private void prepareTileForRender( Tile tile ){
-    if( !mTilesVisible.contains( tile ) ){
+    if( !mTileManager.tilesInCurrentViewport.contains( tile ) ){
       return;
     }
     tile.setTransitionsEnabled( mTransitionsEnabled );
     tile.setTransitionDuration( mTransitionDuration );
     tile.stampTime();
+    mTileManager.tilesAlreadyRendered.add( tile );
     mCurrentTileCanvasView.addTile( tile );
   }
 

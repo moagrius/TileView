@@ -28,6 +28,8 @@ public class Tile {
 
   private boolean mTransitionsEnabled;
 
+  private boolean mHasBeenDecoded;
+
   private int mTransitionDuration = DEFAULT_TRANSITION_DURATION;
 
   private Paint mPaint;
@@ -85,6 +87,14 @@ public class Tile {
 
   public void setTransitionDuration( int transitionDuration ) {
     mTransitionDuration = transitionDuration;
+  }
+
+  public void setHasBeenDecoded( boolean hasBeenDecoded ) {
+    mHasBeenDecoded = hasBeenDecoded;
+  }
+
+  public boolean getHasBeenDecoded() {
+    return mHasBeenDecoded;
   }
 
   public void stampTime() {
@@ -162,13 +172,24 @@ public class Tile {
   }
 
   @Override
+  public int hashCode() {
+    return getRow() + getColumn();
+  }
+
+  @Override
   public boolean equals( Object o ) {
+    //Log.d( "DEBUG", "Tile.equals" );
+    if( this == o ){
+      //Log.d( "DEBUG", "Tile.equals returning identity" );
+      return true;
+    }
     if( o instanceof Tile ) {
       Tile m = (Tile) o;
-      return (m.getRow() == getRow())
-        && (m.getColumn() == getColumn())
-        && (m.getDetailLevel().equals( getDetailLevel()));
+      return m.getRow() == getRow()
+        && m.getColumn() == getColumn()
+        && m.getDetailLevel().getScale() == getDetailLevel().getScale();
     }
+    //Log.d( "DEBUG", "did not match row, column or scale" );
     return false;
   }
 
