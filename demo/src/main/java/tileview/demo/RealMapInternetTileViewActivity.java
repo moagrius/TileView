@@ -34,7 +34,7 @@ public class RealMapInternetTileViewActivity extends TileViewActivity {
 
 
     // set mScale to 0, but keep scaleToFit true, so it'll be as small as possible but still match the container
-    tileView.setScale( 0 );
+    //tileView.setScale( 0 );
 
     // let's use 0-1 positioning...
     tileView.defineBounds( 0, 0, 1, 1 );

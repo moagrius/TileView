@@ -6,7 +6,6 @@ import android.util.Log;
 
 import java.io.InterruptedIOException;
 import java.lang.ref.WeakReference;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -59,23 +58,21 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
   public void queue( TileCanvasViewGroup tileCanvasViewGroup, List<Tile> renderList ) {
     synchronized( this ) {
-      List<TileRenderRunnable> completeTasks = new LinkedList<>();
       for( Runnable runnable : getQueue() ) {
         if( runnable instanceof TileRenderRunnable ) {
           TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) runnable;
           if( tileRenderRunnable.isDone() ) {  // todo: necessary?  need to cancel as well?
-            completeTasks.add( tileRenderRunnable );
+            //remove( tileRenderRunnable );
           } else {
             if( renderList.contains( tileRenderRunnable.getTile() ) ) {
               renderList.remove( tileRenderRunnable.getTile() );
             } else {
-              tileRenderRunnable.cancel();
-              completeTasks.add( tileRenderRunnable );
+              tileRenderRunnable.cancel();  // should not be necessary
+              remove( tileRenderRunnable );
             }
           }
         }
       }
-      getQueue().removeAll( completeTasks );
       if( renderList.size() > 0 ) {
         mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
         tileCanvasViewGroup.onRenderTaskPreExecute();
@@ -102,8 +99,10 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     synchronized( this ) {
       super.afterExecute( runnable, throwable );
       // TODO: cancel here?
+      Log.d( "DEBUG", "queue size=" + getQueue().size() );
       if( getQueue().size() == 0 && getActiveCount() == 1 ) {
         Log.d( "DEBUG", "last task done" );
+        purge();
         TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroupWeakReference.get();
         if( tileCanvasViewGroup != null ) {
           tileCanvasViewGroup.onRenderTaskPostExecute();
