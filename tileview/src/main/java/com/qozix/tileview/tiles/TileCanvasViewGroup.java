@@ -208,7 +208,6 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
     // TODO: we're cancelling and restarting the same tiles repeatedly.  we need to get intersection from renderlist
     if( mTileRenderPoolManager != null ){
-      mTileRenderPoolManager.cancel();
       mTileRenderPoolManager.queue( this, getRenderList() );
     }
   }
