@@ -170,7 +170,6 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
       tile.destroy( mShouldRecycleBitmaps );
     }
     mTilesAlreadyRendered.clear();
-    mTileRenderPoolExecutor.cancel();
   }
 
   private float getCurrentDetailLevelScale() {
