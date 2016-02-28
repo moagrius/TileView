@@ -219,8 +219,9 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
     @Override
     public void run() {
-      renderTile();
-      markComplete();
+      if(renderTile()) {
+        markComplete();
+      }
     }
   }
 }
