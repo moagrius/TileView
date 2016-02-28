@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.view.View;
 
 import java.util.HashSet;
+import java.util.Set;
 
 public class TileCanvasView extends View {
 
@@ -18,6 +19,10 @@ public class TileCanvasView extends View {
 
   public TileCanvasView( Context context ) {
     super( context );
+  }
+
+  public Set<Tile> getTiles(){
+    return mTiles;
   }
 
   public void setScale( float factor ) {

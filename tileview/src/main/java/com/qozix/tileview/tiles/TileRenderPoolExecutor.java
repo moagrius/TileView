@@ -2,11 +2,14 @@ package com.qozix.tileview.tiles;
 
 import android.os.Process;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.InterruptedIOException;
 import java.lang.ref.WeakReference;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -31,45 +34,33 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     );
   }
 
-  public void cancel() {
-    if( getQueue().size() > 0 || getActiveCount() > 0 ) {
-      Log.d( "DEBUG", "queue 0, active count 0, dispatch render cancelled event" );
-      TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroupWeakReference.get();
-      if( tileCanvasViewGroup != null ) {
-        tileCanvasViewGroup.onRenderTaskCancelled();
-        Log.d( "DEBUG", "render cancelled event dispatched" );
-      }
-    }
-    getQueue().clear();
-  }
-
-  @Override
-  public void shutdown() {
-    cancel();
-    super.shutdown();
-  }
-
-  @Override
-  @NonNull
-  public List<Runnable> shutdownNow() {
-    cancel();
-    return super.shutdownNow();
-  }
-
   public void queue( TileCanvasViewGroup tileCanvasViewGroup, List<Tile> renderList ) {
     synchronized( this ) {
+      List<String> positions = new LinkedList<>();
+      for( Tile tile : renderList ) {
+        positions.add( tile.getColumn() + ":" + tile.getRow() );
+      }
+      Log.d( "DEBUG", "visible tiles: " + TextUtils.join( ",", positions ) );
       for( Runnable runnable : getQueue() ) {
         if( runnable instanceof TileRenderRunnable ) {
           TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) runnable;
-          if( tileRenderRunnable.isDone() ) {  // todo: necessary?  need to cancel as well?
-            //remove( tileRenderRunnable );
+          Tile tile = tileRenderRunnable.getTile();
+          if( tile == null ) {
+            Log.d( "DEBUG", "skipping null tile" );
+            continue;
+          }
+          if( tileRenderRunnable.isDone() ){
+            Log.d( "DEBUG", "tile at " + tile.getColumn() + ", " + tile.getRow() + " is in queue but is done already" );
+            continue;
+          }
+          Log.d( "DEBUG", "tile at " + tile.getColumn() + ", " + tile.getRow() + " is in queue" );
+          if( renderList.contains( tile ) ) {
+            Log.d( "DEBUG", "removing tile at " + tile.getColumn() + ", " + tile.getRow() );
+            renderList.remove( tile );
           } else {
-            if( renderList.contains( tileRenderRunnable.getTile() ) ) {
-              renderList.remove( tileRenderRunnable.getTile() );
-            } else {
-              tileRenderRunnable.cancel();  // should not be necessary
-              remove( tileRenderRunnable );
-            }
+            Log.d( "DEBUG", "tile is not in current visible viewport, cancelling tile at " + tile.getColumn() + ", " + tile.getRow() );
+            tileRenderRunnable.cancel( true );
+            remove( tileRenderRunnable );
           }
         }
       }
@@ -78,6 +69,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
         tileCanvasViewGroup.onRenderTaskPreExecute();
         for( Tile tile : renderList ) {
           if( isShutdownOrTerminating() ) {
+            Log.d( "DEBUG", "skipping tile at " + tile.getColumn() + ", " + tile.getRow() );
             return;
           }
           TileRenderRunnable runnable = new TileRenderRunnable();
@@ -89,20 +81,29 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     }
   }
 
+  public void cancel(){
+    if( getQueue().size() > 0 || getActiveCount() > 0 ) {
+      Log.d( "DEBUG", "queue 0, active count 0, dispatch render cancelled event" );
+      TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroupWeakReference.get();
+      if( tileCanvasViewGroup != null ) {
+        tileCanvasViewGroup.onRenderTaskCancelled();
+        Log.d( "DEBUG", "render cancelled event dispatched" );
+      }
+    }
+    getQueue().clear();
+  }
+
   public boolean isShutdownOrTerminating() {
     return isShutdown() || isTerminating() || isTerminated();
   }
-
 
   @Override
   protected void afterExecute( Runnable runnable, Throwable throwable ) {
     synchronized( this ) {
       super.afterExecute( runnable, throwable );
-      // TODO: cancel here?
       Log.d( "DEBUG", "queue size=" + getQueue().size() );
       if( getQueue().size() == 0 && getActiveCount() == 1 ) {
         Log.d( "DEBUG", "last task done" );
-        purge();
         TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroupWeakReference.get();
         if( tileCanvasViewGroup != null ) {
           tileCanvasViewGroup.onRenderTaskPostExecute();
@@ -112,20 +113,34 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     }
   }
 
-  private static class TileRenderRunnable implements Runnable {
+  private static class TileRenderRunnable implements Runnable, Future<Void> {
 
     private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
     private WeakReference<Tile> mTileWeakReference;
 
     private volatile boolean mCancelled = false;
     private volatile boolean mComplete = false;
+    // TODO: mExcepted
 
     public TileRenderRunnable() {
 
     }
 
-    public void cancel() {
+    public Void get(){
+      return null;
+    }
+
+    public Void get(long timeout, @NonNull TimeUnit unit){
+      return null;
+    }
+
+    public boolean cancel( boolean mayInterrupt ) {
+      if( mayInterrupt ){
+        Thread.currentThread().interrupt();
+      }
+      boolean isAlreadyCancelled = mCancelled;
       mCancelled = true;
+      return !isAlreadyCancelled;
     }
 
     public void markComplete() {
@@ -134,6 +149,10 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
     public boolean isComplete(){
       return mComplete;
+    }
+
+    public boolean isCancelled(){
+      return mCancelled;
     }
 
     public boolean isDone(){
@@ -191,7 +210,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
         return false;
       }
       if( mCancelled || tile.getBitmap() == null || thread.isInterrupted() || tileCanvasViewGroup.getRenderIsCancelled() ) {
-        tile.destroy( true );
+        //tile.destroy( true );
         return false;
       }
       tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );

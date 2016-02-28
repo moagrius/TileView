@@ -167,7 +167,7 @@ public class Tile {
       Tile m = (Tile) o;
       return (m.getRow() == getRow())
         && (m.getColumn() == getColumn())
-        && (m.getDetailLevel() == getDetailLevel());
+        && (m.getDetailLevel().equals( getDetailLevel()));
     }
     return false;
   }

@@ -40,7 +40,7 @@ public class RealMapInternetTileViewActivity extends TileViewActivity {
     tileView.defineBounds( 0, 0, 1, 1 );
 
     // frame to center
-    frameTo( 0.5, 0.5 );
+    //frameTo( 0.5, 0.5 );
 
     // render while panning
     tileView.setShouldRenderWhilePanning( true );
