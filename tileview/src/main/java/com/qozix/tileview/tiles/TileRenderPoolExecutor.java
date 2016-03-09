@@ -1,11 +1,16 @@
 package com.qozix.tileview.tiles;
 
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.os.Process;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
-import java.io.InterruptedIOException;
+import com.qozix.tileview.graphics.BitmapProvider;
+
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,6 +30,8 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
   private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
 
+  private Handler mHandler;
+
   public TileRenderPoolExecutor() {
     super(
       CORE_POOL_SIZE,
@@ -33,6 +40,37 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       KEEP_ALIVE_TIME_UNIT,
       new LinkedBlockingDeque<Runnable>()
     );
+    mHandler = new TileRenderHandler();
+  }
+
+  private static class TileRenderHandler extends Handler {
+
+    public TileRenderHandler() {
+      this( Looper.getMainLooper() );
+    }
+
+    public TileRenderHandler( Looper looper ) {
+      super( looper );
+    }
+
+    @Override
+    public void handleMessage( Message message ) {
+      TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) message.obj;
+      TileCanvasViewGroup tileCanvasViewGroup = tileRenderRunnable.getTileCanvasViewGroup();
+      if( tileCanvasViewGroup == null ) {
+        return;
+      }
+      Tile tile = tileRenderRunnable.getTile();
+      if( tile == null ) {
+        return;
+      }
+      Log.d( "DEBUG", "sending tile to TCVG" );
+      tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
+        /*
+        switch( inputMessage.what ) {
+        }
+        */
+    }
   }
 
   public void queue( TileCanvasViewGroup tileCanvasViewGroup, Set<Tile> renderList ) {
@@ -50,7 +88,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
             Log.d( "DEBUG", "skipping null tile" );
             continue;
           }
-          if( tileRenderRunnable.isDone() ){
+          if( tileRenderRunnable.isDone() ) {
             Log.d( "DEBUG", "tile at " + tile.getColumn() + ", " + tile.getRow() + " is in queue but is done already" );
             continue;
           }
@@ -76,13 +114,14 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
           TileRenderRunnable runnable = new TileRenderRunnable();
           runnable.setTile( tile );
           runnable.setTileCanvasViewGroup( tileCanvasViewGroup );
+          runnable.setHandler( mHandler );
           execute( runnable );
         }
       }
     }
   }
 
-  public void cancel(){
+  public void cancel() {
     if( getQueue().size() > 0 || getActiveCount() > 0 ) {
       Log.d( "DEBUG", "queue 0, active count 0, dispatch render cancelled event" );
       TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroupWeakReference.get();
@@ -118,6 +157,9 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
     private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
     private WeakReference<Tile> mTileWeakReference;
+    private WeakReference<Handler> mHandlerWeakReference;
+    private WeakReference<Context> mContextWeakReference;
+    private WeakReference<BitmapProvider> mBitmapProviderWeakReference;
 
     private volatile boolean mCancelled = false;
     private volatile boolean mComplete = false;
@@ -127,16 +169,16 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
     }
 
-    public Void get(){
+    public Void get() {
       return null;
     }
 
-    public Void get(long timeout, @NonNull TimeUnit unit){
+    public Void get( long timeout, @NonNull TimeUnit unit ) {
       return null;
     }
 
     public boolean cancel( boolean mayInterrupt ) {
-      if( mayInterrupt ){
+      if( mayInterrupt ) {
         Thread.currentThread().interrupt();
       }
       boolean isAlreadyCancelled = mCancelled;
@@ -148,20 +190,33 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       mComplete = true;
     }
 
-    public boolean isComplete(){
+    public boolean isComplete() {
       return mComplete;
     }
 
-    public boolean isCancelled(){
+    public boolean isCancelled() {
       return mCancelled;
     }
 
-    public boolean isDone(){
+    public boolean isDone() {
       return mCancelled || mComplete;
+    }
+
+    public void setHandler( Handler handler ) {
+      mHandlerWeakReference = new WeakReference<>( handler );
+    }
+
+    public Handler getHandler() {
+      if( mHandlerWeakReference == null ) {
+        return null;
+      }
+      return mHandlerWeakReference.get();
     }
 
     public void setTileCanvasViewGroup( TileCanvasViewGroup tileCanvasViewGroup ) {
       mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
+      mContextWeakReference = new WeakReference<>( tileCanvasViewGroup.getContext() );
+      mBitmapProviderWeakReference = new WeakReference<>( tileCanvasViewGroup.getBitmapProvider() );
     }
 
     public TileCanvasViewGroup getTileCanvasViewGroup() {
@@ -169,6 +224,20 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
         return mTileCanvasViewGroupWeakReference.get();
       }
       return null;
+    }
+
+    public Context getContext() {
+      if( mContextWeakReference == null ) {
+        return null;
+      }
+      return mContextWeakReference.get();
+    }
+
+    public BitmapProvider getBitmapProvider() {
+      if( mBitmapProviderWeakReference == null ) {
+        return null;
+      }
+      return mBitmapProviderWeakReference.get();
     }
 
     public void setTile( Tile tile ) {
@@ -191,36 +260,45 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       if( thread.isInterrupted() ) {
         return false;
       }
-      TileCanvasViewGroup tileCanvasViewGroup = getTileCanvasViewGroup();
-      if( tileCanvasViewGroup == null ) {
-        return false;
-      }
-      if( tileCanvasViewGroup.getRenderIsCancelled() ) {
-        return false;
-      }
       Tile tile = getTile();
       if( tile == null ) {
         return false;
       }
+      Context context = getContext();
+      if( context == null ) {
+        return false;
+      }
+      BitmapProvider bitmapProvider = getBitmapProvider();
+      if( bitmapProvider == null ) {
+        return false;
+      }
       try {
-        tileCanvasViewGroup.generateTileBitmap( tile );
+        tile.generateBitmap( context, bitmapProvider );
+        /*
       } catch( InterruptedIOException e ) {
         Thread.currentThread().interrupt();
         return false;
+        */
       } catch( Exception e ) {
         return false;
       }
-      if( mCancelled || tile.getBitmap() == null || thread.isInterrupted() || tileCanvasViewGroup.getRenderIsCancelled() ) {
-        //tile.destroy( true );
+      if( mCancelled || tile.getBitmap() == null || thread.isInterrupted() ) {
+        //tile.destroy( true );  // TODO:
         return false;
       }
-      tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
+      Handler handler = getHandler();
+      if( handler == null ) {
+        return false;
+      }
+      Message message = handler.obtainMessage( 0, this );
+      message.sendToTarget();
       return true;
     }
 
     @Override
     public void run() {
-      if(renderTile()) {
+      if( renderTile() ) {
+        Log.d( "DEBUG", "tile rendered" );
         markComplete();
       }
     }

@@ -11,7 +11,6 @@ import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.graphics.BitmapProviderAssets;
 import com.qozix.tileview.widgets.ScalingLayout;
 
-import java.io.InterruptedIOException;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -250,7 +249,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     return renderSet;
   }
 
-  void generateTileBitmap( Tile tile ) throws InterruptedIOException {
+  void generateTileBitmap( Tile tile ) {
     tile.generateBitmap( getContext(), getBitmapProvider() );
   }
 
