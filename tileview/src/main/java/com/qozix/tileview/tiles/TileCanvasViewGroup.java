@@ -14,7 +14,6 @@ import com.qozix.tileview.widgets.ScalingLayout;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView.TileCanvasDrawListener {
@@ -25,7 +24,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public static final int FAST_RENDER_BUFFER = 10;
   private static final int DEFAULT_TRANSITION_DURATION = 200;
 
-  private TileManager mTileManager = new TileManager();
+  private volatile TileManager mTileManager = new TileManager();
 
   private BitmapProvider mBitmapProvider;
   private HashMap<Float, TileCanvasView> mTileCanvasViewHashMap = new HashMap<>();
@@ -201,21 +200,28 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     Set<Tile> visibleTiles = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
     Log.d( "DEBUG", "size of tile set from DetailLevel: " + visibleTiles.size() );
     mTileManager.reconcile( visibleTiles );
+    clearTilesOutOfViewport();
     Log.d( "DEBUG", "size of tile set in manager: " + mTileManager.tilesInCurrentViewport.size() );
     // TODO: we're cancelling and restarting the same tiles repeatedly.  we need to get intersection from renderlist
     if( mTileRenderPoolExecutor != null ){
-      mTileRenderPoolExecutor.queue( this, getRenderList() );
+      mTileRenderPoolExecutor.queue( this, getRenderSet() );
     }
   }
 
-  private void cleanup() {
-    LinkedList<Tile> condemned = new LinkedList<>( mTileManager.tilesAlreadyRendered );
+  private void clearTilesOutOfViewport(){
+    Set<Tile> condemned = new HashSet<>( mTileManager.tilesAlreadyRendered );
+    Log.d( "DEBUG", "condemned before removing all still in viewport: " + condemned.size() );
     condemned.removeAll( mTileManager.tilesInCurrentViewport );
+    Log.d( "DEBUG", "condemned after removing all still in viewport: " + condemned.size() );
+    mTileManager.tilesAlreadyRendered.removeAll( condemned );
     for( Tile tile : condemned ) {
       tile.destroy( mShouldRecycleBitmaps );
     }
-    mTileManager.tilesAlreadyRendered.removeAll( condemned );
     mCurrentTileCanvasView.invalidate();
+  }
+
+  private void cleanup() {
+    clearTilesOutOfViewport();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       if( mCurrentTileCanvasView != tileGroup ) {
         tileGroup.clearTiles( mShouldRecycleBitmaps );
@@ -243,9 +249,9 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     mTileRenderHandler.post( mRenderPostExecuteRunnable );
   }
 
-  Set<Tile> getRenderList() {
+  Set<Tile> getRenderSet() {
     Set<Tile> renderSet = new HashSet<>( mTileManager.tilesInCurrentViewport );
-    renderSet.removeAll( mTileManager.tilesAlreadyRendered );
+    renderSet.removeAll( mTileManager.tilesAlreadyRendered );  // TODO: here
     return renderSet;
   }
 

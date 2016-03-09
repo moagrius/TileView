@@ -43,7 +43,7 @@ public class RealMapInternetTileViewActivity extends TileViewActivity {
     //frameTo( 0.5, 0.5 );
 
     // render while panning
-    tileView.setShouldRenderWhilePanning( true );
+    //tileView.setShouldRenderWhilePanning( true );
 
   }
 }

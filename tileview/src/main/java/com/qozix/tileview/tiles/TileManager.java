@@ -23,7 +23,7 @@ public class TileManager {
     Log.d( "DEBUG", "tile size passed: " + recentlyComputedVisibleTileSet.size() );
     Log.d( "DEBUG", "tile size existing: " + tilesInCurrentViewport.size() );
     for( Tile tile : tilesInCurrentViewport ) {
-      if( recentlyComputedVisibleTileSet.contains( tile ) ) {
+      if( !recentlyComputedVisibleTileSet.contains( tile ) ) {
         tilesNotInCurrentViewport.add( tile );
       }
     }
