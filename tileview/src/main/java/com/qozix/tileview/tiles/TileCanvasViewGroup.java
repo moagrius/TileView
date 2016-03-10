@@ -39,7 +39,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   private boolean mTransitionsEnabled = true;
   private int mTransitionDuration = DEFAULT_TRANSITION_DURATION;
 
-  private TileRenderHandler mTileRenderHandler;
+  private TileRenderThrottleHandler mTileRenderThrottleHandler;
   private TileRenderListener mTileRenderListener;
 
   private int mRenderBuffer = DEFAULT_RENDER_BUFFER;
@@ -52,9 +52,9 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public Set<Tile> tilesAlreadyRendered = new HashSet<>();
 
   public TileCanvasViewGroup( Context context ) {
-    super(context);
+    super( context );
     setWillNotDraw( false );
-    mTileRenderHandler = new TileRenderHandler( this );
+    mTileRenderThrottleHandler = new TileRenderThrottleHandler( this );
     mTileRenderPoolExecutor = new TileRenderPoolExecutor();
   }
 
@@ -119,8 +119,8 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     if( mDetailLevelToRender == null ) {
       return;
     }
-    if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {
-      mTileRenderHandler.sendEmptyMessageDelayed( RENDER_FLAG, mRenderBuffer );
+    if( !mTileRenderThrottleHandler.hasMessages( RENDER_FLAG ) ) {
+      mTileRenderThrottleHandler.sendEmptyMessageDelayed( RENDER_FLAG, mRenderBuffer );
     }
   }
 
@@ -257,7 +257,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   void onRenderTaskPostExecute() {
     mIsRendering = false;
-    mTileRenderHandler.post( mRenderPostExecuteRunnable );
+    mTileRenderThrottleHandler.post( mRenderPostExecuteRunnable );
   }
 
   Set<Tile> getRenderSet() {
@@ -310,16 +310,16 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
       tileGroup.clearTiles( mShouldRecycleBitmaps );
     }
     mTileCanvasViewHashMap.clear();
-    if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {
-      mTileRenderHandler.removeMessages( RENDER_FLAG );
+    if( !mTileRenderThrottleHandler.hasMessages( RENDER_FLAG ) ) {
+      mTileRenderThrottleHandler.removeMessages( RENDER_FLAG );
     }
   }
 
-  private static class TileRenderHandler extends Handler {
+  private static class TileRenderThrottleHandler extends Handler {
 
     private final WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
 
-    public TileRenderHandler( TileCanvasViewGroup tileCanvasViewGroup ) {
+    public TileRenderThrottleHandler( TileCanvasViewGroup tileCanvasViewGroup ) {
       super( Looper.getMainLooper() );
       mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
     }

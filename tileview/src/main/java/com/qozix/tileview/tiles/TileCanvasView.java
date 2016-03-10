@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.view.View;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,7 +11,7 @@ public class TileCanvasView extends View {
 
   private float mScale = 1;
 
-  private Set<Tile> mTiles = (Set<Tile>) Collections.synchronizedSet(new HashSet<Tile>());
+  private Set<Tile> mTiles = new HashSet<>();
 
   private TileCanvasDrawListener mTileCanvasDrawListener;
 

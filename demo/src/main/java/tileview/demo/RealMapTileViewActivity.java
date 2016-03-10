@@ -4,7 +4,6 @@ import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
@@ -108,36 +107,10 @@ public class RealMapTileViewActivity extends TileViewActivity {
     // start small and allow zoom
     tileView.setScale( 0.5f );
 
-
-
     // TODO:
     tileView.setShouldRenderWhilePanning( true );
     tileView.setTransitionsEnabled( false );
     tileView.setShouldScaleToFit( false );
-    tileView.addZoomPanListener( new TileView.ZoomPanListener() {
-      public void onPanBegin( int x, int y, Origination origin ) {
-
-      }
-
-      @Override
-      public void onPanUpdate( int x, int y, Origination origin ) {
-
-      }
-
-      public void onPanEnd( int x, int y, Origination origin ) {
-      }
-
-      public void onZoomBegin( float scale, Origination origin ) {
-      }
-
-      public void onZoomUpdate( float scale, Origination origin ) {
-        Log.d( "DEBUG", "scale=" + scale );
-      }
-
-      public void onZoomEnd( float scale, Origination origin ) {
-      }
-    } );
-
   }
 
   private MarkerLayout.MarkerTapListener markerTapListener = new MarkerLayout.MarkerTapListener() {
