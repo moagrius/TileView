@@ -1,19 +1,9 @@
 package com.qozix.tileview.tiles;
 
-import android.content.Context;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.os.Process;
-import android.support.annotation.NonNull;
-import android.util.Log;
-
-import com.qozix.tileview.graphics.BitmapProvider;
 
 import java.lang.ref.WeakReference;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +18,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
   private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
 
-  private Handler mHandler;
+  private Handler mHandler = new TileRenderHandler();
 
   public TileRenderPoolExecutor() {
     super(
@@ -38,7 +28,6 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       KEEP_ALIVE_TIME_UNIT,
       new LinkedBlockingDeque<Runnable>()
     );
-    mHandler = new TileRenderHandler();
   }
 
   public void queue( TileCanvasViewGroup tileCanvasViewGroup, Set<Tile> renderSet ) {
@@ -94,20 +83,6 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     broadcastCancel();
   }
 
-  @Override
-  public void shutdown() {
-    super.shutdown();
-    broadcastCancel();
-  }
-
-  @Override
-  @NonNull
-  public List<Runnable> shutdownNow() {
-    List<Runnable> tasks = super.shutdownNow();
-    broadcastCancel();
-    return tasks;
-  }
-
   public boolean isShutdownOrTerminating() {
     return isShutdown() || isTerminating() || isTerminated();
   }
@@ -125,202 +100,4 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     }
   }
 
-  public static class TileRenderHandler extends Handler {
-
-    public static final int RENDER_ERROR = -1;
-    public static final int RENDER_INCOMPLETE = 0;
-    public static final int RENDER_COMPLETE = 1;
-
-    public enum Status {
-
-      ERROR (RENDER_ERROR),
-      INCOMPLETE (RENDER_INCOMPLETE),
-      COMPLETE (RENDER_COMPLETE);
-
-      private int mMessageCode;
-
-      Status(int messageCode){
-        mMessageCode = messageCode;
-      }
-      int getMessageCode(){
-        return mMessageCode;
-      }
-    }
-
-
-    public TileRenderHandler() {
-      this( Looper.getMainLooper() );
-    }
-
-    public TileRenderHandler( Looper looper ) {
-      super( looper );
-    }
-
-    @Override
-    public void handleMessage( Message message ) {
-      TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) message.obj;
-      TileCanvasViewGroup tileCanvasViewGroup = tileRenderRunnable.getTileCanvasViewGroup();
-      if( tileCanvasViewGroup == null ) {
-        return;
-      }
-      Tile tile = tileRenderRunnable.getTile();
-      if( tile == null ) {
-        return;
-      }
-      switch( message.what ) {
-        case RENDER_ERROR :
-          tileCanvasViewGroup.handleTileRenderException( tileRenderRunnable.getThrowable() );
-          break;
-        case RENDER_COMPLETE:
-          tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
-          break;
-        case RENDER_INCOMPLETE:
-          Log.w( TileRenderPoolExecutor.class.getSimpleName(), "Tile was queued but was not rendered" );
-          break;
-      }
-    }
-  }
-
-  private static class TileRenderRunnable implements Runnable, Future<Void> {
-
-    private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
-    private WeakReference<Tile> mTileWeakReference;
-    private WeakReference<Handler> mHandlerWeakReference;
-    private WeakReference<Context> mContextWeakReference;
-    private WeakReference<BitmapProvider> mBitmapProviderWeakReference;
-
-    private volatile boolean mCancelled = false;
-    private volatile boolean mComplete = false;
-
-    private Throwable mThrowable;
-
-    @Override
-    public Void get() {
-      return null;
-    }
-
-    @Override
-    public Void get( long timeout, @NonNull TimeUnit unit ) {
-      return null;
-    }
-
-    @Override
-    public boolean cancel( boolean mayInterrupt ) {
-      if( mayInterrupt ) {
-        Thread.currentThread().interrupt();
-      }
-      boolean cancelled = mCancelled;
-      mCancelled = true;
-      return !cancelled;
-    }
-
-    public boolean isCancelled() {
-      return mCancelled;
-    }
-
-    public boolean isDone() {
-      return mComplete;
-    }
-
-    public void setHandler( Handler handler ) {
-      mHandlerWeakReference = new WeakReference<>( handler );
-    }
-
-    public Handler getHandler() {
-      if( mHandlerWeakReference == null ) {
-        return null;
-      }
-      return mHandlerWeakReference.get();
-    }
-
-    public void setTileCanvasViewGroup( TileCanvasViewGroup tileCanvasViewGroup ) {
-      mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
-      mContextWeakReference = new WeakReference<>( tileCanvasViewGroup.getContext() );
-      mBitmapProviderWeakReference = new WeakReference<>( tileCanvasViewGroup.getBitmapProvider() );
-    }
-
-    public TileCanvasViewGroup getTileCanvasViewGroup() {
-      if( mTileCanvasViewGroupWeakReference != null ) {
-        return mTileCanvasViewGroupWeakReference.get();
-      }
-      return null;
-    }
-
-    public Context getContext() {
-      if( mContextWeakReference == null ) {
-        return null;
-      }
-      return mContextWeakReference.get();
-    }
-
-    public BitmapProvider getBitmapProvider() {
-      if( mBitmapProviderWeakReference == null ) {
-        return null;
-      }
-      return mBitmapProviderWeakReference.get();
-    }
-
-    public void setTile( Tile tile ) {
-      mTileWeakReference = new WeakReference<>( tile );
-    }
-
-    public Tile getTile() {
-      if( mTileWeakReference != null ) {
-        return mTileWeakReference.get();
-      }
-      return null;
-    }
-
-    public Throwable getThrowable(){
-      return mThrowable;
-    }
-
-    // TODO: TCV.clearTiles throw concurrent modification exception on Set
-    public TileRenderHandler.Status renderTile() {
-      if( mCancelled ) {
-        return TileRenderHandler.Status.INCOMPLETE;
-      }
-      Process.setThreadPriority( Process.THREAD_PRIORITY_BACKGROUND );
-      final Thread thread = Thread.currentThread();
-      if( thread.isInterrupted() ) {
-        return TileRenderHandler.Status.INCOMPLETE;
-      }
-      Tile tile = getTile();
-      if( tile == null ) {
-        return TileRenderHandler.Status.INCOMPLETE;
-      }
-      Context context = getContext();
-      if( context == null ) {
-        return TileRenderHandler.Status.INCOMPLETE;
-      }
-      BitmapProvider bitmapProvider = getBitmapProvider();
-      if( bitmapProvider == null ) {
-        return TileRenderHandler.Status.INCOMPLETE;
-      }
-      try {
-        tile.generateBitmap( context, bitmapProvider );
-      } catch( Throwable throwable ) {
-        mThrowable = throwable;
-        return TileRenderHandler.Status.ERROR;
-      }
-      if( mCancelled || tile.getBitmap() == null || thread.isInterrupted() ) {
-        tile.destroy( true );
-        return TileRenderHandler.Status.INCOMPLETE;
-      }
-      return TileRenderHandler.Status.COMPLETE;
-    }
-
-    @Override
-    public void run() {
-      TileRenderHandler.Status status = renderTile();
-      Handler handler = getHandler();
-      if( handler != null ) {
-        Message message = handler.obtainMessage( status.getMessageCode(), this );
-        message.sendToTarget();
-      }
-      if( status == TileRenderHandler.Status.COMPLETE ) {
-        mComplete = true;
-      }
-    }
-  }
 }
