@@ -253,11 +253,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   void addTileToCurrentTileCanvasView( final Tile tile ) {
-      mTileRenderHandler.post( new PrepareTileForRenderRunnable( tile ) );
-  }
-
-  private void prepareTileForRender( Tile tile ){
-    if( !mTileManager.tilesInCurrentViewport.contains( tile ) ){
+    if( !mTileManager.tilesInCurrentViewport.contains( tile ) ) {
       return;
     }
     tile.setTransitionsEnabled( mTransitionsEnabled );
@@ -320,21 +316,6 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     void onRenderStart();
     void onRenderCancelled();
     void onRenderComplete();
-  }
-
-  private class PrepareTileForRenderRunnable implements Runnable{
-    private WeakReference<Tile> mTile;
-
-    public PrepareTileForRenderRunnable( Tile tile ) {
-      mTile = new WeakReference<>( tile );
-    }
-
-    @Override
-    public void run() {
-      if ( mTile != null && mTile.get() != null) {
-        prepareTileForRender( mTile.get() );
-      }
-    }
   }
 
   // This runnable is required to run on UI thread

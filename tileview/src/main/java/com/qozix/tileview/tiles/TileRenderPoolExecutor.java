@@ -41,44 +41,40 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     mHandler = new TileRenderHandler();
   }
 
-  public void queue( TileCanvasViewGroup tileCanvasViewGroup, Set<Tile> renderList ) {
-    synchronized( this ) {  // TODO: why is this synchronized?
-      for( Runnable runnable : getQueue() ) {
-        if( runnable instanceof TileRenderRunnable ) {
-          TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) runnable;
-          Tile tile = tileRenderRunnable.getTile();
-          if( tile == null ) {
-            continue;
-          }
-          if( tileRenderRunnable.isDone() ) {
-            continue;
-          }
-          if( renderList.contains( tile ) ) {
-            renderList.remove( tile );
-          } else {
-            tileRenderRunnable.cancel( true );
-            remove( tileRenderRunnable );
-          }
+  public void queue( TileCanvasViewGroup tileCanvasViewGroup, Set<Tile> renderSet ) {
+    mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
+    tileCanvasViewGroup.onRenderTaskPreExecute();
+    for( Runnable runnable : getQueue() ) {
+      if( runnable instanceof TileRenderRunnable ) {
+        TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) runnable;
+        if( tileRenderRunnable.isDone() || tileRenderRunnable.isCancelled() ) {
+          continue;
         }
-      }
-      if( renderList.size() > 0 ) {
-        mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
-        tileCanvasViewGroup.onRenderTaskPreExecute();
-        for( Tile tile : renderList ) {
-          if( isShutdownOrTerminating() ) {
-            return;
-          }
-          TileRenderRunnable runnable = new TileRenderRunnable();
-          runnable.setTile( tile );
-          runnable.setTileCanvasViewGroup( tileCanvasViewGroup );
-          runnable.setHandler( mHandler );
-          execute( runnable );
+        Tile tile = tileRenderRunnable.getTile();
+        if( tile == null ) {
+          continue;
+        }
+        if( renderSet.contains( tile ) ) {
+          renderSet.remove( tile );
+        } else {
+          tileRenderRunnable.cancel( true );
+          remove( tileRenderRunnable );
         }
       }
     }
+    for( Tile tile : renderSet ) {
+      if( isShutdownOrTerminating() ) {
+        return;
+      }
+      TileRenderRunnable runnable = new TileRenderRunnable();
+      runnable.setTile( tile );
+      runnable.setTileCanvasViewGroup( tileCanvasViewGroup );
+      runnable.setHandler( mHandler );
+      execute( runnable );
+    }
   }
 
-  private void broadcastCancel(){
+  private void broadcastCancel() {
     if( mTileCanvasViewGroupWeakReference != null ) {
       TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroupWeakReference.get();
       if( tileCanvasViewGroup != null ) {
@@ -87,22 +83,29 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     }
   }
 
-  public void cancel(){
-    broadcastCancel();
+  public void cancel() {
+    for( Runnable runnable : getQueue() ) {
+      if( runnable instanceof TileRenderRunnable ) {
+        TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) runnable;
+        tileRenderRunnable.cancel( true );
+      }
+    }
     getQueue().clear();
+    broadcastCancel();
   }
 
   @Override
-  public void shutdown(){
-    broadcastCancel();
+  public void shutdown() {
     super.shutdown();
+    broadcastCancel();
   }
 
   @Override
   @NonNull
-  public List<Runnable> shutdownNow(){
+  public List<Runnable> shutdownNow() {
+    List<Runnable> tasks = super.shutdownNow();
     broadcastCancel();
-    return super.shutdownNow();
+    return tasks;
   }
 
   public boolean isShutdownOrTerminating() {
@@ -138,7 +141,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     @Override
     public void handleMessage( Message message ) {
       switch( message.what ) {
-        case RENDER_COMPLETE :
+        case RENDER_COMPLETE:
           TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) message.obj;
           TileCanvasViewGroup tileCanvasViewGroup = tileRenderRunnable.getTileCanvasViewGroup();
           if( tileCanvasViewGroup != null ) {
@@ -148,7 +151,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
             }
           }
           break;
-        case RENDER_INCOMPLETE :
+        case RENDER_INCOMPLETE:
           Log.w( TileRenderPoolExecutor.class.getSimpleName(), "Tile was queued but was not rendered" );
           break;
       }
@@ -165,35 +168,25 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
     private volatile boolean mCancelled = false;
     private volatile boolean mComplete = false;
-    // TODO: mExcepted
 
-    public TileRenderRunnable() {
-
-    }
-
+    @Override
     public Void get() {
       return null;
     }
 
+    @Override
     public Void get( long timeout, @NonNull TimeUnit unit ) {
       return null;
     }
 
+    @Override
     public boolean cancel( boolean mayInterrupt ) {
       if( mayInterrupt ) {
         Thread.currentThread().interrupt();
       }
-      boolean isAlreadyCancelled = mCancelled;
+      boolean cancelled = mCancelled;
       mCancelled = true;
-      return !isAlreadyCancelled;
-    }
-
-    public void markComplete() {
-      mComplete = true;
-    }
-
-    public boolean isComplete() {
-      return mComplete;
+      return !cancelled;
     }
 
     public boolean isCancelled() {
@@ -201,7 +194,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
     }
 
     public boolean isDone() {
-      return mCancelled || mComplete;
+      return mComplete;
     }
 
     public void setHandler( Handler handler ) {
@@ -253,8 +246,6 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       return null;
     }
 
-    // TODO: check if TCVG is cancelled, or better yet reroute TCVG.cancel to here
-    // TODO: get boolean here, post messages in .run
     // TODO: somewhere check OOM and call .cleanup, in case of constant slow dragging
     // TODO: TCV.clearTiles throw concurrent modification exception on Set
     public boolean renderTile() {
@@ -280,11 +271,6 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       }
       try {
         tile.generateBitmap( context, bitmapProvider );
-        /*
-      } catch( InterruptedIOException e ) {
-        Thread.currentThread().interrupt();
-        return false;
-        */
       } catch( Exception e ) {
         return false;
       }
@@ -307,7 +293,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
         message.sendToTarget();
       }
       if( rendered ) {
-        markComplete();
+        mComplete = true;
       }
     }
   }
