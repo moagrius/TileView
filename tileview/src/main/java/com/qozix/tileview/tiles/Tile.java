@@ -186,9 +186,7 @@ public class Tile {
 
   @Override
   public boolean equals( Object o ) {
-    //Log.d( "DEBUG", "Tile.equals" );
     if( this == o ){
-      //Log.d( "DEBUG", "Tile.equals returning identity" );
       return true;
     }
     if( o instanceof Tile ) {
@@ -197,7 +195,6 @@ public class Tile {
         && m.getColumn() == getColumn()
         && m.getDetailLevel().getScale() == getDetailLevel().getScale();
     }
-    //Log.d( "DEBUG", "did not match row, column or scale" );
     return false;
   }
 
