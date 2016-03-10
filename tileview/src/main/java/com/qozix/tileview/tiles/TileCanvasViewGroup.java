@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.graphics.BitmapProvider;
@@ -198,21 +197,15 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
       return;
     }
     Set<Tile> visibleTiles = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
-    Log.d( "DEBUG", "size of tile set from DetailLevel: " + visibleTiles.size() );
     mTileManager.reconcile( visibleTiles );
-    //clearTilesOutOfViewport();
-    Log.d( "DEBUG", "size of tile set in manager: " + mTileManager.tilesInCurrentViewport.size() );
-    // TODO: we're cancelling and restarting the same tiles repeatedly.  we need to get intersection from renderlist
     if( mTileRenderPoolExecutor != null ){
       mTileRenderPoolExecutor.queue( this, getRenderSet() );
     }
   }
 
-  private void clearTilesOutOfViewport(){
+  private void clearOutOfViewportTiles(){
     Set<Tile> condemned = new HashSet<>( mTileManager.tilesAlreadyRendered );
-    Log.d( "DEBUG", "condemned before removing all still in viewport: " + condemned.size() );
     condemned.removeAll( mTileManager.tilesInCurrentViewport );
-    Log.d( "DEBUG", "condemned after removing all still in viewport: " + condemned.size() );
     mTileManager.tilesAlreadyRendered.removeAll( condemned );
     for( Tile tile : condemned ) {
       tile.destroy( mShouldRecycleBitmaps );
@@ -221,7 +214,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   private void cleanup() {
-    clearTilesOutOfViewport();
+    clearOutOfViewportTiles();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       if( mCurrentTileCanvasView != tileGroup ) {
         tileGroup.clearTiles( mShouldRecycleBitmaps );

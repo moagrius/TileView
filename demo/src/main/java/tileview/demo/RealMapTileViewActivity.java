@@ -108,7 +108,11 @@ public class RealMapTileViewActivity extends TileViewActivity {
     // start small and allow zoom
     tileView.setScale( 0.5f );
 
+
+
     // TODO:
+    tileView.setShouldRenderWhilePanning( true );
+    tileView.setTransitionsEnabled( false );
     tileView.setShouldScaleToFit( false );
     tileView.addZoomPanListener( new TileView.ZoomPanListener() {
       public void onPanBegin( int x, int y, Origination origin ) {
