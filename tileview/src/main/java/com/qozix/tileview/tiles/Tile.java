@@ -173,7 +173,11 @@ public class Tile {
 
   @Override
   public int hashCode() {
-    return getRow() + getColumn();
+    int hash = 17;
+    hash = hash * 31 + getColumn();
+    hash = hash * 31 + getRow();
+    hash = hash * 31 + (int) (1000 * getDetailLevel().getScale());
+    return hash;
   }
 
   @Override

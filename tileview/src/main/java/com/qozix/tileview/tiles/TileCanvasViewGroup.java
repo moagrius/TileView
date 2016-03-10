@@ -200,7 +200,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     Set<Tile> visibleTiles = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
     Log.d( "DEBUG", "size of tile set from DetailLevel: " + visibleTiles.size() );
     mTileManager.reconcile( visibleTiles );
-    clearTilesOutOfViewport();
+    //clearTilesOutOfViewport();
     Log.d( "DEBUG", "size of tile set in manager: " + mTileManager.tilesInCurrentViewport.size() );
     // TODO: we're cancelling and restarting the same tiles repeatedly.  we need to get intersection from renderlist
     if( mTileRenderPoolExecutor != null ){

@@ -251,6 +251,10 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       return null;
     }
 
+    // TODO: check if TCVG is cancelled, or better yet reroute TCVG.cancel to here
+    // TODO: get boolean here, post messages in .run
+    // TODO: somewhere check OOM and call .cleanup, in case of constant slow dragging
+    // TODO: TCV.clearTiles throw concurrent modification exception on Set
     public boolean renderTile() {
       if( mCancelled ) {
         return false;
