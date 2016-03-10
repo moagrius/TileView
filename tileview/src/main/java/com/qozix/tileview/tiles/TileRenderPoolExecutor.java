@@ -275,7 +275,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
         return false;
       }
       if( mCancelled || tile.getBitmap() == null || thread.isInterrupted() ) {
-        //tile.destroy( true );  // TODO:
+        tile.destroy( true );
         return false;
       }
       return true;
