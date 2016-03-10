@@ -151,11 +151,15 @@ public class Tile {
   }
 
   void destroy( boolean shouldRecycle ) {
+    destroy( shouldRecycle, true );
+  }
+
+  void destroy( boolean shouldRecycle, boolean shouldRemove ) {
     if( shouldRecycle && mBitmap != null && !mBitmap.isRecycled() ) {
       mBitmap.recycle();
     }
     mBitmap = null;
-    if( mParentTileCanvasView != null ) {
+    if( shouldRemove && mParentTileCanvasView != null ) {
       mParentTileCanvasView.removeTile( this );
     }
   }

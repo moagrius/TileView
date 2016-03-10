@@ -263,6 +263,12 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     mCurrentTileCanvasView.addTile( tile );
   }
 
+  void handleTileRenderException( Throwable throwable ) {
+    if( throwable instanceof OutOfMemoryError ){
+      cleanup();
+    }
+  }
+
   boolean getRenderIsCancelled() {
     return mRenderIsCancelled;
   }

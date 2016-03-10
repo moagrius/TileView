@@ -57,8 +57,9 @@ public class TileCanvasView extends View {
 
   public void clearTiles( boolean shouldRecycle ) {
     for( Tile tile : mTiles ) {
-      tile.destroy( shouldRecycle );
+      tile.destroy( shouldRecycle, false );
     }
+    mTiles.clear();
     invalidate();
   }
 

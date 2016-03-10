@@ -127,8 +127,26 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
   public static class TileRenderHandler extends Handler {
 
+    public static final int RENDER_ERROR = -1;
     public static final int RENDER_INCOMPLETE = 0;
     public static final int RENDER_COMPLETE = 1;
+
+    public enum Status {
+
+      ERROR (RENDER_ERROR),
+      INCOMPLETE (RENDER_INCOMPLETE),
+      COMPLETE (RENDER_COMPLETE);
+
+      private int mMessageCode;
+
+      Status(int messageCode){
+        mMessageCode = messageCode;
+      }
+      int getMessageCode(){
+        return mMessageCode;
+      }
+    }
+
 
     public TileRenderHandler() {
       this( Looper.getMainLooper() );
@@ -140,16 +158,21 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
     @Override
     public void handleMessage( Message message ) {
+      TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) message.obj;
+      TileCanvasViewGroup tileCanvasViewGroup = tileRenderRunnable.getTileCanvasViewGroup();
+      if( tileCanvasViewGroup == null ) {
+        return;
+      }
+      Tile tile = tileRenderRunnable.getTile();
+      if( tile == null ) {
+        return;
+      }
       switch( message.what ) {
+        case RENDER_ERROR :
+          tileCanvasViewGroup.handleTileRenderException( tileRenderRunnable.getThrowable() );
+          break;
         case RENDER_COMPLETE:
-          TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) message.obj;
-          TileCanvasViewGroup tileCanvasViewGroup = tileRenderRunnable.getTileCanvasViewGroup();
-          if( tileCanvasViewGroup != null ) {
-            Tile tile = tileRenderRunnable.getTile();
-            if( tile != null ) {
-              tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
-            }
-          }
+          tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
           break;
         case RENDER_INCOMPLETE:
           Log.w( TileRenderPoolExecutor.class.getSimpleName(), "Tile was queued but was not rendered" );
@@ -168,6 +191,8 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
     private volatile boolean mCancelled = false;
     private volatile boolean mComplete = false;
+
+    private Throwable mThrowable;
 
     @Override
     public Void get() {
@@ -246,53 +271,54 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       return null;
     }
 
-    // TODO: somewhere check OOM and call .cleanup, in case of constant slow dragging
+    public Throwable getThrowable(){
+      return mThrowable;
+    }
+
     // TODO: TCV.clearTiles throw concurrent modification exception on Set
-    public boolean renderTile() {
+    public TileRenderHandler.Status renderTile() {
       if( mCancelled ) {
-        return false;
+        return TileRenderHandler.Status.INCOMPLETE;
       }
       Process.setThreadPriority( Process.THREAD_PRIORITY_BACKGROUND );
       final Thread thread = Thread.currentThread();
       if( thread.isInterrupted() ) {
-        return false;
+        return TileRenderHandler.Status.INCOMPLETE;
       }
       Tile tile = getTile();
       if( tile == null ) {
-        return false;
+        return TileRenderHandler.Status.INCOMPLETE;
       }
       Context context = getContext();
       if( context == null ) {
-        return false;
+        return TileRenderHandler.Status.INCOMPLETE;
       }
       BitmapProvider bitmapProvider = getBitmapProvider();
       if( bitmapProvider == null ) {
-        return false;
+        return TileRenderHandler.Status.INCOMPLETE;
       }
       try {
         tile.generateBitmap( context, bitmapProvider );
-      } catch( Exception e ) {
-        return false;
+      } catch( Throwable throwable ) {
+        mThrowable = throwable;
+        return TileRenderHandler.Status.ERROR;
       }
       if( mCancelled || tile.getBitmap() == null || thread.isInterrupted() ) {
         tile.destroy( true );
-        return false;
+        return TileRenderHandler.Status.INCOMPLETE;
       }
-      return true;
+      return TileRenderHandler.Status.COMPLETE;
     }
 
     @Override
     public void run() {
-      boolean rendered = renderTile();
+      TileRenderHandler.Status status = renderTile();
       Handler handler = getHandler();
       if( handler != null ) {
-        int status = rendered
-          ? TileRenderHandler.RENDER_COMPLETE
-          : TileRenderHandler.RENDER_INCOMPLETE;
-        Message message = handler.obtainMessage( status, this );
+        Message message = handler.obtainMessage( status.getMessageCode(), this );
         message.sendToTarget();
       }
-      if( rendered ) {
+      if( status == TileRenderHandler.Status.COMPLETE ) {
         mComplete = true;
       }
     }
