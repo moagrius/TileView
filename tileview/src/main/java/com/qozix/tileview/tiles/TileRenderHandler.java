@@ -4,6 +4,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import java.lang.ref.WeakReference;
+
 /**
  * @author Mike Dunn, 3/10/16.
  */
@@ -29,6 +31,7 @@ class TileRenderHandler extends Handler {
     }
   }
 
+  private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
 
   public TileRenderHandler() {
     this( Looper.getMainLooper() );
@@ -38,10 +41,21 @@ class TileRenderHandler extends Handler {
     super( looper );
   }
 
+  public void setTileCanvasViewGroup( TileCanvasViewGroup tileCanvasViewGroup ){
+    mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
+  }
+
+  public TileCanvasViewGroup getTileCanvasViewGroup(){
+    if( mTileCanvasViewGroupWeakReference == null ) {
+      return null;
+    }
+    return mTileCanvasViewGroupWeakReference.get();
+  }
+
   @Override
   public void handleMessage( Message message ) {
     TileRenderRunnable tileRenderRunnable = (TileRenderRunnable) message.obj;
-    TileCanvasViewGroup tileCanvasViewGroup = tileRenderRunnable.getTileCanvasViewGroup();
+    TileCanvasViewGroup tileCanvasViewGroup = getTileCanvasViewGroup();
     if( tileCanvasViewGroup == null ) {
       return;
     }

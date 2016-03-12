@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author Mike Dunn, 3/10/16.
+ * TODO: extend FutureTask?
  */
 class TileRenderRunnable implements Runnable, Future<Void> {
 
@@ -66,17 +67,12 @@ class TileRenderRunnable implements Runnable, Future<Void> {
     return mHandlerWeakReference.get();
   }
 
-  public void setTileCanvasViewGroup( TileCanvasViewGroup tileCanvasViewGroup ) {
-    mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
-    mContextWeakReference = new WeakReference<>( tileCanvasViewGroup.getContext() );
-    mBitmapProviderWeakReference = new WeakReference<>( tileCanvasViewGroup.getBitmapProvider() );
+  public void setContext( Context context ) {
+    mContextWeakReference = new WeakReference<>( context );
   }
 
-  public TileCanvasViewGroup getTileCanvasViewGroup() {
-    if( mTileCanvasViewGroupWeakReference != null ) {
-      return mTileCanvasViewGroupWeakReference.get();
-    }
-    return null;
+  public void setBitmapProvider( BitmapProvider bitmapProvider ){
+    mBitmapProviderWeakReference = new WeakReference<>( bitmapProvider );
   }
 
   public Context getContext() {
