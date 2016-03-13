@@ -102,15 +102,17 @@ public class RealMapTileViewActivity extends TileViewActivity {
     frameTo( x, y );
 
     // test higher than 1
-    //tileView.setScaleLimits( 0, 2 );
+    tileView.setScaleLimits( 0, 2 );
 
     // start small and allow zoom
     tileView.setScale( 0.5f );
 
-    // TODO:
+    // we're running from assets, should be fairly fast decodes, go ahead and render asap
     tileView.setShouldRenderWhilePanning( true );
+
+    // for quickly drawn tiles _without_ a downsample, transitions aren't particularly useful
     tileView.setTransitionsEnabled( false );
-    tileView.setShouldScaleToFit( false );
+
   }
 
   private MarkerLayout.MarkerTapListener markerTapListener = new MarkerLayout.MarkerTapListener() {

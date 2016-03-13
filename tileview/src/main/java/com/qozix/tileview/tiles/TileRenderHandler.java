@@ -17,18 +17,20 @@ class TileRenderHandler extends Handler {
 
   public enum Status {
 
-    ERROR (RENDER_ERROR),
-    INCOMPLETE (RENDER_INCOMPLETE),
-    COMPLETE (RENDER_COMPLETE);
+    ERROR( RENDER_ERROR ),
+    INCOMPLETE( RENDER_INCOMPLETE ),
+    COMPLETE( RENDER_COMPLETE );
 
     private int mMessageCode;
 
-    Status(int messageCode){
+    Status( int messageCode ) {
       mMessageCode = messageCode;
     }
-    int getMessageCode(){
+
+    int getMessageCode() {
       return mMessageCode;
     }
+
   }
 
   private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
@@ -41,11 +43,11 @@ class TileRenderHandler extends Handler {
     super( looper );
   }
 
-  public void setTileCanvasViewGroup( TileCanvasViewGroup tileCanvasViewGroup ){
+  public void setTileCanvasViewGroup( TileCanvasViewGroup tileCanvasViewGroup ) {
     mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
   }
 
-  public TileCanvasViewGroup getTileCanvasViewGroup(){
+  public TileCanvasViewGroup getTileCanvasViewGroup() {
     if( mTileCanvasViewGroupWeakReference == null ) {
       return null;
     }
@@ -64,14 +66,11 @@ class TileRenderHandler extends Handler {
       return;
     }
     switch( message.what ) {
-      case RENDER_ERROR :
+      case RENDER_ERROR:
         tileCanvasViewGroup.handleTileRenderException( tileRenderRunnable.getThrowable() );
         break;
       case RENDER_COMPLETE:
         tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
-        break;
-      case RENDER_INCOMPLETE:
-        // Tile was queued but was not rendered, but no Error or Exception was thrown
         break;
     }
   }

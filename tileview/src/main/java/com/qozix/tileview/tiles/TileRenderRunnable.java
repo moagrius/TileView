@@ -1,47 +1,34 @@
 package com.qozix.tileview.tiles;
 
 import android.content.Context;
-import android.os.*;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Process;
-import android.support.annotation.NonNull;
 
 import com.qozix.tileview.graphics.BitmapProvider;
 
 import java.lang.ref.WeakReference;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Mike Dunn, 3/10/16.
- * TODO: extend FutureTask?
  */
-class TileRenderRunnable implements Runnable, Future<Void> {
+class TileRenderRunnable implements Runnable {
 
-  private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
   private WeakReference<Tile> mTileWeakReference;
   private WeakReference<Handler> mHandlerWeakReference;
   private WeakReference<Context> mContextWeakReference;
   private WeakReference<BitmapProvider> mBitmapProviderWeakReference;
 
-  private volatile boolean mCancelled = false;
-  private volatile boolean mComplete = false;
+  private boolean mCancelled = false;
+  private boolean mComplete = false;
+
+  private volatile Thread mThread;
 
   private Throwable mThrowable;
 
-  @Override
-  public Void get() {
-    return null;
-  }
-
-  @Override
-  public Void get( long timeout, @NonNull TimeUnit unit ) {
-    return null;
-  }
-
-  @Override
   public boolean cancel( boolean mayInterrupt ) {
-    if( mayInterrupt ) {
-      Thread.currentThread().interrupt();
+    if( mayInterrupt && mThread != null ) {
+      mThread.interrupt();
     }
     boolean cancelled = mCancelled;
     mCancelled = true;
@@ -71,7 +58,7 @@ class TileRenderRunnable implements Runnable, Future<Void> {
     mContextWeakReference = new WeakReference<>( context );
   }
 
-  public void setBitmapProvider( BitmapProvider bitmapProvider ){
+  public void setBitmapProvider( BitmapProvider bitmapProvider ) {
     mBitmapProviderWeakReference = new WeakReference<>( bitmapProvider );
   }
 
@@ -109,8 +96,7 @@ class TileRenderRunnable implements Runnable, Future<Void> {
       return TileRenderHandler.Status.INCOMPLETE;
     }
     android.os.Process.setThreadPriority( Process.THREAD_PRIORITY_BACKGROUND );
-    final Thread thread = Thread.currentThread();
-    if( thread.isInterrupted() ) {
+    if( mThread.isInterrupted() ) {
       return TileRenderHandler.Status.INCOMPLETE;
     }
     Tile tile = getTile();
@@ -131,7 +117,7 @@ class TileRenderRunnable implements Runnable, Future<Void> {
       mThrowable = throwable;
       return TileRenderHandler.Status.ERROR;
     }
-    if( mCancelled || tile.getBitmap() == null || thread.isInterrupted() ) {
+    if( mCancelled || tile.getBitmap() == null || mThread.isInterrupted() ) {
       tile.destroy( true );
       return TileRenderHandler.Status.INCOMPLETE;
     }
@@ -140,14 +126,18 @@ class TileRenderRunnable implements Runnable, Future<Void> {
 
   @Override
   public void run() {
+    mThread = Thread.currentThread();
     TileRenderHandler.Status status = renderTile();
+    if( status == TileRenderHandler.Status.INCOMPLETE ) {
+      return;
+    }
+    if( status == TileRenderHandler.Status.COMPLETE ) {
+      mComplete = true;
+    }
     Handler handler = getHandler();
     if( handler != null ) {
       Message message = handler.obtainMessage( status.getMessageCode(), this );
       message.sendToTarget();
-    }
-    if( status == TileRenderHandler.Status.COMPLETE ) {
-      mComplete = true;
     }
   }
 }

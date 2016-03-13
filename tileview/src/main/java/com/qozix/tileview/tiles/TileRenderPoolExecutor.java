@@ -1,7 +1,6 @@
 package com.qozix.tileview.tiles;
 
 import android.content.Context;
-import android.os.Handler;
 
 import com.qozix.tileview.graphics.BitmapProvider;
 
@@ -22,7 +21,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
   private WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
 
-  private Handler mHandler = new TileRenderHandler();
+  private TileRenderHandler mHandler = new TileRenderHandler();
 
   public TileRenderPoolExecutor() {
     super(
@@ -36,6 +35,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
 
   public void queue( TileCanvasViewGroup tileCanvasViewGroup, Set<Tile> renderSet ) {
     mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
+    mHandler.setTileCanvasViewGroup( tileCanvasViewGroup );
     final Context context = tileCanvasViewGroup.getContext();
     final BitmapProvider bitmapProvider = tileCanvasViewGroup.getBitmapProvider();
     tileCanvasViewGroup.onRenderTaskPreExecute();
