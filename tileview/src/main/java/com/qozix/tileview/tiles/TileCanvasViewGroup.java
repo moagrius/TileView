@@ -20,7 +20,8 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   private static final int RENDER_FLAG = 1;
 
   public static final int DEFAULT_RENDER_BUFFER = 250;
-  public static final int FAST_RENDER_BUFFER = 10;
+  public static final int FAST_RENDER_BUFFER = 15;
+
   private static final int DEFAULT_TRANSITION_DURATION = 200;
 
   private BitmapProvider mBitmapProvider;
