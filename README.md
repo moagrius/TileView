@@ -18,7 +18,8 @@ Major goals were:
 
 #Change Log
 (Only major and minor changes are tracked here, consult git history for patches)
-*2.1* Rewrite of threading strategy, thanks to @peterLaurence and @bnsantos.  Tile render performance is substantially improved.
+
+**2.1** Rewrite of threading strategy, thanks to @peterLaurence and @bnsantos.  Tile render performance is substantially improved.
 
 #TileView
 The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images, with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers), built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or coordinate system.
