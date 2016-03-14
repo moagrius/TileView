@@ -1,8 +1,8 @@
 package com.qozix.tileview.tiles;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 
 import com.qozix.tileview.detail.DetailLevel;
@@ -12,23 +12,20 @@ import com.qozix.tileview.widgets.ScalingLayout;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView.TileCanvasDrawListener {
 
   private static final int RENDER_FLAG = 1;
 
   public static final int DEFAULT_RENDER_BUFFER = 250;
-  public static final int FAST_RENDER_BUFFER = 10;
+  public static final int FAST_RENDER_BUFFER = 15;
+
   private static final int DEFAULT_TRANSITION_DURATION = 200;
 
-  private LinkedList<Tile> mTilesVisible = new LinkedList<Tile>();
-  private LinkedList<Tile> mTilesAlreadyRendered = new LinkedList<Tile>();
-
   private BitmapProvider mBitmapProvider;
-  private HashMap<Float, TileCanvasView> mTileCanvasViewHashMap = new HashMap<Float, TileCanvasView>();
-
-  private TileRenderTask mLastRunTileRenderTask;
+  private HashMap<Float, TileCanvasView> mTileCanvasViewHashMap = new HashMap<>();
 
   private DetailLevel mDetailLevelToRender;
   private DetailLevel mLastRenderedDetailLevel;
@@ -43,15 +40,22 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   private boolean mTransitionsEnabled = true;
   private int mTransitionDuration = DEFAULT_TRANSITION_DURATION;
 
-  private TileRenderHandler mTileRenderHandler;
+  private TileRenderThrottleHandler mTileRenderThrottleHandler;
   private TileRenderListener mTileRenderListener;
 
   private int mRenderBuffer = DEFAULT_RENDER_BUFFER;
 
+  private TileRenderPoolExecutor mTileRenderPoolExecutor;
+
+  private Set<Tile> mTilesInCurrentViewport = new HashSet<>();
+  private Set<Tile> mTilesNotInCurrentViewport = new HashSet<>();
+  private Set<Tile> mTilesAlreadyRendered = new HashSet<>();
+
   public TileCanvasViewGroup( Context context ) {
     super( context );
     setWillNotDraw( false );
-    mTileRenderHandler = new TileRenderHandler( this );
+    mTileRenderThrottleHandler = new TileRenderThrottleHandler( this );
+    mTileRenderPoolExecutor = new TileRenderPoolExecutor();
   }
 
   public boolean getTransitionsEnabled() {
@@ -115,8 +119,8 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     if( mDetailLevelToRender == null ) {
       return;
     }
-    if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {
-      mTileRenderHandler.sendEmptyMessageDelayed( RENDER_FLAG, mRenderBuffer );
+    if( !mTileRenderThrottleHandler.hasMessages( RENDER_FLAG ) ) {
+      mTileRenderThrottleHandler.sendEmptyMessageDelayed( RENDER_FLAG, mRenderBuffer );
     }
   }
 
@@ -126,10 +130,9 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
    */
   public void cancelRender() {
     mRenderIsCancelled = true;
-    if( mLastRunTileRenderTask != null && mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
-      mLastRunTileRenderTask.cancel( true );
+    if( mTileRenderPoolExecutor != null ){
+      mTileRenderPoolExecutor.cancel();
     }
-    mLastRunTileRenderTask = null;
   }
 
   /**
@@ -161,14 +164,23 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public void clear() {
     suppressRender();
     cancelRender();
-    for( Tile tile : mTilesVisible ) {
-      tile.destroy( mShouldRecycleBitmaps );
+    mTilesInCurrentViewport.clear();
+    mCurrentTileCanvasView.clearTiles( mShouldRecycleBitmaps );
+  }
+
+  /**
+   * Effectively adds any new tiles, without replacing existing tiles, and removes those not in passed set.
+   * @param recentlyComputedVisibleTileSet Tile Set that should be visible, based on DetailLevel inspection of viewport size and position.
+   */
+  public void reconcile( Set<Tile> recentlyComputedVisibleTileSet ){
+    for( Tile tile : mTilesInCurrentViewport ) {
+      if( !recentlyComputedVisibleTileSet.contains( tile ) ) {
+        mTilesNotInCurrentViewport.add( tile );
+      }
     }
-    mTilesVisible.clear();
-    for( Tile tile : mTilesAlreadyRendered ) {
-      tile.destroy( mShouldRecycleBitmaps );
-    }
-    mTilesAlreadyRendered.clear();
+    mTilesInCurrentViewport.addAll( recentlyComputedVisibleTileSet );
+    mTilesInCurrentViewport.removeAll( mTilesNotInCurrentViewport );
+    mTilesNotInCurrentViewport.clear();
   }
 
   private float getCurrentDetailLevelScale() {
@@ -202,22 +214,25 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     if( !changed ) {
       return;
     }
-    mTilesVisible = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
-    if( mLastRunTileRenderTask != null && mLastRunTileRenderTask.getStatus() != AsyncTask.Status.FINISHED ) {
-      mLastRunTileRenderTask.cancel( true );
+    Set<Tile> visibleTiles = mDetailLevelToRender.getVisibleTilesFromLastViewportComputation();
+    reconcile( visibleTiles );
+    if( mTileRenderPoolExecutor != null ){
+      mTileRenderPoolExecutor.queue( this, getRenderSet() );
     }
-    mLastRunTileRenderTask = new TileRenderTask( this );
-    mLastRunTileRenderTask.executeOnExecutor( AsyncTask.THREAD_POOL_EXECUTOR );
   }
 
-  private void cleanup() {
-    LinkedList<Tile> condemned = new LinkedList<Tile>( mTilesAlreadyRendered );
-    condemned.removeAll( mTilesVisible );
+  private void clearOutOfViewportTiles(){
+    Set<Tile> condemned = new HashSet<>( mTilesAlreadyRendered );
+    condemned.removeAll( mTilesInCurrentViewport );
+    mTilesAlreadyRendered.removeAll( condemned );
     for( Tile tile : condemned ) {
       tile.destroy( mShouldRecycleBitmaps );
     }
-    mTilesAlreadyRendered.removeAll( condemned );
     mCurrentTileCanvasView.invalidate();
+  }
+
+  private void cleanup() {
+    clearOutOfViewportTiles();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       if( mCurrentTileCanvasView != tileGroup ) {
         tileGroup.clearTiles( mShouldRecycleBitmaps );
@@ -242,32 +257,34 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   void onRenderTaskPostExecute() {
     mIsRendering = false;
-    if( !mTransitionsEnabled ) {
-      cleanup();
-    }
-    if( mTileRenderListener != null ) {
-      mTileRenderListener.onRenderComplete();
-    }
-    invalidate();
-    requestRender();
+    mTileRenderThrottleHandler.post( mRenderPostExecuteRunnable );
   }
 
-  LinkedList<Tile> getRenderList() {
-    LinkedList<Tile> renderList = (LinkedList<Tile>) mTilesVisible.clone();
-    renderList.removeAll( mTilesAlreadyRendered );
-    return renderList;
+  Set<Tile> getRenderSet() {
+    Set<Tile> renderSet = new HashSet<>( mTilesInCurrentViewport );
+    renderSet.removeAll( mTilesAlreadyRendered );
+    return renderSet;
   }
 
   void generateTileBitmap( Tile tile ) {
     tile.generateBitmap( getContext(), getBitmapProvider() );
   }
 
-  void addTileToCurrentTileCanvasView( Tile tile ) {
+  void addTileToCurrentTileCanvasView( final Tile tile ) {
+    if( !mTilesInCurrentViewport.contains( tile ) ) {
+      return;
+    }
     tile.setTransitionsEnabled( mTransitionsEnabled );
     tile.setTransitionDuration( mTransitionDuration );
     tile.stampTime();
     mTilesAlreadyRendered.add( tile );
     mCurrentTileCanvasView.addTile( tile );
+  }
+
+  void handleTileRenderException( Throwable throwable ) {
+    if( throwable instanceof OutOfMemoryError ){
+      cleanup();
+    }
   }
 
   boolean getRenderIsCancelled() {
@@ -287,28 +304,29 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   public void destroy(){
+    mTileRenderPoolExecutor.shutdownNow();
     clear();
     for( TileCanvasView tileGroup : mTileCanvasViewHashMap.values() ) {
       tileGroup.clearTiles( mShouldRecycleBitmaps );
     }
     mTileCanvasViewHashMap.clear();
-    if( !mTileRenderHandler.hasMessages( RENDER_FLAG ) ) {
-      mTileRenderHandler.removeMessages( RENDER_FLAG );
+    if( !mTileRenderThrottleHandler.hasMessages( RENDER_FLAG ) ) {
+      mTileRenderThrottleHandler.removeMessages( RENDER_FLAG );
     }
   }
 
-  private static class TileRenderHandler extends Handler {
+  private static class TileRenderThrottleHandler extends Handler {
 
-    private final WeakReference<TileCanvasViewGroup> mTileManagerWeakReference;
+    private final WeakReference<TileCanvasViewGroup> mTileCanvasViewGroupWeakReference;
 
-    public TileRenderHandler( TileCanvasViewGroup tileCanvasViewGroup ) {
-      super();
-      mTileManagerWeakReference = new WeakReference<TileCanvasViewGroup>( tileCanvasViewGroup );
+    public TileRenderThrottleHandler( TileCanvasViewGroup tileCanvasViewGroup ) {
+      super( Looper.getMainLooper() );
+      mTileCanvasViewGroupWeakReference = new WeakReference<>( tileCanvasViewGroup );
     }
 
     @Override
     public final void handleMessage( Message message ) {
-      final TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
+      final TileCanvasViewGroup tileCanvasViewGroup = mTileCanvasViewGroupWeakReference.get();
       if( tileCanvasViewGroup != null ) {
         tileCanvasViewGroup.renderTiles();
       }
@@ -324,77 +342,18 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
     void onRenderComplete();
   }
 
-  static class TileRenderTask extends AsyncTask<Void, Tile, Void> {
-
-    private final WeakReference<TileCanvasViewGroup> mTileManagerWeakReference;
-
-    TileRenderTask( TileCanvasViewGroup tileCanvasViewGroup ) {
-      super();
-      mTileManagerWeakReference = new WeakReference<TileCanvasViewGroup>( tileCanvasViewGroup );
-    }
-
+  // This runnable is required to run on UI thread
+  private Runnable mRenderPostExecuteRunnable =  new Runnable() {
     @Override
-    protected void onPreExecute() {
-      final TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
-      if( tileCanvasViewGroup != null ) {
-        tileCanvasViewGroup.onRenderTaskPreExecute();
+    public void run() {
+      if ( !mTransitionsEnabled ) {
+        cleanup();
       }
-    }
-
-    /**
-     * As of 10/03/15, lint is _incorrectly_ indicating that we can't access member
-     * variables from a worker thread (this thread).
-     * https://code.google.com/p/android/issues/detail?id=175397
-     * Until this is corrected, use @SuppressWarnings
-     *
-     * @param params noop
-     * @return null
-     */
-    @SuppressWarnings("all")
-    @Override
-    protected Void doInBackground( Void... params ) {
-      TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
-      if( tileCanvasViewGroup != null ) {
-        LinkedList<Tile> renderList = tileCanvasViewGroup.getRenderList();
-        for( Tile tile : renderList ) {
-          if( !isCancelled() ) {
-            tileCanvasViewGroup = mTileManagerWeakReference.get();
-            if( tileCanvasViewGroup != null && !tileCanvasViewGroup.getRenderIsCancelled() ) {
-              tileCanvasViewGroup.generateTileBitmap( tile );
-              publishProgress( tile );
-            }
-          }
-        }
+      if( mTileRenderListener != null ) {
+        mTileRenderListener.onRenderComplete();
       }
-      return null;
+      invalidate();
+      requestRender();
     }
-
-    @Override
-    protected void onProgressUpdate( Tile... params ) {
-      if( !isCancelled() ) {
-        TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
-        if( tileCanvasViewGroup != null && !tileCanvasViewGroup.getRenderIsCancelled() ) {
-          Tile tile = params[0];
-          tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
-        }
-      }
-    }
-
-    @Override
-    protected void onPostExecute( Void param ) {
-      TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
-      if( tileCanvasViewGroup != null ) {
-        tileCanvasViewGroup.onRenderTaskPostExecute();
-      }
-    }
-
-    @Override
-    protected void onCancelled() {
-      TileCanvasViewGroup tileCanvasViewGroup = mTileManagerWeakReference.get();
-      if( tileCanvasViewGroup != null ) {
-        tileCanvasViewGroup.onRenderTaskCancelled();
-      }
-    }
-
-  }
+  };
 }

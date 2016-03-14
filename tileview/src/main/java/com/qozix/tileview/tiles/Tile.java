@@ -141,11 +141,15 @@ public class Tile {
   }
 
   void destroy( boolean shouldRecycle ) {
+    destroy( shouldRecycle, true );
+  }
+
+  void destroy( boolean shouldRecycle, boolean shouldRemove ) {
     if( shouldRecycle && mBitmap != null && !mBitmap.isRecycled() ) {
       mBitmap.recycle();
     }
     mBitmap = null;
-    if( mParentTileCanvasView != null ) {
+    if( shouldRemove && mParentTileCanvasView != null ) {
       mParentTileCanvasView.removeTile( this );
     }
   }
@@ -162,12 +166,24 @@ public class Tile {
   }
 
   @Override
+  public int hashCode() {
+    int hash = 17;
+    hash = hash * 31 + getColumn();
+    hash = hash * 31 + getRow();
+    hash = hash * 31 + (int) (1000 * getDetailLevel().getScale());
+    return hash;
+  }
+
+  @Override
   public boolean equals( Object o ) {
+    if( this == o ){
+      return true;
+    }
     if( o instanceof Tile ) {
       Tile m = (Tile) o;
-      return (m.getRow() == getRow())
-        && (m.getColumn() == getColumn())
-        && (m.getDetailLevel() == getDetailLevel());
+      return m.getRow() == getRow()
+        && m.getColumn() == getColumn()
+        && m.getDetailLevel().getScale() == getDetailLevel().getScale();
     }
     return false;
   }

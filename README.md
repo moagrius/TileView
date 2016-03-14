@@ -16,6 +16,10 @@ Major goals were:
 6.  General refactoring.  There are too many simplifications and optimization to mention, but each class and each method has been revisited.
 7.  Hooks hooks hooks!  While pan and zoom events are broadcast using a familiar listener mechanism, and should be sufficient for most use-cases, public hooks exist for a large number of operations that can be overriden by subclasses for custom functionality.
 
+#Change Log
+(Only major and minor changes are tracked here, consult git history for patches)
+*2.1* Rewrite of threading strategy, thanks to @peterLaurence and @bnsantos.  Tile render performance is substantially improved.
+
 #TileView
 The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images, with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers), built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or coordinate system.
 
@@ -27,7 +31,7 @@ Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tile
 ###Installation
 Gradle:
 ```
-compile 'com.qozix:tileview:2.0.10'
+compile 'com.qozix:tileview:2.1.0'
 ```
 
 The library is hosted on jcenter, and is not currently available from maven.
@@ -47,7 +51,7 @@ A demo application, built in Android Studio, is available in the `demo` folder o
 at the 2nd column from left and 3rd row from top.
 1. Create a new application with a single activity ('Main').
 1. Save the image tiles to your `assets` directory.
-1. Add `compile 'com.qozix:tileview:2.0.10'` to your gradle dependencies.
+1. Add `compile 'com.qozix:tileview:2.1.0'` to your gradle dependencies.
 1. In the Main Activity, use this for `onCreate`:
 ```
 @Override

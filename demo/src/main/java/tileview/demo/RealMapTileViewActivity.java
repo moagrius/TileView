@@ -105,7 +105,13 @@ public class RealMapTileViewActivity extends TileViewActivity {
     tileView.setScaleLimits( 0, 2 );
 
     // start small and allow zoom
-    tileView.setScale( 0.3f );
+    tileView.setScale( 0.5f );
+
+    // we're running from assets, should be fairly fast decodes, go ahead and render asap
+    tileView.setShouldRenderWhilePanning( true );
+
+    // for quickly drawn tiles _without_ a downsample, transitions aren't particularly useful
+    tileView.setTransitionsEnabled( false );
 
   }
 
