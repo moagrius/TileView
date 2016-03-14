@@ -47,10 +47,9 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
 
   private TileRenderPoolExecutor mTileRenderPoolExecutor;
 
-
-  public Set<Tile> tilesInCurrentViewport = new HashSet<>();
-  public Set<Tile> tilesNotInCurrentViewport = new HashSet<>();
-  public Set<Tile> tilesAlreadyRendered = new HashSet<>();
+  private Set<Tile> mTilesInCurrentViewport = new HashSet<>();
+  private Set<Tile> mTilesNotInCurrentViewport = new HashSet<>();
+  private Set<Tile> mTilesAlreadyRendered = new HashSet<>();
 
   public TileCanvasViewGroup( Context context ) {
     super( context );
@@ -165,7 +164,7 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   public void clear() {
     suppressRender();
     cancelRender();
-    tilesInCurrentViewport.clear();
+    mTilesInCurrentViewport.clear();
     mCurrentTileCanvasView.clearTiles( mShouldRecycleBitmaps );
   }
 
@@ -174,14 +173,14 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
    * @param recentlyComputedVisibleTileSet Tile Set that should be visible, based on DetailLevel inspection of viewport size and position.
    */
   public void reconcile( Set<Tile> recentlyComputedVisibleTileSet ){
-    for( Tile tile : tilesInCurrentViewport ) {
+    for( Tile tile : mTilesInCurrentViewport ) {
       if( !recentlyComputedVisibleTileSet.contains( tile ) ) {
-        tilesNotInCurrentViewport.add( tile );
+        mTilesNotInCurrentViewport.add( tile );
       }
     }
-    tilesInCurrentViewport.addAll( recentlyComputedVisibleTileSet );
-    tilesInCurrentViewport.removeAll( tilesNotInCurrentViewport );
-    tilesNotInCurrentViewport.clear();
+    mTilesInCurrentViewport.addAll( recentlyComputedVisibleTileSet );
+    mTilesInCurrentViewport.removeAll( mTilesNotInCurrentViewport );
+    mTilesNotInCurrentViewport.clear();
   }
 
   private float getCurrentDetailLevelScale() {
@@ -223,9 +222,9 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   private void clearOutOfViewportTiles(){
-    Set<Tile> condemned = new HashSet<>( tilesAlreadyRendered );
-    condemned.removeAll( tilesInCurrentViewport );
-    tilesAlreadyRendered.removeAll( condemned );
+    Set<Tile> condemned = new HashSet<>( mTilesAlreadyRendered );
+    condemned.removeAll( mTilesInCurrentViewport );
+    mTilesAlreadyRendered.removeAll( condemned );
     for( Tile tile : condemned ) {
       tile.destroy( mShouldRecycleBitmaps );
     }
@@ -262,8 +261,8 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   Set<Tile> getRenderSet() {
-    Set<Tile> renderSet = new HashSet<>( tilesInCurrentViewport );
-    renderSet.removeAll( tilesAlreadyRendered );
+    Set<Tile> renderSet = new HashSet<>( mTilesInCurrentViewport );
+    renderSet.removeAll( mTilesAlreadyRendered );
     return renderSet;
   }
 
@@ -272,13 +271,13 @@ public class TileCanvasViewGroup extends ScalingLayout implements TileCanvasView
   }
 
   void addTileToCurrentTileCanvasView( final Tile tile ) {
-    if( !tilesInCurrentViewport.contains( tile ) ) {
+    if( !mTilesInCurrentViewport.contains( tile ) ) {
       return;
     }
     tile.setTransitionsEnabled( mTransitionsEnabled );
     tile.setTransitionDuration( mTransitionDuration );
     tile.stampTime();
-    tilesAlreadyRendered.add( tile );
+    mTilesAlreadyRendered.add( tile );
     mCurrentTileCanvasView.addTile( tile );
   }
 

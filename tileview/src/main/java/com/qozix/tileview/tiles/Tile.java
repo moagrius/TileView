@@ -28,8 +28,6 @@ public class Tile {
 
   private boolean mTransitionsEnabled;
 
-  private boolean mHasBeenDecoded;
-
   private int mTransitionDuration = DEFAULT_TRANSITION_DURATION;
 
   private Paint mPaint;
@@ -87,14 +85,6 @@ public class Tile {
 
   public void setTransitionDuration( int transitionDuration ) {
     mTransitionDuration = transitionDuration;
-  }
-
-  public void setHasBeenDecoded( boolean hasBeenDecoded ) {
-    mHasBeenDecoded = hasBeenDecoded;
-  }
-
-  public boolean getHasBeenDecoded() {
-    return mHasBeenDecoded;
   }
 
   public void stampTime() {
