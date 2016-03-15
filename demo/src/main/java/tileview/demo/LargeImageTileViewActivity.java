@@ -37,6 +37,8 @@ public class LargeImageTileViewActivity extends TileViewActivity {
 
 		// render while panning
 		tileView.setShouldRenderWhilePanning( true );
-		
+
+		// disallow going back to minimum scale while double-taping at maximum scale (for demo purpose)
+		tileView.setShouldLoopScale( false );
 	}
 }

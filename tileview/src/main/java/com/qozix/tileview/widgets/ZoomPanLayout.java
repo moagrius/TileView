@@ -47,6 +47,7 @@ public class ZoomPanLayout extends ViewGroup implements
 
   private float mEffectiveMinScale;
   private boolean mShouldScaleToFit = true;
+  private boolean mShouldLoopScale = true;
 
   private boolean mIsFlinging;
   private boolean mIsDragging;
@@ -133,6 +134,16 @@ public class ZoomPanLayout extends ViewGroup implements
   public void setShouldScaleToFit( boolean shouldScaleToFit ) {
     mShouldScaleToFit = shouldScaleToFit;
     calculateMinimumScaleToFit();
+  }
+
+  /**
+   * Determines whether the ZoomPanLayout should go back to minimum scale after a double-tap at
+   * maximum scale.
+   *
+   * @param shouldLoopScale True to allow going back to minimum scale, false otherwise.
+   */
+  public void setShouldLoopScale( boolean shouldLoopScale ) {
+    mShouldLoopScale = shouldLoopScale;
   }
 
   /**
@@ -691,8 +702,9 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public boolean onDoubleTap( MotionEvent event ) {
-    float destination = mScale >= mMaxScale ? mMinScale : mScale * 2;
-    destination = getConstrainedDestinationScale( destination );
+    float destination = (float)( Math.pow( 2, Math.floor( Math.log( mScale * 2 ) / Math.log( 2 ) ) ) );
+    float effectiveDestination = mShouldLoopScale && mScale >= mMaxScale ? mMinScale : destination;
+    destination = getConstrainedDestinationScale( effectiveDestination );
     smoothScaleFromFocalPoint( (int) event.getX(), (int) event.getY(), destination );
     return true;
   }
