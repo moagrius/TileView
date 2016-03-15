@@ -510,11 +510,11 @@ public class ZoomPanLayout extends ViewGroup implements
     }
   }
 
-  private int getHalfWidth() {
+  protected int getHalfWidth() {
     return FloatMathHelper.scale( getWidth(), 0.5f );
   }
 
-  private int getHalfHeight() {
+  protected int getHalfHeight() {
     return FloatMathHelper.scale( getHeight(), 0.5f );
   }
 

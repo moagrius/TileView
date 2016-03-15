@@ -8,6 +8,8 @@ import android.graphics.RectF;
 import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -848,6 +850,83 @@ public class TileView extends ZoomPanLayout implements
       clear();
       sendEmptyMessageDelayed( MESSAGE, RENDER_THROTTLE_TIMEOUT );
     }
+  }
+
+  /**
+   * Object used to keep some data when a configuration change happens and the activity is
+   * re-created.
+   * It's boiler-plate but this is how to save View state.
+   */
+  private static class SavedState extends BaseSavedState {
+    /* This will store the current scale and position */
+    float mScale;
+    int mSavedCenterX;
+    int mSavedCenterY;
+
+    SavedState( Parcelable superState ) {
+      super( superState );
+    }
+
+    private SavedState( Parcel in ) {
+      super( in );
+      mScale = in.readFloat();
+      mSavedCenterX = in.readInt();
+      mSavedCenterY = in.readInt();
+    }
+
+    @Override
+    public void writeToParcel( Parcel out, int flags ) {
+      super.writeToParcel( out, flags );
+      out.writeFloat( mScale );
+      out.writeInt( mSavedCenterX );
+      out.writeInt( mSavedCenterY );
+    }
+
+    public static final Parcelable.Creator<SavedState> CREATOR
+            = new Parcelable.Creator<SavedState>() {
+      public SavedState createFromParcel( Parcel in ) {
+        return new SavedState( in );
+      }
+
+      public SavedState[] newArray( int size ) {
+        return new SavedState[ size ];
+      }
+    };
+  }
+
+  /**
+   * The default {@code super.onSaveInstanceState} and {@code onRestoreInstanceState} don't
+   * restore the position on the map as expected (if the instance of {@link TileView} remains the
+   * same). For this reason and if a new {@link TileView} instance is created, we have to save
+   * the current scale and position on the map, to restore them later when the {@link TileView} is
+   * recreated.
+   */
+  @Override
+  public Parcelable onSaveInstanceState() {
+    Parcelable superState = super.onSaveInstanceState();
+    SavedState ss = new SavedState( superState );
+    ss.mScale = getScale();
+    ss.mSavedCenterX = getScrollX() + getHalfWidth();
+    ss.mSavedCenterY = getScrollY() + getHalfHeight();
+    return ss;
+  }
+
+  @Override
+  public void onRestoreInstanceState(Parcelable state) {
+    final SavedState ss = (SavedState) state;
+    super.onRestoreInstanceState( ss.getSuperState() );
+    setScale( ss.mScale );
+
+    /*
+     * This is important to schedule a scroll change and not do it right away, as it won't work
+     * otherwise.
+     */
+    post(new Runnable() {
+      @Override
+      public void run() {
+        scrollToAndCenter(ss.mSavedCenterX, ss.mSavedCenterY);
+      }
+    });
   }
 
 }
