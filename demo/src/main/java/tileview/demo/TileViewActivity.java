@@ -8,11 +8,20 @@ import com.qozix.tileview.TileView;
 public class TileViewActivity extends Activity {
 
 	private TileView tileView;
-	
+
 	@Override
 	public void onCreate( Bundle savedInstanceState ) {
 		super.onCreate( savedInstanceState );
 		tileView = new TileView( this );
+
+		/**
+		 * Set an id. This is necessary to enable the save state mechanism of Android.
+		 * It is retrieved from a resource value, but it can also be generated with
+		 * {@code View.generateViewId()}.
+		 */
+		tileView.setId( R.id.tileview_id );
+		tileView.setSaveEnabled( true );
+
 		setContentView( tileView );
 	}
 	
