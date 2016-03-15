@@ -859,9 +859,9 @@ public class TileView extends ZoomPanLayout implements
    */
   private static class SavedState extends BaseSavedState {
     /* This will store the current scale and position */
-    float scale;
-    int savedCenterX;
-    int savedCenterY;
+    float mScale;
+    int mSavedCenterX;
+    int mSavedCenterY;
 
     SavedState( Parcelable superState ) {
       super( superState );
@@ -869,17 +869,17 @@ public class TileView extends ZoomPanLayout implements
 
     private SavedState( Parcel in ) {
       super( in );
-      scale = in.readFloat();
-      savedCenterX = in.readInt();
-      savedCenterY = in.readInt();
+      mScale = in.readFloat();
+      mSavedCenterX = in.readInt();
+      mSavedCenterY = in.readInt();
     }
 
     @Override
     public void writeToParcel( Parcel out, int flags ) {
       super.writeToParcel( out, flags );
-      out.writeFloat( scale );
-      out.writeInt( savedCenterX );
-      out.writeInt( savedCenterY );
+      out.writeFloat( mScale );
+      out.writeInt( mSavedCenterX );
+      out.writeInt( mSavedCenterY );
     }
 
     public static final Parcelable.Creator<SavedState> CREATOR
@@ -905,9 +905,9 @@ public class TileView extends ZoomPanLayout implements
   public Parcelable onSaveInstanceState() {
     Parcelable superState = super.onSaveInstanceState();
     SavedState ss = new SavedState( superState );
-    ss.scale = getScale();
-    ss.savedCenterX = getScrollX() + getHalfWidth();
-    ss.savedCenterY = getScrollY() + getHalfHeight();
+    ss.mScale = getScale();
+    ss.mSavedCenterX = getScrollX() + getHalfWidth();
+    ss.mSavedCenterY = getScrollY() + getHalfHeight();
     return ss;
   }
 
@@ -915,16 +915,16 @@ public class TileView extends ZoomPanLayout implements
   public void onRestoreInstanceState(Parcelable state) {
     final SavedState ss = (SavedState) state;
     super.onRestoreInstanceState( ss.getSuperState() );
-    setScale( ss.scale );
+    setScale( ss.mScale );
 
-    /**
+    /*
      * This is important to schedule a scroll change and not do it right away, as it won't work
      * otherwise.
      */
     post(new Runnable() {
       @Override
       public void run() {
-        scrollToAndCenter( ss.savedCenterX, ss.savedCenterY );
+        scrollToAndCenter(ss.mSavedCenterX, ss.mSavedCenterY);
       }
     });
   }
