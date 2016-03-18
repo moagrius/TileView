@@ -676,9 +676,7 @@ public class TileView extends ZoomPanLayout implements
    * appropriate for Activity.onPause.
    */
   public void pause() {
-    mTileCanvasViewGroup.clear();
     mRenderThrottleHandler.clear();
-    mCompositePathView.setShouldDraw( false );
     mDetailLevelManager.invalidateAll();
     setWillNotDraw( true );
   }
@@ -702,7 +700,6 @@ public class TileView extends ZoomPanLayout implements
   public void resume() {
     setWillNotDraw( false );
     updateViewport();
-    mCompositePathView.setShouldDraw( true );
     mTileCanvasViewGroup.updateTileSet( mDetailLevelManager.getCurrentDetailLevel() );
     requestRender();
     requestLayout();
@@ -916,11 +913,6 @@ public class TileView extends ZoomPanLayout implements
     final SavedState ss = (SavedState) state;
     super.onRestoreInstanceState( ss.getSuperState() );
     setScale( ss.mScale );
-
-    /*
-     * This is important to schedule a scroll change and not do it right away, as it won't work
-     * otherwise.
-     */
     post(new Runnable() {
       @Override
       public void run() {
