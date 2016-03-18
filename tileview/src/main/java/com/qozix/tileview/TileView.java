@@ -11,7 +11,6 @@ import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -680,7 +679,6 @@ public class TileView extends ZoomPanLayout implements
     mRenderThrottleHandler.clear();
     mDetailLevelManager.invalidateAll();
     setWillNotDraw( true );
-    Log.d( "DEBUG", "pause" );
   }
 
   /**
@@ -705,7 +703,6 @@ public class TileView extends ZoomPanLayout implements
     mTileCanvasViewGroup.updateTileSet( mDetailLevelManager.getCurrentDetailLevel() );
     requestRender();
     requestLayout();
-    Log.d( "DEBUG", "resume" );
   }
 
   /**
