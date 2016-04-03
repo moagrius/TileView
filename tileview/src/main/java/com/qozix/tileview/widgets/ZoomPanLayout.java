@@ -652,6 +652,7 @@ public class ZoomPanLayout extends ViewGroup implements
   public boolean onDown( MotionEvent event ) {
     if( mIsFlinging && !mScroller.isFinished() ) {
       mScroller.forceFinished( true );
+      mIsFlinging = false;
       broadcastFlingEnd();
     }
     return true;
