@@ -26,12 +26,23 @@ public class CoordinateTranslater {
 
   private boolean mHasDefinedBounds;
 
-
+  /**
+   * Set size in pixels of the image at 100% scale.
+   * @param width Width of the tiled image in pixels.
+   * @param height Height of the tiled image in pixels.
+   */
   public void setSize( int width, int height ) {
     mWidth = width;
     mHeight = height;
   }
 
+  /**
+   * Define arbitrary bound coordinates to the edges of the tiled image (e.g., latitude and longitude).
+   * @param left The left boundary (e.g., west longitude).
+   * @param top The top boundary (e.g., north latitude).
+   * @param right The right boundary (e.g., east longitude).
+   * @param bottom The bottom boundary (e.g., south latitude).
+   */
   public void setBounds( double left, double top, double right, double bottom ) {
     mHasDefinedBounds = true;
     mLeft = left;
@@ -52,6 +63,11 @@ public class CoordinateTranslater {
     mDiffY = mHeight;
   }
 
+  /**
+   * Translate a relative X position to an absolute pixel value.
+   * @param x The relative X position (e.g., longitude) to translate to absolute pixels.
+   * @return The translated position as a pixel value.
+   */
   public int translateX( double x ) {
     if( !mHasDefinedBounds ) {
       return (int) x;
@@ -60,10 +76,20 @@ public class CoordinateTranslater {
     return FloatMathHelper.scale( mWidth, (float) factor );
   }
 
+  /**
+   * Translate a relative X position to an absolute pixel value, considering a scale value as well.
+   * @param x The relative X position (e.g., longitude) to translate to absolute pixels.
+   * @return The translated position as a pixel value.
+   */
   public int translateAndScaleX( double x, float scale ) {
     return FloatMathHelper.scale( translateX( x ), scale );
   }
 
+  /**
+   * Translate a relative Y position to an absolute pixel value.
+   * @param y The relative Y position (e.g., latitude) to translate to absolute pixels.
+   * @return The translated position as a pixel value.
+   */
   public int translateY( double y ) {
     if( !mHasDefinedBounds ) {
       return (int) y;
@@ -72,10 +98,41 @@ public class CoordinateTranslater {
     return FloatMathHelper.scale( mHeight, (float) factor );
   }
 
+  /**
+   * Translate a relative Y position to an absolute pixel value, considering a scale value as well.
+   * @param y The relative Y position (e.g., latitude) to translate to absolute pixels.
+   * @return The translated position as a pixel value.
+   */
   public int translateAndScaleY( double y, float scale ) {
     return FloatMathHelper.scale( translateY( y ), scale );
   }
 
+  /**
+   * Translate an absolute pixel value to a relative coordinate.
+   * @param x The x value to be translated.
+   * @return The relative value of the x coordinate supplied.
+   */
+  public double translateAbsoluteToRelativeX( int x ){
+    double factor = x / mWidth;
+    return mLeft + (factor * mRight);
+  }
+
+  /**
+   * Translate an absolute pixel value to a relative coordinate.
+   * @param y The y value to be translated.
+   * @return The relative value of the y coordinate supplied.
+   */
+  public double translateAbsoluteToRelativeY( int y ){
+    double factor = y / mHeight;
+    return mTop + (factor * mBottom);
+  }
+
+  /**
+   * Determines if a given position (x, y) falls within the bounds defined, or the absolute pixel size of the image, if arbitrary bounds are nor supplied.
+   * @param x The x value of the coordinate to test.
+   * @param y The y value of the coordinate to test.
+   * @return True if the point falls within the defined area; false if not.
+   */
   public boolean contains( double x, double y ) {
     return y >= mTop
       && y <= mBottom
@@ -83,6 +140,12 @@ public class CoordinateTranslater {
       && x <= mRight;
   }
 
+  /**
+   * Convenience method to convert a List of coordinates (pairs of doubles) to a Path instance.
+   * @param positions List of coordinates (pairs of doubles).
+   * @param shouldClose True if the path should be closed at the end of this operation.
+   * @return The Path instance created from the positions supplied.
+   */
   public Path pathFromPositions( List<double[]> positions, boolean shouldClose ) {
     Path path = new Path();
     double[] start = positions.get( 0 );
