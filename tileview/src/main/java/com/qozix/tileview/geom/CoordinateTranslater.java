@@ -114,7 +114,17 @@ public class CoordinateTranslater {
    */
   public double translateAbsoluteToRelativeX( int x ){
     double factor = x / mWidth;
-    return mLeft + (factor * mRight);
+    return mLeft + (factor * mDiffX);
+  }
+
+  /**
+   * Convenience method to translate an absolute pixel value to a relative coordinate, while considering a scale value.
+   * @param x The x value to be translated.
+   * @param scale The scale to apply.
+   * @return The relative value of the x coordinate supplied.
+   */
+  public double translateAndScaleAbsoluteToRelativeX( int x, float scale ){
+    return translateAbsoluteToRelativeX( FloatMathHelper.unscale( x, scale ) );
   }
 
   /**
@@ -124,7 +134,17 @@ public class CoordinateTranslater {
    */
   public double translateAbsoluteToRelativeY( int y ){
     double factor = y / mHeight;
-    return mTop + (factor * mBottom);
+    return mTop + (factor * mDiffY);
+  }
+
+  /**
+   * Convenience method to translate an absolute pixel value to a relative coordinate, while considering a scale value.
+   * @param y The y value to be translated.
+   * @param scale The scale to apply.
+   * @return The relative value of the y coordinate supplied.
+   */
+  public double translateAndScaleAbsoluteToRelativeY( int y, float scale ) {
+    return translateAbsoluteToRelativeY( FloatMathHelper.unscale( y, scale ) );
   }
 
   /**
