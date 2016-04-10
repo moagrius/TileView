@@ -12,7 +12,7 @@ Major goals were:
 
 1.  Optimize tiling.  Tiles are now simply POJOs that manage Bitmaps, and are no longer ImageView instances.
 2.  Leverage the gestures framework.  In order to behave more consistently with other Android widgets, several (all?) framework-provided gesture detector classes are used in version 2.
-3.  Leverage the threading framework.  Threading is managed by AsyncTasks leveraging a common ThreadPoolExecutor.
+3.  Leverage the threading framework; take advantage of multi-core devices and multi-threading more aggressively.  Threading is managed using a ThreadPoolExecutor.
 4.  Simplify and expose.  The API provides fewer overloaded signatures, but public access to nearly all core classes.
 5.  Defer caching to the user.  Built-in caching has been removed.  The user can supply their own (or a third party) caching mechanism using the BitmapProvider interface.
 6.  General refactoring.  There are too many simplifications and optimization to mention, but each class and each method has been revisited.
