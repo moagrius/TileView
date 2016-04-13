@@ -1,4 +1,4 @@
-_**03/18/16** if you're using a version earlier than 2.1, there were significant performance gains realized with 2.1 so we'd advise you to start using the most recent version (2.1.2) immediately.  The improvements made also make fast-render viable, especially if not fetching tile data from across a network, so we'd also encourage you to try `TileView.setShouldRenderWhilePanning(true);` if you'd like more responsive tile rendering._
+_**03/18/16** if you're using a version earlier than 2.1, there were significant performance gains realized with 2.1 so we'd advise you to start using the most recent version (2.1 or later) immediately.  The improvements made also make fast-render viable, especially if not fetching tile data from across a network, so we'd also encourage you to try `TileView.setShouldRenderWhilePanning(true);` if you'd like more responsive tile rendering._
 
 #Version 2.0
 
@@ -34,7 +34,7 @@ Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tile
 ###Installation
 Gradle:
 ```
-compile 'com.qozix:tileview:2.1.3'
+compile 'com.qozix:tileview:2.1.4'
 ```
 
 The library is hosted on jcenter, and is not currently available from maven.
@@ -54,7 +54,7 @@ A demo application, built in Android Studio, is available in the `demo` folder o
 at the 2nd column from left and 3rd row from top.
 1. Create a new application with a single activity ('Main').
 1. Save the image tiles to your `assets` directory.
-1. Add `compile 'com.qozix:tileview:2.1.3'` to your gradle dependencies.
+1. Add `compile 'com.qozix:tileview:2.1.4'` to your gradle dependencies.
 1. In the Main Activity, use this for `onCreate`:
 ```
 @Override
