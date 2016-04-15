@@ -17,3 +17,4 @@
 #}
 -keep class com.qozix** {*;}
 -keepattributes InnerClasses
+-keepattributes EnclosingMethod
