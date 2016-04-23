@@ -716,6 +716,30 @@ public class TileView extends ZoomPanLayout implements
     mTileCanvasViewGroup.setRenderBuffer( buffer );
   }
 
+  /**
+   * Allows the use of a custom {@link DetailLevelManager}.
+   * <p>
+   * For example, to change the logic of {@link DetailLevel} choice for a given scale, you
+   * declare your own {@code DetailLevelMangerCustom} that extends {@link DetailLevelManager} :
+   * <pre>{@code
+   * private class DetailLevelManagerCustom extends DetailLevelManager{
+   *  @literal @Override
+   *   public DetailLevel getDetailLevelForScale(){
+   *     // your logic here
+   *   }
+   * }
+   * }
+   * </pre>
+   * Then you should use {@code TileView.setDetailLevelManager} before other method calls, especially
+   * {@code TileView.setSize} and {@code TileView.addDetailLevel}.
+   * </p>
+   *
+   * @param manager The DetailLevelManager instance used.
+   */
+  public void setDetailLevelManager( DetailLevelManager manager ) {
+    mDetailLevelManager = manager;
+  }
+
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
     super.onLayout( changed, l, t, r, b );
