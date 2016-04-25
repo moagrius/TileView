@@ -9,11 +9,11 @@ import java.util.LinkedList;
 
 public class DetailLevelManager {
 
-  private LinkedList<DetailLevel> mDetailLevelLinkedList = new LinkedList<DetailLevel>();
+  protected LinkedList<DetailLevel> mDetailLevelLinkedList = new LinkedList<DetailLevel>();
 
   private DetailLevelChangeListener mDetailLevelChangeListener;
 
-  private float mScale = 1;
+  protected float mScale = 1;
 
   private int mBaseWidth;
   private int mBaseHeight;
@@ -127,7 +127,7 @@ public class DetailLevelManager {
     return mCurrentDetailLevel;
   }
 
-  private void update() {
+  protected void update() {
     boolean detailLevelChanged = false;
     if( !mDetailLevelLocked ) {
       DetailLevel matchingLevel = getDetailLevelForScale();
