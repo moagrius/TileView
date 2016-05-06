@@ -1,3 +1,5 @@
+![Release Badge](https://img.shields.io/github/release/moagrius/TileView.svg)
+
 _**03/18/16** if you're using a version earlier than 2.1, there were significant performance gains realized with 2.1 so we'd advise you to start using the most recent version (2.1 or later) immediately.  The improvements made also make fast-render viable, especially if not fetching tile data from across a network, so we'd also encourage you to try `TileView.setShouldRenderWhilePanning(true);` if you'd like more responsive tile rendering._
 
 #Version 2.0
