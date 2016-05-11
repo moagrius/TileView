@@ -119,9 +119,15 @@ public class CoordinateTranslater {
    * @param x The x value to be translated.
    * @return The relative value of the x coordinate supplied.
    */
+  public double translateAbsoluteToRelativeX( float x ) {
+    return mLeft + ( x * mDiffX / mWidth );
+  }
+
+  /**
+   * Pipes to {@link #translateAbsoluteToRelativeX( float )}
+   */
   public double translateAbsoluteToRelativeX( int x ) {
-    double factor = x / mWidth;
-    return mLeft + (factor * mDiffX);
+    return translateAbsoluteToRelativeX( (float) x );
   }
 
   /**
@@ -131,8 +137,15 @@ public class CoordinateTranslater {
    * @param scale The scale to apply.
    * @return The relative value of the x coordinate supplied.
    */
+  public double translateAndScaleAbsoluteToRelativeX( float x, float scale ) {
+    return translateAbsoluteToRelativeX( x / scale );
+  }
+
+  /**
+   * @see #translateAndScaleAbsoluteToRelativeX(float, float)
+   */
   public double translateAndScaleAbsoluteToRelativeX( int x, float scale ) {
-    return translateAbsoluteToRelativeX( FloatMathHelper.unscale( x, scale ) );
+    return translateAbsoluteToRelativeX( x / scale );
   }
 
   /**
@@ -141,9 +154,15 @@ public class CoordinateTranslater {
    * @param y The y value to be translated.
    * @return The relative value of the y coordinate supplied.
    */
+  public double translateAbsoluteToRelativeY( float y ) {
+    return mTop + ( y * mDiffY / mHeight );
+  }
+
+  /**
+   * Pipes to {@link #translateAbsoluteToRelativeY( float )}
+   */
   public double translateAbsoluteToRelativeY( int y ) {
-    double factor = y / mHeight;
-    return mTop + (factor * mDiffY);
+    return translateAbsoluteToRelativeY( (float) y );
   }
 
   /**
@@ -153,8 +172,15 @@ public class CoordinateTranslater {
    * @param scale The scale to apply.
    * @return The relative value of the y coordinate supplied.
    */
+  public double translateAndScaleAbsoluteToRelativeY( float y, float scale ) {
+    return translateAbsoluteToRelativeY( y / scale );
+  }
+
+  /**
+   * @see #translateAndScaleAbsoluteToRelativeY(float, float)
+   */
   public double translateAndScaleAbsoluteToRelativeY( int y, float scale ) {
-    return translateAbsoluteToRelativeY( FloatMathHelper.unscale( y, scale ) );
+    return translateAbsoluteToRelativeY( y / scale );
   }
 
   /**
