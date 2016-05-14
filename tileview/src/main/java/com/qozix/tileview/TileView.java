@@ -85,6 +85,7 @@ public class TileView extends ZoomPanLayout implements
   private RenderThrottleHandler mRenderThrottleHandler;
 
   private boolean mShouldRenderWhilePanning = false;
+  private boolean mShouldUpdateDetailLevelWhileZooming = false;
 
   /**
    * Constructor to use when creating a TileView from code.
@@ -717,6 +718,23 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
+   * By default, when a zoom begins, the current {@link DetailLevel} is locked so it is used to
+   * provide tiles until the zoom ends. This ensures that the {@link TileView} is updated
+   * consistently.
+   * <p>
+   * However, a zoom out may require a lot of tiles of the locked {@code DetailLevel} to be rendered.
+   * In worst case, it can cause {@link OutOfMemoryError}.
+   * Then, disabling the {@code DetailLevel} lock is a bandage to that issue. Using
+   * {@code setShouldUpdateDetailLevelWhileZooming( true )} is not advised unless you have that issue.
+   * </p>
+   *
+   * @param shouldUpdate True if it should lock {@link DetailLevel} when a zoom begins.
+   */
+  public void setShouldUpdateDetailLevelWhileZooming( boolean shouldUpdate ) {
+    mShouldUpdateDetailLevelWhileZooming = shouldUpdate;
+  }
+
+  /**
    * Allows the use of a custom {@link DetailLevelManager}.
    * <p>
    * For example, to change the logic of {@link DetailLevel} choice for a given scale, you
@@ -795,7 +813,9 @@ public class TileView extends ZoomPanLayout implements
 
   @Override
   public void onZoomBegin( float scale, Origination origin ) {
-    mDetailLevelManager.lockDetailLevel();
+    if( !mShouldUpdateDetailLevelWhileZooming ) {
+      mDetailLevelManager.lockDetailLevel();
+    }
     mDetailLevelManager.setScale( scale );
   }
 
