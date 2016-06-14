@@ -46,7 +46,6 @@ public class ZoomPanLayout extends ViewGroup implements
   private float mMaxScale = 1;
 
   private float mEffectiveMinScale;
-  private boolean mShouldScaleToFit = true;
   private boolean mShouldLoopScale = true;
 
   private boolean mIsFlinging;
@@ -64,6 +63,7 @@ public class ZoomPanLayout extends ViewGroup implements
   private ScaleGestureDetector mScaleGestureDetector;
   private GestureDetector mGestureDetector;
   private TouchUpGestureDetector mTouchUpGestureDetector;
+  private MinimumScaleMode mMinimumScaleMode = MinimumScaleMode.FILL;
 
   /**
    * Constructor to use when creating a ZoomPanLayout from code.
@@ -115,10 +115,24 @@ public class ZoomPanLayout extends ViewGroup implements
    */
   @Override
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+    final int width = getWidth();
+    final int height = getHeight();
+
+    int translateX = 0;
+    int translateY = 0;
+
+    if (mScaledWidth < width) {
+      translateX = width / 2 - mScaledWidth / 2;
+    }
+
+    if (mScaledHeight < height) {
+      translateY = height / 2 - mScaledHeight / 2;
+    }
+
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( 0, 0, mScaledWidth, mScaledHeight);
+        child.layout( translateX, translateY, mScaledWidth + translateX, mScaledHeight + translateY);
       }
     }
     calculateMinimumScaleToFit();
@@ -132,7 +146,16 @@ public class ZoomPanLayout extends ViewGroup implements
    * @param shouldScaleToFit True to limit minimum scale, false to allow arbitrary minimum scale.
    */
   public void setShouldScaleToFit( boolean shouldScaleToFit ) {
-    mShouldScaleToFit = shouldScaleToFit;
+    setMinimumScaleMode(shouldScaleToFit ? MinimumScaleMode.FILL : MinimumScaleMode.NONE);
+  }
+
+  /**
+   * Sets the minimum scale mode
+   *
+   * @param minimumScaleMode The minimum scale mode
+   */
+  public void setMinimumScaleMode(MinimumScaleMode minimumScaleMode) {
+    mMinimumScaleMode = minimumScaleMode;
     calculateMinimumScaleToFit();
   }
 
@@ -418,8 +441,8 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   private float getConstrainedDestinationScale( float scale ) {
-    float currentMinumumScale = mShouldScaleToFit ? mEffectiveMinScale : mMinScale;
-    scale = Math.max( scale, currentMinumumScale );
+    float currentMinimumScale = mMinimumScaleMode == MinimumScaleMode.NONE ? mMinScale : mEffectiveMinScale;
+    scale = Math.max( scale, currentMinimumScale );
     scale = Math.min( scale, mMaxScale );
     return scale;
   }
@@ -497,10 +520,10 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   private void calculateMinimumScaleToFit() {
-    if( mShouldScaleToFit ) {
+    if (mMinimumScaleMode != MinimumScaleMode.NONE) {
       float minimumScaleX = getWidth() / (float) mBaseWidth;
       float minimumScaleY = getHeight() / (float) mBaseHeight;
-      float recalculatedMinScale = Math.max( minimumScaleX, minimumScaleY );
+      float recalculatedMinScale = mMinimumScaleMode == MinimumScaleMode.FILL ? Math.max( minimumScaleX, minimumScaleY ) : Math.min( minimumScaleX, minimumScaleY );
       if( recalculatedMinScale != mEffectiveMinScale ) {
         mEffectiveMinScale = recalculatedMinScale;
         if( mScale < mEffectiveMinScale ){
@@ -911,4 +934,22 @@ public class ZoomPanLayout extends ViewGroup implements
     void onZoomEnd( float scale, Origination origin );
   }
 
+  public enum MinimumScaleMode {
+    /**
+     * Limit the minimum scale to no less than what
+     * would be required to fill the container
+     */
+    FILL,
+
+    /**
+     * Limit the minimum scale to no less than what
+     * would be required to fit inside the container
+     */
+    FIT,
+
+    /**
+     * Allow arbitrary minimum scale.
+     */
+    NONE
+  }
 }
