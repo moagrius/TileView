@@ -13,7 +13,6 @@ task androidJavadocs(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
     ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
     classpath += files(ext.androidJar)
-    failOnError = false
 }
 
 task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
