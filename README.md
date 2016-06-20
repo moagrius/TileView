@@ -142,6 +142,18 @@ drawablePath.paint = // generate a Paint instance use the standard android.graph
 tileView.addPath( drawablePath );
 ```
 
+####Scaling
+The `setScale(1)` method sets the initial scale of the TileView. 
+
+`setScaleLimits(0, 1)` sets the minimum and maximum scale which controls how far a TileView can be zoomed in or out. `0` means completely zoomed out, `1` means zoomed in to the most detailled level (with the pixels of the tiles matching the screen dpi). For example by using `setScaleLimits(0, 3)` you allow users to zoom in even further then the most detailled level (stretching the image).
+
+`setMinimumScaleMode(ZoomPanLayout.MinimumScaleMode.FILL)` controls how far a image can be zoomed out based on the dimensions of the image:
+- `FILL`: Limit the minimum scale to no less than what would be required to fill the container
+- `FIT`: Limit the minimum scale to no less than what would be required to fit inside the container
+- `NONE`: Limit to the minimum scale level set by `setScaleLimits`
+
+_When using `FILL` or `FIT`, the minimum scale level of `setScaleLimits` is ignored_
+
 ####Hooks and Listeners
 
 A TileView can have any number of `ZoomPanListeners` instances listening for events relating to zoom and pan actions, including: `onPanBegin`, `onPanUpdate`, `onPanEnd`, `onZoomBegin`, `onZoomUpdate`, and `onZoomEnd`.  The last argument passed to each callback is the source of the event, represented by `ZoomPanListener.Origin` enum: `DRAG`, `FLING`, `PINCH`, or null (which indicates a programmatic pan or zoom).
