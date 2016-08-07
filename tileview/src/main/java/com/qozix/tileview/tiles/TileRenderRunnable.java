@@ -1,11 +1,8 @@
 package com.qozix.tileview.tiles;
 
-import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Process;
-
-import com.qozix.tileview.graphics.BitmapProvider;
 
 import java.lang.ref.WeakReference;
 
@@ -15,9 +12,7 @@ import java.lang.ref.WeakReference;
 class TileRenderRunnable implements Runnable {
 
   private WeakReference<Tile> mTileWeakReference;
-  private WeakReference<Handler> mHandlerWeakReference;
-  private WeakReference<Context> mContextWeakReference;
-  private WeakReference<BitmapProvider> mBitmapProviderWeakReference;
+  private WeakReference<TileRenderPoolExecutor> mTileRenderPoolExecutorWeakReference;
 
   private boolean mCancelled = false;
   private boolean mComplete = false;
@@ -32,6 +27,12 @@ class TileRenderRunnable implements Runnable {
     }
     boolean cancelled = mCancelled;
     mCancelled = true;
+    if( mTileRenderPoolExecutorWeakReference != null ) {
+      TileRenderPoolExecutor tileRenderPoolExecutor = mTileRenderPoolExecutorWeakReference.get();
+      if(tileRenderPoolExecutor != null){
+        tileRenderPoolExecutor.remove( this );
+      }
+    }
     return !cancelled;
   }
 
@@ -43,37 +44,8 @@ class TileRenderRunnable implements Runnable {
     return mComplete;
   }
 
-  public void setHandler( Handler handler ) {
-    mHandlerWeakReference = new WeakReference<>( handler );
-  }
-
-  public Handler getHandler() {
-    if( mHandlerWeakReference == null ) {
-      return null;
-    }
-    return mHandlerWeakReference.get();
-  }
-
-  public void setContext( Context context ) {
-    mContextWeakReference = new WeakReference<>( context );
-  }
-
-  public void setBitmapProvider( BitmapProvider bitmapProvider ) {
-    mBitmapProviderWeakReference = new WeakReference<>( bitmapProvider );
-  }
-
-  public Context getContext() {
-    if( mContextWeakReference == null ) {
-      return null;
-    }
-    return mContextWeakReference.get();
-  }
-
-  public BitmapProvider getBitmapProvider() {
-    if( mBitmapProviderWeakReference == null ) {
-      return null;
-    }
-    return mBitmapProviderWeakReference.get();
+  public void setTileRenderPoolExecutor(TileRenderPoolExecutor tileRenderPoolExecutor ) {
+    mTileRenderPoolExecutorWeakReference = new WeakReference<>(tileRenderPoolExecutor);
   }
 
   public void setTile( Tile tile ) {
@@ -103,22 +75,22 @@ class TileRenderRunnable implements Runnable {
     if( tile == null ) {
       return TileRenderHandler.Status.INCOMPLETE;
     }
-    Context context = getContext();
-    if( context == null ) {
+    TileRenderPoolExecutor tileRenderPoolExecutor = mTileRenderPoolExecutorWeakReference.get();
+    if( tileRenderPoolExecutor == null ) {
       return TileRenderHandler.Status.INCOMPLETE;
     }
-    BitmapProvider bitmapProvider = getBitmapProvider();
-    if( bitmapProvider == null ) {
+    TileCanvasViewGroup tileCanvasViewGroup = tileRenderPoolExecutor.getTileCanvasViewGroup();
+    if(tileCanvasViewGroup == null ) {
       return TileRenderHandler.Status.INCOMPLETE;
     }
     try {
-      tile.generateBitmap( context, bitmapProvider );
+      tile.generateBitmap( tileCanvasViewGroup.getContext(), tileCanvasViewGroup.getBitmapProvider() );
     } catch( Throwable throwable ) {
       mThrowable = throwable;
       return TileRenderHandler.Status.ERROR;
     }
     if( mCancelled || tile.getBitmap() == null || mThread.isInterrupted() ) {
-      tile.destroy( true );
+      tile.reset();
       return TileRenderHandler.Status.INCOMPLETE;
     }
     return TileRenderHandler.Status.COMPLETE;
@@ -134,10 +106,24 @@ class TileRenderRunnable implements Runnable {
     if( status == TileRenderHandler.Status.COMPLETE ) {
       mComplete = true;
     }
-    Handler handler = getHandler();
-    if( handler != null ) {
-      Message message = handler.obtainMessage( status.getMessageCode(), this );
-      message.sendToTarget();
+    TileRenderPoolExecutor tileRenderPoolExecutor = mTileRenderPoolExecutorWeakReference.get();
+    if( tileRenderPoolExecutor != null ) {
+      TileCanvasViewGroup tileCanvasViewGroup = tileRenderPoolExecutor.getTileCanvasViewGroup();
+      if( tileCanvasViewGroup != null ) {
+        Tile tile = getTile();
+        if( tile != null ) {
+          Handler handler = tileRenderPoolExecutor.getHandler();
+          if( handler != null ) {
+            // need to stamp time now, since it'll be drawn before the handler posts
+            tile.setTransitionsEnabled( tileCanvasViewGroup.getTransitionsEnabled() );
+            tile.setTransitionDuration( tileCanvasViewGroup.getTransitionDuration() );
+            Message message = handler.obtainMessage( status.getMessageCode(), this );
+            message.sendToTarget();
+          }
+        }
+      }
+
     }
   }
+
 }

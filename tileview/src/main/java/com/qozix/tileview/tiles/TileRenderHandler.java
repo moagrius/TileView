@@ -70,7 +70,7 @@ class TileRenderHandler extends Handler {
         tileCanvasViewGroup.handleTileRenderException( tileRenderRunnable.getThrowable() );
         break;
       case RENDER_COMPLETE:
-        tileCanvasViewGroup.addTileToCurrentTileCanvasView( tile );
+        tileCanvasViewGroup.addTileToCanvas( tile );
         break;
     }
   }
