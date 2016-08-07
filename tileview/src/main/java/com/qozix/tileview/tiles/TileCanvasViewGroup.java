@@ -8,7 +8,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-import android.view.View;
+import android.view.ViewGroup;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.graphics.BitmapProvider;
@@ -19,7 +19,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public class TileCanvasViewGroup extends View {
+/**
+ * This class extends ViewGroup for legacy reasons, and may be changed to extend View at
+ * some future point; consider all ViewGroup methods deprecated.
+ */
+public class TileCanvasViewGroup extends ViewGroup {
 
   private static final int RENDER_FLAG = 1;
 
@@ -66,6 +70,11 @@ public class TileCanvasViewGroup extends View {
     setWillNotDraw( false );
     mTileRenderThrottleHandler = new TileRenderThrottleHandler( this );
     mTileRenderPoolExecutor = new TileRenderPoolExecutor();
+  }
+
+  @Override
+  protected void onLayout( boolean changed, int l, int t, int r, int b ) {
+
   }
 
   public void setScale( float factor ) {
@@ -199,6 +208,15 @@ public class TileCanvasViewGroup extends View {
     cancelRender();
     mTilesInCurrentViewport.clear();
     invalidate();
+  }
+
+  /**
+   * This function is now a no-op
+   * @deprecated
+   * @param recentlyComputedVisibleTileSet
+   */
+  public void reconcile( Set<Tile> recentlyComputedVisibleTileSet ) {
+    // noop
   }
 
   void renderTiles() {

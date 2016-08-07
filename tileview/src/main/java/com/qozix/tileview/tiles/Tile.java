@@ -126,6 +126,21 @@ public class Tile {
     return mRelativeRect;
   }
 
+  /**
+   * @deprecated
+   * @return
+   */
+  public float getRendered() {
+    return mProgress;
+  }
+
+  /**
+   * @deprecated
+   */
+  public void stampTime() {
+    // no op
+  }
+
   public Rect getScaledRect( float scale ) {
     mScaledRect.set(
       (int) (mRelativeRect.left * scale),
