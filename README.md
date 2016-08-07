@@ -1,5 +1,7 @@
 ![Release Badge](https://img.shields.io/github/release/moagrius/TileView.svg)
 
+_**08/07/16** 2.2 is released, and provides some much-needed improvements in how tiles are rendered - please consider upgrading, but be aware there are some minor potential breaking changes (that should not affect 99% of users).
+
 _**03/18/16** if you're using a version earlier than 2.1, there were significant performance gains realized with 2.1 so we'd advise you to start using the most recent version (2.1 or later) immediately.  The improvements made also make fast-render viable, especially if not fetching tile data from across a network, so we'd also encourage you to try `TileView.setShouldRenderWhilePanning(true);` if you'd like more responsive tile rendering._
 
 #Version 2.0
@@ -24,6 +26,7 @@ Major goals were:
 (Only major and minor changes are tracked here, consult git history for patches)
 
 **2.1** Rewrite of threading strategy, thanks to @peterLaurence and @bnsantos.  Tile render performance is substantially improved.
+**2.2** Rewrite of tile rendering strategy, again with the help of @peterLaurence.  Peak memory consumption should be reduceds, and Tile render performance should be improved.
 
 #TileView
 The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images, with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers), built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or coordinate system.
@@ -298,3 +301,6 @@ tileView.addView( downSample, 0 );
 
 ###Contributing
 See [here](https://github.com/moagrius/TileView/wiki/Contributing).
+
+###Contributors
+Several members of the github community have contributed and made `TileView` better, but over the last year or so, @peterLaurence has been as involved as myself and been integral in the last few major updates.  Thanks Peter.
