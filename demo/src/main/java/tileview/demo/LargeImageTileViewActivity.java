@@ -13,9 +13,9 @@ public class LargeImageTileViewActivity extends TileViewActivity {
 		
 		// multiple references
 		TileView tileView = getTileView();
-		
-		// by disabling transitions, we won't see a flicker of background color when moving between tile sets
-		tileView.setTransitionsEnabled( false );
+
+		// let the image explode
+		tileView.setScaleLimits( 0, 2 );
 		
 		// size of original image at 100% mScale
 		tileView.setSize( 2835, 4289 );

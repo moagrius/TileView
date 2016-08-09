@@ -21,6 +21,12 @@ public class BuildingPlansTileViewActivity extends TileViewActivity {
 		// size of original image at 100% mScale
 		tileView.setSize( 2736, 2880 );
 
+		// small map, let's let it resize to 200%
+		tileView.setScaleLimits( 0, 2 );
+
+		// we're running from assets, should be fairly fast decodes, go ahead and render asap
+		tileView.setShouldRenderWhilePanning( true );
+
 		// detail levels
 		tileView.addDetailLevel( 1.000f, "tiles/plans/1000/%d_%d.jpg");
 		tileView.addDetailLevel( 0.500f, "tiles/plans/500/%d_%d.jpg");

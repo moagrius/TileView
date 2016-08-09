@@ -7,7 +7,6 @@ import android.graphics.Region;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 import android.view.ViewGroup;
 
 import com.qozix.tileview.detail.DetailLevel;
@@ -212,8 +211,9 @@ public class TileCanvasViewGroup extends ViewGroup {
 
   /**
    * This function is now a no-op
-   * @deprecated
+   *
    * @param recentlyComputedVisibleTileSet
+   * @deprecated
    */
   public void reconcile( Set<Tile> recentlyComputedVisibleTileSet ) {
     // noop
@@ -232,7 +232,7 @@ public class TileCanvasViewGroup extends ViewGroup {
     return mDetailLevelToRender.getDetailLevelManager().getComputedScaledViewport( getInvertedScale() );
   }
 
-  private boolean establishOpaqueRegion() {
+  private boolean establishDirtyRegion() {
     boolean shouldInvalidate = false;
     mDirtyRegion.set( getComputedViewport() );
     for( Tile tile : mTilesInCurrentViewport ) {
@@ -305,7 +305,7 @@ public class TileCanvasViewGroup extends ViewGroup {
 
   private void drawTilesConsideringPreviouslyDrawnLevel( Canvas canvas ) {
     // compute states, populate opaque region
-    boolean shouldInvalidate = establishOpaqueRegion();
+    boolean shouldInvalidate = establishDirtyRegion();
     // draw any previous tiles that are in viewport and not under full opaque current tiles
     shouldInvalidate |= drawPreviousTiles( canvas );
     // draw the current tile set
@@ -325,7 +325,6 @@ public class TileCanvasViewGroup extends ViewGroup {
     } else {
       drawTilesWithoutConsideringPreviouslyDrawnLevel( canvas );
     }
-    Log.d( getClass().getSimpleName(), "prevous tile count: " + mPreviouslyDrawnTiles.size() );
   }
 
   public void updateTileSet( DetailLevel detailLevel ) {

@@ -17,6 +17,9 @@ public class FictionalMapTileViewActivity extends TileViewActivity {
 		
 		// size of original image at 100% mScale
 		tileView.setSize( 4015, 4057 );
+
+		// we're running from assets, should be fairly fast decodes, go ahead and render asap
+		tileView.setShouldRenderWhilePanning( true );
 		
 		// detail levels
 		tileView.addDetailLevel( 1.000f, "tiles/fantasy/1000/%d_%d.jpg");
