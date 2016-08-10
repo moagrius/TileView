@@ -18,6 +18,7 @@ public class BitmapProviderPicasso implements BitmapProvider {
       String unformattedFileName = (String) tile.getData();
       String formattedFileName = String.format( unformattedFileName, tile.getColumn(), tile.getRow() );
       try {
+        // TODO: this is throwing...
         return Picasso.with( context ).load( formattedFileName ).memoryPolicy( MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE ).get();
       } catch( Throwable t ) {
         // probably couldn't find the file

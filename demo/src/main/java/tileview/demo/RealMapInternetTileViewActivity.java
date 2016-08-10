@@ -30,14 +30,13 @@ public class RealMapInternetTileViewActivity extends TileViewActivity {
     // multiple references
     TileView tileView = getTileView();
 
+    tileView.addDetailLevel( 0.0125f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-62500-%d_%d.jpg" );
+    tileView.addDetailLevel( 0.2500f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-125000-%d_%d.jpg" );
+    tileView.addDetailLevel( 0.5000f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-250000-%d_%d.jpg" );
+    tileView.addDetailLevel( 1.0000f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-500000-%d_%d.jpg" );
+
     // simple http provider
     tileView.setBitmapProvider( new BitmapProviderPicasso() );
-
-    // by disabling transitions, we won't see a flicker of background color when moving between tile sets
-    tileView.setTransitionsEnabled( false );
-
-    // this is default behavior so the method invocation is redundant, but for network work fast render might be less appropriate
-    //tileView.setShouldRenderWhilePanning( false );
 
     // size and geolocation
     tileView.setSize( 8967, 6726 );
@@ -110,10 +109,16 @@ public class RealMapInternetTileViewActivity extends TileViewActivity {
     // we won't use a downsample here, so color it similarly to tiles
     tileView.setBackgroundColor( 0xFFe7e7e7 );
 
-    tileView.addDetailLevel( 0.0125f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-62500-%d_%d.jpg" );
-    tileView.addDetailLevel( 0.2500f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-125000-%d_%d.jpg" );
-    tileView.addDetailLevel( 0.5000f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-250000-%d_%d.jpg" );
-    tileView.addDetailLevel( 1.0000f, "https://raw.githubusercontent.com/moagrius/TileView/master/demo/src/main/assets/tiles/map/phi-500000-%d_%d.jpg" );
+    // this will result in a lot more network work, but should be a better UX
+    // set to false to minimize work on the wire
+    tileView.setShouldRenderWhilePanning( true );
+
+    // since there's going to be significant time between tiles loaded over http,
+    // using a low res version of the image stretched to fill all available space can
+    // create the illusion of progressive rendering
+    ImageView downSample = new ImageView( this );
+    downSample.setImageResource( R.drawable.downsample );
+    tileView.addView( downSample, 0 );
 
   }
 
