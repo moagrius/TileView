@@ -4,12 +4,14 @@
 The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images, with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers), built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or coordinate system.
 
 ![Demo](https://cloud.githubusercontent.com/assets/701344/17538476/6933099e-5e6b-11e6-9e18-45e924c19c91.gif)
-_Properly configured, TileView can render tiles quickly enough to create the illusion of a seamless image_
+<br>
+Properly configured, TileView can render tiles quickly enough be appear seamless.
 [](https://cloud.githubusercontent.com/assets/701344/10954033/d20843bc-8310-11e5-83ad-4e062b9b1be0.gif)
 
-_**08/07/16** 2.2 is released, and provides some much-needed improvements in how tiles are rendered - please consider upgrading, but be aware there are some minor potential breaking changes (that should not affect 99% of users)._
+##News
+**08/07/16** 2.2 is released, and provides some much-needed improvements in how tiles are rendered - please consider upgrading, but be aware there are some minor potential breaking changes (that should not affect 99% of users).
 
-_**03/18/16** if you're using a version earlier than 2.1, there were significant performance gains realized with 2.1 so we'd advise you to start using the most recent version (2.1 or later) immediately.  The improvements made also make fast-render viable, so we'd also encourage you to try `TileView.setShouldRenderWhilePanning(true);` if you'd like more responsive tile rendering._
+**03/18/16** if you're using a version earlier than 2.1, there were significant performance gains realized with 2.1 so we'd advise you to start using the most recent version (2.1 or later) immediately.  The improvements made also make fast-render viable, so we'd also encourage you to try `TileView.setShouldRenderWhilePanning(true);` if you'd like more responsive tile rendering.
 
 ##Version 2.0
 
@@ -33,6 +35,7 @@ Major goals were:
 (Only major and minor changes are tracked here, consult git history for patches)
 
 **2.2** Rewrite of tile rendering strategy, again with the help of @peterLaurence.  Peak memory consumption should be reduced, and Tile render performance should be improved.
+
 **2.1** Rewrite of threading strategy, thanks to @peterLaurence and @bnsantos.  Tile render performance is substantially improved.
 
 ###Documentation
