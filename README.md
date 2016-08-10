@@ -60,7 +60,7 @@ A demo application, built in Android Studio, is available in the `demo` folder o
 
 ###Quick Setup
 1. Tile an image into image slices of a set size, e.g., 256x256 (<a href="https://github.com/moagrius/TileView/wiki/Creating-Tiles" target="_blank">instructions</a>)
-1. Name the tiles by the row and column number, e.g., 'tile-2-3.png' for the image tile that would be
+1. Name the tiles by the row and column number, e.g., 'tile-1-2.png' for the image tile that would be
 at the 2nd column from left and 3rd row from top.
 1. Create a new application with a single activity ('Main').
 1. Save the image tiles to your `assets` directory.
@@ -72,7 +72,7 @@ protected void onCreate( Bundle savedInstanceState ) {
   super.onCreate( savedInstanceState );
   TileView tileView = new TileView( this );
   tileView.setSize( 2000, 3000 );  // the original size of the untiled image
-  tileView.addDetailLevel( 1f, "tile-%d-%d.png");
+  tileView.addDetailLevel( 1f, "tile-%d-%d.png", 256, 256);
   setContentView( tileView );
 }
 ```
