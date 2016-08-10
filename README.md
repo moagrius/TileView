@@ -1,8 +1,17 @@
 ![Release Badge](https://img.shields.io/github/release/moagrius/TileView.svg)
 
-_**03/18/16** if you're using a version earlier than 2.1, there were significant performance gains realized with 2.1 so we'd advise you to start using the most recent version (2.1 or later) immediately.  The improvements made also make fast-render viable, especially if not fetching tile data from across a network, so we'd also encourage you to try `TileView.setShouldRenderWhilePanning(true);` if you'd like more responsive tile rendering._
+#TileView
+The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images, with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers), built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or coordinate system.
 
-#Version 2.0
+![Demo](https://cloud.githubusercontent.com/assets/701344/17538476/6933099e-5e6b-11e6-9e18-45e924c19c91.gif)
+_Properly configured, TileView can render tiles quickly enough to create the illusion of a seamless image_
+[](https://cloud.githubusercontent.com/assets/701344/10954033/d20843bc-8310-11e5-83ad-4e062b9b1be0.gif)
+
+_**08/07/16** 2.2 is released, and provides some much-needed improvements in how tiles are rendered - please consider upgrading, but be aware there are some minor potential breaking changes (that should not affect 99% of users)._
+
+_**03/18/16** if you're using a version earlier than 2.1, there were significant performance gains realized with 2.1 so we'd advise you to start using the most recent version (2.1 or later) immediately.  The improvements made also make fast-render viable, so we'd also encourage you to try `TileView.setShouldRenderWhilePanning(true);` if you'd like more responsive tile rendering._
+
+##Version 2.0
 
 **Version 2.0 released 10.25.15**
 
@@ -20,15 +29,11 @@ Major goals were:
 6.  General refactoring.  There are too many simplifications and optimization to mention, but each class and each method has been revisited.
 7.  Hooks hooks hooks!  While pan and zoom events are broadcast using a familiar listener mechanism, and should be sufficient for most use-cases, public hooks exist for a large number of operations that can be overriden by subclasses for custom functionality.
 
-#Change Log
+##Change Log
 (Only major and minor changes are tracked here, consult git history for patches)
 
+**2.2** Rewrite of tile rendering strategy, again with the help of @peterLaurence.  Peak memory consumption should be reduced, and Tile render performance should be improved.
 **2.1** Rewrite of threading strategy, thanks to @peterLaurence and @bnsantos.  Tile render performance is substantially improved.
-
-#TileView
-The TileView widget is a subclass of ViewGroup that provides a mechanism to asynchronously display tile-based images, with additional functionality for 2D dragging, flinging, pinch or double-tap to zoom, adding overlaying Views (markers), built-in Hot Spot support, dynamic path drawing, multiple levels of detail, and support for any relative positioning or coordinate system.
-
-![Demo](https://cloud.githubusercontent.com/assets/701344/10954033/d20843bc-8310-11e5-83ad-4e062b9b1be0.gif)
 
 ###Documentation
 Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tileview/TileView.html).  Wiki is [here](https://github.com/moagrius/TileView/wiki).
@@ -36,7 +41,7 @@ Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tile
 ###Installation
 Gradle:
 ```
-compile 'com.qozix:tileview:2.1.8'
+compile 'com.qozix:tileview:2.2.0'
 ```
 
 The library is hosted on jcenter, and is not currently available from maven.
@@ -56,7 +61,7 @@ A demo application, built in Android Studio, is available in the `demo` folder o
 at the 2nd column from left and 3rd row from top.
 1. Create a new application with a single activity ('Main').
 1. Save the image tiles to your `assets` directory.
-1. Add `compile 'com.qozix:tileview:2.1.8'` to your gradle dependencies.
+1. Add `compile 'com.qozix:tileview:2.2.0'` to your gradle dependencies.
 1. In the Main Activity, use this for `onCreate`:
 ```
 @Override
@@ -76,15 +81,15 @@ That's it.  You should have a tiled image that only renders the pieces of the im
 
 ![detail-levels](https://cloud.githubusercontent.com/assets/701344/10954031/d2059c3e-8310-11e5-821d-26dd8691d4d3.gif)
 
-A TileView instance can have any number of detail levels, which is a single image made up of many tiles.  These tiles are positioned appropriately to show the portion of the image that the device's viewport is displayed - other tiles are recyled (and their memory freed) as they move out of the visible area.  Detail levels often showing the same content at different magnifications, but may show different details as well - for example, a detail level showing a larger area will probably label features differently than a detail level showing a smaller area (imagine a TileView representing the United States may show the Rocky Mountains at a very low detail level, while a higher detail level may show individual streets or addresses.
+A TileView instance can have any number of detail levels, which is a single image made up of many tiles; each DetailLevel exists in the same space, but are useful to show different levels of details (thus the class name), and to further break down large images into smaller tiles sets.  These tiles are positioned appropriately to show the portion of the image that the device's viewport is displayed - other tiles are recycled (and their memory freed) as they move out of the visible area.  Detail levels often show the same content at different magnifications, but may show different details as well - for example, a detail level showing a larger area will probably label features differently than a detail level showing a smaller area (imagine a TileView representing the United States may show the Rocky Mountains at a very low detail level, while a higher detail level may show individual streets or addresses.
 
-Each detail level is passed a float value, indicating the scale value that it represents (e.g., a detail level passed 0.5f scale would be displayed when the TileView was zoomed out by 50%). Additionally, each detail level is passed an aribtrary data object that is attached to each tile and can provide instructions on how to generate the tile's bitmap.
+Each detail level is passed a float value, indicating the scale value that it represents (e.g., a detail level passed 0.5f scale would be displayed when the TileView was zoomed out by 50%). Additionally, each detail level is passed an arbitrary data object that is attached to each tile and can provide instructions on how to generate the tile's bitmap.  That data object is often a String, formatted to provide the path to the bitmap image for that Tile, but can be any kind of Object whatsoever - during the decode process, each tile has access to the data object for the  detail level.
 
 ####Tiles
 
-A Tile is a class instance that represents a Bitmap which is a portion of the total image.  Each Tile provides position information, and methods to manage the Bitmap, and is also passed to the TileView's `BitmapProvider` implementation, which is how individual bitmaps are generated.
+A Tile is a class instance that represents a Bitmap - a portion of the total image.  Each Tile provides position information, and methods to manage the Bitmap's state and behavior.  Each Tile instanced is also passed to the TileView's `BitmapProvider` implementation, which is how individual bitmaps are generated.  Tile instances uses an `equals` method that compares only row, column and detail level, and are often passed in `Set` collections, so that Tile instances already in process are simply excluded by the unique nature of the Set if the program or user tries to add a single Tile more than once.
 
-Each TileView uses a `BitmapProvider` implementation to generate tile bitmaps.  The interface defines a single method: `public Bitmap getBitmap( Tile tile, Context context );`.  This method is called each time a bitmap is required, and has access to the Tile instance for that position and detail level, and a Context object to access system resources.  The `BitmapProvider` implementation can generate the bitmap in any way it chooses - assets, resources, http requests, dynamically drawn, SVG, decoded regions, etc.  The default implementation, `BitmapProviderAssets`, parses a String (the data object passed to the DetailLevel) and returns a bitmap found by file name in the app's assets directory.
+Each TileView instance must reference a `BitmapProvider` implementation to generate tile bitmaps.  The interface defines a single method: `public Bitmap getBitmap( Tile tile, Context context );`.  This method is called each time a bitmap is required, and has access to the Tile instance for that position and detail level, and a Context object to access system resources.  The `BitmapProvider` implementation can generate the bitmap in any way it chooses - assets, resources, http requests, dynamically drawn, SVG, decoded regions, etc.  The default implementation, `BitmapProviderAssets`, parses a String (the data object passed to the DetailLevel) and returns a bitmap found by file name in the app's assets directory.
 
 ####Markers & Callouts
 
@@ -145,14 +150,14 @@ tileView.addPath( drawablePath );
 ####Scaling
 The `setScale(1)` method sets the initial scale of the TileView. 
 
-`setScaleLimits(0, 1)` sets the minimum and maximum scale which controls how far a TileView can be zoomed in or out. `0` means completely zoomed out, `1` means zoomed in to the most detailled level (with the pixels of the tiles matching the screen dpi). For example by using `setScaleLimits(0, 3)` you allow users to zoom in even further then the most detailled level (stretching the image).
+`setScaleLimits(0, 1)` sets the minimum and maximum scale which controls how far a TileView can be zoomed in or out. `0` means completely zoomed out, `1` means zoomed in to the most detailed level (with the pixels of the tiles matching the screen dpi). For example by using `setScaleLimits(0, 3)` you allow users to zoom in even further then the most detailed level (stretching the image).
 
 `setMinimumScaleMode(ZoomPanLayout.MinimumScaleMode.FILL)` controls how far a image can be zoomed out based on the dimensions of the image:
 - `FILL`: Limit the minimum scale to no less than what would be required to fill the container
 - `FIT`: Limit the minimum scale to no less than what would be required to fit inside the container
 - `NONE`: Limit to the minimum scale level set by `setScaleLimits`
 
-_When using `FILL` or `FIT`, the minimum scale level of `setScaleLimits` is ignored_
+_When using `FILL` or `FIT`, the minimum scale level of `setScaleLimits` is ignored._
 
 ####Hooks and Listeners
 
@@ -173,7 +178,7 @@ tileView.addZoomPanListener( new ZoomPanListener(){
 });
 ```
 
-Additionally, TileView reports most significant operations to hooks.  TileView implements `ZoomPanLayout.ZoomPanListener`, `TileCanvasViewGroup.TileRenderListener`, and `DetailLevelManager.DetailLevelChangeListener`, and it's super class implements `GestureDetector.OnGestureListener`, `GestureDetector.OnDoubleTapListener`,`ScaleGestureDetector.OnScaleGestureListener`, and `TouchUpGestureDetector.OnTouchUpListener`.  As such, the following hooks are available to be overriden by subclasses of TileView:
+Additionally, TileView reports most significant operations to hooks.  TileView implements `ZoomPanLayout.ZoomPanListener`, `TileCanvasViewGroup.TileRenderListener`, and `DetailLevelManager.DetailLevelChangeListener`, and it's super class implements `GestureDetector.OnGestureListener`, `GestureDetector.OnDoubleTapListener`,`ScaleGestureDetector.OnScaleGestureListener`, and `TouchUpGestureDetector.OnTouchUpListener`.  As such, the following hooks are available to be overridden by subclasses of TileView:
 
 ```
 protected void onScrollChanged( int l, int t, int oldl, int oldt );
@@ -214,7 +219,7 @@ See the [wiki entry here](https://github.com/moagrius/TileView/wiki/Creating-Til
 ####...use relative coordinates (like latitude and longitude)?
 The TileView method `defineBounds( double left, double top, double right, double bottom )` establishes a coordinate system for further positioning method calls (e.g., `scrollTo`, `addMarker`, etc).  After relative coordinates are established by invoking the `defineBounds` method, any subsequent method invocations that affect position *and* accept `double` parameters will compute the value as relative of the provided bounds, rather than absolute pixels.  That's to say that:
  
- 1.  A TileView instance is intialized with `setSize( 5000, 5000 );`
+ 1.  A TileView instance is initialized with `setSize( 5000, 5000 );`
  1.  That TileView instance calls `defineBounds( 0, 100, 0, 100 );`
  1.  That TileView instance calls `scrollTo( 25d, 50d );`
  1.  That TileView will immediately scroll to the pixel at 1250, 2500.
@@ -298,3 +303,6 @@ tileView.addView( downSample, 0 );
 
 ###Contributing
 See [here](https://github.com/moagrius/TileView/wiki/Contributing).
+
+###Contributors
+Several members of the github community have contributed and made `TileView` better, but over the last year or so, @peterLaurence has been as involved as myself and been integral in the last few major updates.  Thanks Peter.

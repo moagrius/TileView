@@ -26,6 +26,7 @@ public class DetailLevelManager {
 
   private Rect mViewport = new Rect();
   private Rect mComputedViewport = new Rect();
+  private Rect mComputedScaledViewport = new Rect();
 
   private DetailLevel mCurrentDetailLevel;
 
@@ -101,6 +102,16 @@ public class DetailLevelManager {
     return mComputedViewport;
   }
 
+  public Rect getComputedScaledViewport(float scale){
+    mComputedScaledViewport.set(
+      (int) (mComputedViewport.left * scale),
+      (int) (mComputedViewport.top * scale),
+      (int) (mComputedViewport.right * scale),
+      (int) (mComputedViewport.bottom * scale)
+    );
+    return mComputedScaledViewport;
+  }
+
   /**
    * While the detail level is locked (after this method is invoked, and before unlockDetailLevel is invoked),
    * the DetailLevel will not change, and the current DetailLevel will be scaled beyond the normal
@@ -116,6 +127,10 @@ public class DetailLevelManager {
    */
   public void unlockDetailLevel() {
     mDetailLevelLocked = false;
+  }
+
+  public boolean getIsLocked() {
+    return mDetailLevelLocked;
   }
 
   public void resetDetailLevels() {

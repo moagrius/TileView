@@ -1,10 +1,6 @@
 package tileview.demo;
 
-import android.graphics.CornerPathEffect;
-import android.graphics.Paint;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -50,27 +46,6 @@ public class RealMapTileViewActivity extends TileViewActivity {
       SOUTH_EAST_LATITUDE
     );
 
-    // get the default paint and style it.  the same effect could be achieved by passing a custom Paint instnace
-    Paint paint = tileView.getDefaultPathPaint();
-
-    // get metrics for programmatic DP
-    DisplayMetrics metrics = getResources().getDisplayMetrics();
-
-    // dress up the path effects and draw it between some points
-    paint.setShadowLayer(
-      TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 4, metrics ),
-      TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 2, metrics ),
-      TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 2, metrics ),
-      0x66000000
-    );
-    paint.setStrokeWidth( TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 5, metrics ) );
-    paint.setPathEffect(
-      new CornerPathEffect(
-        TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_DIP, 5, metrics )
-      )
-    );
-    tileView.drawPath( points.subList( 1, 5 ), null );
-
     // add markers for all the points
     for( double[] point : points ) {
       // any view will do...
@@ -107,11 +82,11 @@ public class RealMapTileViewActivity extends TileViewActivity {
     // start small and allow zoom
     tileView.setScale( 0.5f );
 
+    // with padding, we might be fast enough to create the illusion of a seamless image
+    tileView.setViewportPadding( 256 );
+
     // we're running from assets, should be fairly fast decodes, go ahead and render asap
     tileView.setShouldRenderWhilePanning( true );
-
-    // for quickly drawn tiles _without_ a downsample, transitions aren't particularly useful
-    tileView.setTransitionsEnabled( false );
 
   }
 

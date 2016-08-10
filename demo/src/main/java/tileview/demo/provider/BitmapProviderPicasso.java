@@ -8,8 +8,6 @@ import com.qozix.tileview.tiles.Tile;
 import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
-
 /**
  * @author Mike Dunn, 2/19/16.
  */
@@ -21,8 +19,8 @@ public class BitmapProviderPicasso implements BitmapProvider {
       String formattedFileName = String.format( unformattedFileName, tile.getColumn(), tile.getRow() );
       try {
         return Picasso.with( context ).load( formattedFileName ).memoryPolicy( MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE ).get();
-      } catch( IOException e ) {
-        // probably couldn't find the file
+      } catch( Throwable t ) {
+        // probably couldn't find the file, maybe OOME
       }
     }
     return null;
