@@ -82,7 +82,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
         tileRenderRunnable.cancel( true );
         Tile tile = tileRenderRunnable.getTile();
         if( tile != null ) {
-          tile.reset();  // TODO:
+          tile.reset();
         }
       }
     }

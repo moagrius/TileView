@@ -43,7 +43,7 @@ public class CompositePathView extends View {
 
   public void setScale( float scale ) {
     mScale = scale;
-    mMatrix.setScale( mScale, mScale );  // TODO: test this
+    mMatrix.setScale( mScale, mScale );
     invalidate();
   }
 

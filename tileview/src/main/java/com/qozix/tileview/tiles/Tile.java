@@ -72,7 +72,7 @@ public class Tile {
     mDetailLevel = detailLevel;
     mDetailLevelScale = mDetailLevel.getScale();
     mIntrinsicRect.set( 0, 0, mWidth, mHeight );
-    mBaseRect.set( mLeft, mTop, mRight, mBottom );  // TODO: need this?
+    mBaseRect.set( mLeft, mTop, mRight, mBottom );
     mRelativeRect.set(
       FloatMathHelper.unscale( mLeft, mDetailLevelScale ),
       FloatMathHelper.unscale( mTop, mDetailLevelScale ),
