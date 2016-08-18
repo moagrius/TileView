@@ -764,6 +764,7 @@ public class TileView extends ZoomPanLayout implements
    */
   public void setDetailLevelManager( DetailLevelManager manager ) {
     mDetailLevelManager = manager;
+    mDetailLevelManager.setDetailLevelChangeListener(this);
   }
 
   @Override
