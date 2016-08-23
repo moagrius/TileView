@@ -45,6 +45,9 @@ public class ZoomPanLayout extends ViewGroup implements
   private float mMinScale = 0;
   private float mMaxScale = 1;
 
+  private int mOffsetX;
+  private int mOffsetY;
+
   private float mEffectiveMinScale = 0;
   private boolean mShouldLoopScale = true;
 
@@ -81,6 +84,7 @@ public class ZoomPanLayout extends ViewGroup implements
   public ZoomPanLayout( Context context, AttributeSet attrs, int defStyleAttr ) {
     super( context, attrs, defStyleAttr );
     setWillNotDraw( false );
+    setClipChildren( false );
     mScroller = new Scroller( context );
     mGestureDetector = new GestureDetector( context, this );
     mScaleGestureDetector = new ScaleGestureDetector( context, this );
@@ -118,21 +122,13 @@ public class ZoomPanLayout extends ViewGroup implements
     final int width = getWidth();
     final int height = getHeight();
 
-    int translateX = 0;
-    int translateY = 0;
-
-    if( mScaledWidth < width ) {
-      translateX = width / 2 - mScaledWidth / 2;
-    }
-
-    if( mScaledHeight < height ) {
-      translateY = height / 2 - mScaledHeight / 2;
-    }
+    mOffsetX = mScaledWidth >= width ? 0 : width / 2 - mScaledWidth / 2;
+    mOffsetY = mScaledHeight >= height ? 0 : height / 2 - mScaledHeight / 2;
 
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
-        child.layout( translateX, translateY, mScaledWidth + translateX, mScaledHeight + translateY );
+        child.layout( mOffsetX, mOffsetY, mScaledWidth + mOffsetX, mScaledHeight + mOffsetY );
       }
     }
     calculateMinimumScaleToFit();
@@ -257,6 +253,24 @@ public class ZoomPanLayout extends ViewGroup implements
    */
   public float getScale() {
     return mScale;
+  }
+
+  /**
+   * Returns the horizontal distance children are offset if the content is scaled smaller than width.
+   *
+   * @return
+   */
+  public int getOffsetX() {
+    return mOffsetX;
+  }
+
+  /**
+   * Return the vertical distance children are offset if the content is scaled smaller than height.
+   *
+   * @return
+   */
+  public int getOffsetY() {
+    return mOffsetY;
   }
 
   /**

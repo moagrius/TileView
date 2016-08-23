@@ -850,8 +850,8 @@ public class TileView extends ZoomPanLayout implements
 
   @Override
   public boolean onSingleTapConfirmed( MotionEvent event ) {
-    int x = (int) (getScrollX() + event.getX());
-    int y = (int) (getScrollY() + event.getY());
+    int x = getScrollX() + (int) event.getX() - getOffsetX();
+    int y = getScrollY() + (int) event.getY() - getOffsetY();
     mMarkerLayout.processHit( x, y );
     mHotSpotManager.processHit( x, y );
     return super.onSingleTapConfirmed( event );
