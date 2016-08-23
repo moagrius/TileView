@@ -190,6 +190,8 @@ public class ZoomPanLayout extends ViewGroup implements
     mBaseWidth = width;
     mBaseHeight = height;
     updateScaledDimensions();
+    calculateMinimumScaleToFit();
+    constrainScrollToLimits();
     requestLayout();
   }
 
