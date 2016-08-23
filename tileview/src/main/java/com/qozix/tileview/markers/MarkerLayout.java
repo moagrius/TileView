@@ -18,6 +18,7 @@ public class MarkerLayout extends ViewGroup {
 
   public MarkerLayout( Context context ) {
     super( context );
+    setClipChildren( false );
   }
 
   /**
