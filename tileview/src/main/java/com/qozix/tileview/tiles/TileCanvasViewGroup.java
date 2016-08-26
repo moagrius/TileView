@@ -203,9 +203,9 @@ public class TileCanvasViewGroup extends ViewGroup {
    * Clears existing tiles and cancels any existing render tasks.
    */
   public void clear() {
-    suppressRender();
     cancelRender();
     mTilesInCurrentViewport.clear();
+    mPreviouslyDrawnTiles.clear();
     invalidate();
   }
 
