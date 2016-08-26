@@ -124,7 +124,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
     }
     if( object instanceof DetailLevel ) {
       DetailLevel detailLevel = (DetailLevel) object;
-      return mScale == detailLevel.getScale();
+      return mScale == detailLevel.getScale() && mData != null && mData.equals( detailLevel.getData() );
     }
     return false;
   }
