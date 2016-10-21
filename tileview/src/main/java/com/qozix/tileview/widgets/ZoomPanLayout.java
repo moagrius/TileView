@@ -67,6 +67,8 @@ public class ZoomPanLayout extends ViewGroup implements
   private GestureDetector mGestureDetector;
   private TouchUpGestureDetector mTouchUpGestureDetector;
   private MinimumScaleMode mMinimumScaleMode = MinimumScaleMode.FILL;
+  private int mScrollOutY;
+  private int mScrollOutX;
 
   /**
    * Constructor to use when creating a ZoomPanLayout from code.
@@ -193,6 +195,15 @@ public class ZoomPanLayout extends ViewGroup implements
     calculateMinimumScaleToFit();
     constrainScrollToLimits();
     requestLayout();
+  }
+
+  /**
+   * Sets the amount of which the scroll can go outside of the actual image, resulting in a rubber band effect
+   * @param scrollOutXY pixel to scroll out of the image
+   */
+  public void setScrollOut(int scrollOutXY) {
+    this.mScrollOutX = scrollOutXY;
+    this.mScrollOutY = scrollOutXY;
   }
 
   /**
@@ -564,11 +575,11 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   private int getConstrainedScrollX( int x ) {
-    return Math.max( 0, Math.min( x, getScrollLimitX() ) );
+    return Math.max( -mScrollOutX, Math.min( x, getScrollLimitX() + mScrollOutX ) );
   }
 
   private int getConstrainedScrollY( int y ) {
-    return Math.max( 0, Math.min( y, getScrollLimitY() ) );
+    return Math.max( -mScrollOutY, Math.min( y, getScrollLimitY() + mScrollOutY ) );
   }
 
   private int getScrollLimitX() {
