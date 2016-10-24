@@ -11,7 +11,7 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
-import android.widget.Scroller;
+import android.widget.OverScroller;
 
 import com.qozix.tileview.geom.FloatMathHelper;
 import com.qozix.tileview.view.TouchUpGestureDetector;
@@ -60,15 +60,15 @@ public class ZoomPanLayout extends ViewGroup implements
 
   private HashSet<ZoomPanListener> mZoomPanListeners = new HashSet<ZoomPanListener>();
 
-  private Scroller mScroller;
+  private OverScroller mScroller;
   private ZoomPanAnimator mZoomPanAnimator;
 
   private ScaleGestureDetector mScaleGestureDetector;
   private GestureDetector mGestureDetector;
   private TouchUpGestureDetector mTouchUpGestureDetector;
   private MinimumScaleMode mMinimumScaleMode = MinimumScaleMode.FILL;
-  private int mScrollOutY;
-  private int mScrollOutX;
+  private int mScrollOverY;
+  private int mScrollOverX;
 
   /**
    * Constructor to use when creating a ZoomPanLayout from code.
@@ -87,7 +87,7 @@ public class ZoomPanLayout extends ViewGroup implements
     super( context, attrs, defStyleAttr );
     setWillNotDraw( false );
     setClipChildren( false );
-    mScroller = new Scroller( context );
+    mScroller = new OverScroller( context );
     mGestureDetector = new GestureDetector( context, this );
     mScaleGestureDetector = new ScaleGestureDetector( context, this );
     mTouchUpGestureDetector = new TouchUpGestureDetector( this );
@@ -199,11 +199,11 @@ public class ZoomPanLayout extends ViewGroup implements
 
   /**
    * Sets the amount of which the scroll can go outside of the actual image, resulting in a rubber band effect
-   * @param scrollOutXY pixel to scroll out of the image
+   * @param scrollOverXY pixel to scroll out of the image
    */
-  public void setScrollOut(int scrollOutXY) {
-    this.mScrollOutX = scrollOutXY;
-    this.mScrollOutY = scrollOutXY;
+  public void setScrollOver( int scrollOverXY ) {
+    this.mScrollOverX = scrollOverXY;
+    this.mScrollOverY = scrollOverXY;
   }
 
   /**
@@ -327,7 +327,7 @@ public class ZoomPanLayout extends ViewGroup implements
    *
    * @return The Scroller instance use to manage dragging and flinging.
    */
-  public Scroller getScroller() {
+  public OverScroller getScroller() {
     return mScroller;
   }
 
@@ -574,12 +574,36 @@ public class ZoomPanLayout extends ViewGroup implements
     return FloatMathHelper.scale( getHeight(), 0.5f );
   }
 
+  private int getConstrainedScrollX( int x, boolean scrollOver ) {
+    if( scrollOver ) {
+      if( x <= 0 ) {
+        return Math.max( x, -mScrollOverX );
+      } else {
+        return Math.min( x, Math.max( 0, getScrollLimitX() ) + mScrollOverX );
+      }
+    } else {
+      return Math.max( 0, Math.min( x, getScrollLimitX() ) );
+    }
+  }
+
   private int getConstrainedScrollX( int x ) {
-    return Math.max( -mScrollOutX, Math.min( x, getScrollLimitX() + mScrollOutX ) );
+    return getConstrainedScrollX( x, true );
+  }
+
+  private int getConstrainedScrollY( int y, boolean scrollOver ) {
+    if( scrollOver ) {
+      if( y <= 0 ) {
+        return Math.max( y, -mScrollOverY );
+      } else {
+        return Math.min( y, Math.max( 0, getScrollLimitY() ) + mScrollOverY );
+      }
+    } else {
+      return Math.max( 0, Math.min( y, getScrollLimitY() ) );
+    }
   }
 
   private int getConstrainedScrollY( int y ) {
-    return Math.max( -mScrollOutY, Math.min( y, getScrollLimitY() + mScrollOutY ) );
+    return getConstrainedScrollY( y, true );
   }
 
   private int getScrollLimitX() {
@@ -716,7 +740,7 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
-    mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, getScrollLimitX(), 0, getScrollLimitY() );
+    mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, Math.max( 0, getScrollLimitX() ), 0, Math.max( 0, getScrollLimitY() ), mScrollOverX, mScrollOverY );
     mIsFlinging = true;
     ViewCompat.postInvalidateOnAnimation( this );
     broadcastFlingBegin();
@@ -776,6 +800,7 @@ public class ZoomPanLayout extends ViewGroup implements
     if( mIsDragging ) {
       mIsDragging = false;
       if( !mIsFlinging ) {
+        scrollTo( getConstrainedScrollX( getScrollX(), false ), getConstrainedScrollY( getScrollY(), false ) );
         broadcastDragEnd();
       }
     }
