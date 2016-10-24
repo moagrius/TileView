@@ -800,7 +800,7 @@ public class ZoomPanLayout extends ViewGroup implements
     if( mIsDragging ) {
       mIsDragging = false;
       if( !mIsFlinging ) {
-        scrollTo( getConstrainedScrollX( getScrollX(), false ), getConstrainedScrollY( getScrollY(), false ) );
+        slideTo( getConstrainedScrollX( getScrollX(), false ), getConstrainedScrollY( getScrollY(), false ) );
         broadcastDragEnd();
       }
     }
