@@ -538,11 +538,15 @@ public class ZoomPanLayout extends ViewGroup implements
     return gestureIntercept || scaleIntercept || touchIntercept || super.onTouchEvent( event );
   }
 
+  public void scrollTo( int x, int y, boolean scrollOver ) {
+    x = getConstrainedScrollX( x, scrollOver );
+    y = getConstrainedScrollY( y, scrollOver );
+    super.scrollTo( x, y );
+  }
+
   @Override
   public void scrollTo( int x, int y ) {
-    x = getConstrainedScrollX( x );
-    y = getConstrainedScrollY( y );
-    super.scrollTo( x, y );
+    scrollTo( x, y, false );
   }
 
   private void calculateMinimumScaleToFit() {
@@ -622,7 +626,7 @@ public class ZoomPanLayout extends ViewGroup implements
       int endX = getConstrainedScrollX( mScroller.getCurrX() );
       int endY = getConstrainedScrollY( mScroller.getCurrY() );
       if( startX != endX || startY != endY ) {
-        scrollTo( endX, endY );
+        scrollTo( endX, endY, true );
         if( mIsFlinging ) {
           broadcastFlingUpdate();
         }
@@ -756,7 +760,7 @@ public class ZoomPanLayout extends ViewGroup implements
   public boolean onScroll( MotionEvent e1, MotionEvent e2, float distanceX, float distanceY ) {
     int scrollEndX = getScrollX() + (int) distanceX;
     int scrollEndY = getScrollY() + (int) distanceY;
-    scrollTo( scrollEndX, scrollEndY );
+    scrollTo( scrollEndX, scrollEndY, true );
     if( !mIsDragging ) {
       mIsDragging = true;
       broadcastDragBegin();
