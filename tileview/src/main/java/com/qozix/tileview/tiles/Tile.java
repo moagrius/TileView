@@ -71,15 +71,7 @@ public class Tile {
     mData = data;
     mDetailLevel = detailLevel;
     mDetailLevelScale = mDetailLevel.getScale();
-    mIntrinsicRect.set( 0, 0, mWidth, mHeight );
-    mBaseRect.set( mLeft, mTop, mRight, mBottom );
-    mRelativeRect.set(
-      FloatMathHelper.unscale( mLeft, mDetailLevelScale ),
-      FloatMathHelper.unscale( mTop, mDetailLevelScale ),
-      FloatMathHelper.unscale( mRight, mDetailLevelScale ),
-      FloatMathHelper.unscale( mBottom, mDetailLevelScale )
-    );
-    mScaledRect.set( mRelativeRect );
+    updateRects();
   }
 
   public int getWidth() {
@@ -149,6 +141,18 @@ public class Tile {
       (int) (mRelativeRect.bottom * scale)
     );
     return mScaledRect;
+  }
+
+  private void updateRects() {
+    mIntrinsicRect.set( 0, 0, mWidth, mHeight );
+    mBaseRect.set( mLeft, mTop, mRight, mBottom );
+    mRelativeRect.set(
+      FloatMathHelper.unscale( mLeft, mDetailLevelScale ),
+      FloatMathHelper.unscale( mTop, mDetailLevelScale ),
+      FloatMathHelper.unscale( mRight, mDetailLevelScale ),
+      FloatMathHelper.unscale( mBottom, mDetailLevelScale )
+    );
+    mScaledRect.set( mRelativeRect );
   }
 
   public void setTransitionDuration( int transitionDuration ) {
@@ -223,6 +227,11 @@ public class Tile {
       return;
     }
     mBitmap = bitmapProvider.getBitmap( this, context );
+    mWidth = mBitmap.getWidth();
+    mHeight = mBitmap.getHeight();
+    mRight = mLeft + mWidth;
+    mBottom = mTop + mHeight;
+    updateRects();
     mState = State.DECODED;
   }
 
