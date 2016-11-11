@@ -264,7 +264,7 @@ public class Tile {
    * @param canvas The canvas the tile's bitmap should be drawn into
    */
   public void draw( Canvas canvas ) {
-    if( mBitmap != null ) {
+    if( mBitmap != null && !mBitmap.isRecycled() ) {
       canvas.drawBitmap( mBitmap, mIntrinsicRect, mRelativeRect, getPaint() );
     }
   }
