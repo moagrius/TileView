@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import com.qozix.tileview.tiles.Tile;
 
 import java.io.InputStream;
+import java.util.Locale;
 
 /**
  * This is a very simple implementation of BitmapProvider, using a formatted string to find
@@ -30,7 +31,7 @@ public class BitmapProviderAssets implements BitmapProvider {
     Object data = tile.getData();
     if( data instanceof String ) {
       String unformattedFileName = (String) tile.getData();
-      String formattedFileName = String.format( unformattedFileName, tile.getColumn(), tile.getRow() );
+      String formattedFileName = String.format( Locale.US, unformattedFileName, tile.getColumn(), tile.getRow() );
       AssetManager assetManager = context.getAssets();
       try {
         InputStream inputStream = assetManager.open( formattedFileName );
