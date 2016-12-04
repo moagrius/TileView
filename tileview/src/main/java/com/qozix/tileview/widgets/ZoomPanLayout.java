@@ -563,20 +563,28 @@ public class ZoomPanLayout extends ViewGroup implements
     return FloatMathHelper.scale( getHeight(), 0.5f );
   }
 
-  private int getConstrainedScrollX( int x ) {
-    return Math.max( 0, Math.min( x, getScrollLimitX() ) );
+  protected int getConstrainedScrollX( int x ) {
+    return Math.max( getScrollMinX(), Math.min( x, getScrollLimitX() ) );
   }
 
-  private int getConstrainedScrollY( int y ) {
-    return Math.max( 0, Math.min( y, getScrollLimitY() ) );
+  protected int getConstrainedScrollY( int y ) {
+    return Math.max( getScrollMinY(), Math.min( y, getScrollLimitY() ) );
   }
 
-  private int getScrollLimitX() {
+  protected int getScrollLimitX() {
     return mScaledWidth - getWidth();
   }
 
-  private int getScrollLimitY() {
+  protected int getScrollLimitY() {
     return mScaledHeight - getHeight();
+  }
+
+  protected int getScrollMinX(){
+    return 0;
+  }
+
+  protected int getScrollMinY(){
+    return 0;
   }
 
   @Override
