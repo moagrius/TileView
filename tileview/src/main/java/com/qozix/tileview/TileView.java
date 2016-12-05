@@ -19,7 +19,7 @@ import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.detail.DetailLevelManager;
 import com.qozix.tileview.geom.CoordinateTranslater;
 import com.qozix.tileview.geom.FloatMathHelper;
-import com.qozix.tileview.graphics.BitmapCleanup;
+import com.qozix.tileview.graphics.BitmapRecycler;
 import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.hotspots.HotSpot;
 import com.qozix.tileview.hotspots.HotSpotManager;
@@ -289,15 +289,15 @@ public class TileView extends ZoomPanLayout implements
   }
 
   /**
-   * Sets a custom class to perform the Bitmap clean-up on Tile#reset.
-   * By default, a BitmapCleanup implementation is provided that calls Bitmap#recycle, but
+   * Sets a custom class to perform the Bitmap finalization on Tile#reset.
+   * By default, a BitmapRecycler implementation is provided that calls Bitmap#recycle, but
    * alternative implementations could be used that recycle Bitmap instances to prevent garbage
    * collection or do other things after the Bitmap is no longer needed for rendering.
    *
-   * @param bitmapCleanup A class instance that implements BitmapCleanup and must define a cleanupBitmap method, which accepts a Bitmap after it is no longer being used
+   * @param bitmapRecycler A class instance that implements BitmapRecycler and must define a recycleBitmap method, which accepts a Bitmap after it is no longer being used
    */
-  public void setBitmapCleanup(BitmapCleanup bitmapCleanup ) {
-    mTileCanvasViewGroup.setBitmapCleanup( bitmapCleanup );
+  public void setBitmapRecycler(BitmapRecycler bitmapRecycler) {
+    mTileCanvasViewGroup.setBitmapRecycler(bitmapRecycler);
   }
 
   /**

@@ -10,8 +10,8 @@ import android.os.Message;
 import android.view.ViewGroup;
 
 import com.qozix.tileview.detail.DetailLevel;
-import com.qozix.tileview.graphics.BitmapCleanup;
-import com.qozix.tileview.graphics.BitmapCleanupRecycle;
+import com.qozix.tileview.graphics.BitmapRecyclerDefault;
+import com.qozix.tileview.graphics.BitmapRecycler;
 import com.qozix.tileview.graphics.BitmapProvider;
 import com.qozix.tileview.graphics.BitmapProviderAssets;
 
@@ -36,7 +36,7 @@ public class TileCanvasViewGroup extends ViewGroup {
   private float mScale = 1;
 
   private BitmapProvider mBitmapProvider;
-  private BitmapCleanup mBitmapCleanup;
+  private BitmapRecycler mBitmapRecycler;
 
   private DetailLevel mDetailLevelToRender;
   private DetailLevel mLastRenderedDetailLevel;
@@ -115,19 +115,19 @@ public class TileCanvasViewGroup extends ViewGroup {
     return mBitmapProvider;
   }
 
-  public BitmapCleanup getBitmapCleanup() {
-    if( mBitmapCleanup == null ){
-      mBitmapCleanup = new BitmapCleanupRecycle();
+  public BitmapRecycler getBitmapCleanup() {
+    if( mBitmapRecycler == null ){
+      mBitmapRecycler = new BitmapRecyclerDefault();
     }
-    return mBitmapCleanup;
+    return mBitmapRecycler;
   }
 
   public void setBitmapProvider( BitmapProvider bitmapProvider ) {
     mBitmapProvider = bitmapProvider;
   }
 
-  public void setBitmapCleanup( BitmapCleanup bitmapCleanup ){
-    mBitmapCleanup = bitmapCleanup;
+  public void setBitmapRecycler(BitmapRecycler bitmapRecycler){
+    mBitmapRecycler = bitmapRecycler;
   }
 
   public void setTileRenderListener( TileRenderListener tileRenderListener ) {

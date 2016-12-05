@@ -9,8 +9,8 @@ import android.view.animation.AnimationUtils;
 
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.geom.FloatMathHelper;
-import com.qozix.tileview.graphics.BitmapCleanup;
 import com.qozix.tileview.graphics.BitmapProvider;
+import com.qozix.tileview.graphics.BitmapRecycler;
 
 import java.lang.ref.WeakReference;
 
@@ -59,7 +59,7 @@ public class Tile {
   private DetailLevel mDetailLevel;
 
   private WeakReference<TileRenderRunnable> mTileRenderRunnableWeakReference;
-  private WeakReference<BitmapCleanup> mBitmapCleanupReference;
+  private WeakReference<BitmapRecycler> mBitmapRecyclerReference;
 
   public Tile( int column, int row, int width, int height, Object data, DetailLevel detailLevel ) {
     mRow = row;
@@ -169,14 +169,14 @@ public class Tile {
     mState = state;
   }
 
-  public void execute( TileRenderPoolExecutor tileRenderPoolExecutor, BitmapCleanup cleanup ) {
+  public void execute( TileRenderPoolExecutor tileRenderPoolExecutor, BitmapRecycler recycler ) {
     if(mState != State.UNASSIGNED){
       return;
     }
     mState = State.PENDING_DECODE;
     TileRenderRunnable runnable = new TileRenderRunnable();
     mTileRenderRunnableWeakReference = new WeakReference<>( runnable );
-    mBitmapCleanupReference = new WeakReference<>( cleanup );
+    mBitmapRecyclerReference = new WeakReference<>( recycler );
     runnable.setTile( this );
     runnable.setTileRenderPoolExecutor( tileRenderPoolExecutor );
     tileRenderPoolExecutor.execute( runnable );
@@ -258,9 +258,9 @@ public class Tile {
     mState = State.UNASSIGNED;
     mRenderTimeStamp = null;
     if( mBitmap != null && !mBitmap.isRecycled() ) {
-      BitmapCleanup cleanup = mBitmapCleanupReference.get();
-      if( cleanup != null ) {
-        cleanup.cleanupBitmap( mBitmap );
+      BitmapRecycler recycler = mBitmapRecyclerReference.get();
+      if( recycler != null ) {
+        recycler.recycleBitmap( mBitmap );
       } else {
         mBitmap.recycle();
       }

@@ -2,9 +2,9 @@ package com.qozix.tileview.graphics;
 
 import android.graphics.Bitmap;
 
-public class BitmapCleanupRecycle implements BitmapCleanup {
+public class BitmapRecyclerDefault implements BitmapRecycler {
   @Override
-  public void cleanupBitmap( Bitmap b ) {
+  public void recycleBitmap(Bitmap b ) {
     b.recycle();
   }
 }
