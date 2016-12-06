@@ -51,7 +51,7 @@ public class TileRenderPoolExecutor extends ThreadPoolExecutor {
       if( isShutdownOrTerminating() ) {
         return;
       }
-      tile.execute( this );
+      tile.execute( this, tileCanvasViewGroup.getBitmapRecycler() );
     }
   }
 

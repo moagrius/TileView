@@ -10,6 +10,7 @@ import android.view.animation.AnimationUtils;
 import com.qozix.tileview.detail.DetailLevel;
 import com.qozix.tileview.geom.FloatMathHelper;
 import com.qozix.tileview.graphics.BitmapProvider;
+import com.qozix.tileview.graphics.BitmapRecycler;
 
 import java.lang.ref.WeakReference;
 
@@ -58,6 +59,7 @@ public class Tile {
   private DetailLevel mDetailLevel;
 
   private WeakReference<TileRenderRunnable> mTileRenderRunnableWeakReference;
+  private WeakReference<BitmapRecycler> mBitmapRecyclerReference;
 
   public Tile( int column, int row, int width, int height, Object data, DetailLevel detailLevel ) {
     mRow = row;
@@ -168,12 +170,17 @@ public class Tile {
   }
 
   public void execute( TileRenderPoolExecutor tileRenderPoolExecutor ) {
+    execute( tileRenderPoolExecutor, null );
+  }
+
+  public void execute( TileRenderPoolExecutor tileRenderPoolExecutor, BitmapRecycler recycler ) {
     if(mState != State.UNASSIGNED){
       return;
     }
     mState = State.PENDING_DECODE;
     TileRenderRunnable runnable = new TileRenderRunnable();
     mTileRenderRunnableWeakReference = new WeakReference<>( runnable );
+    mBitmapRecyclerReference = new WeakReference<>( recycler );
     runnable.setTile( this );
     runnable.setTileRenderPoolExecutor( tileRenderPoolExecutor );
     tileRenderPoolExecutor.execute( runnable );
@@ -254,8 +261,11 @@ public class Tile {
     }
     mState = State.UNASSIGNED;
     mRenderTimeStamp = null;
-    if( mBitmap != null && !mBitmap.isRecycled() ) {
-      mBitmap.recycle();
+    if( mBitmap != null ) {
+      BitmapRecycler recycler = mBitmapRecyclerReference.get();
+      if( recycler != null ) {
+        recycler.recycleBitmap( mBitmap );
+      }
     }
     mBitmap = null;
   }
