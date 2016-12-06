@@ -169,7 +169,6 @@ public class Tile {
     mState = state;
   }
 
-  @Deprecated
   public void execute( TileRenderPoolExecutor tileRenderPoolExecutor ) {
     execute( tileRenderPoolExecutor, null );
   }
