@@ -115,7 +115,7 @@ public class TileCanvasViewGroup extends ViewGroup {
     return mBitmapProvider;
   }
 
-  public BitmapRecycler getBitmapCleanup() {
+  public BitmapRecycler getBitmapRecycler() {
     if( mBitmapRecycler == null ){
       mBitmapRecycler = new BitmapRecyclerDefault();
     }
@@ -126,7 +126,7 @@ public class TileCanvasViewGroup extends ViewGroup {
     mBitmapProvider = bitmapProvider;
   }
 
-  public void setBitmapRecycler(BitmapRecycler bitmapRecycler){
+  public void setBitmapRecycler( BitmapRecycler bitmapRecycler ){
     mBitmapRecycler = bitmapRecycler;
   }
 

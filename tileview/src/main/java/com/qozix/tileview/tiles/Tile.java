@@ -169,6 +169,11 @@ public class Tile {
     mState = state;
   }
 
+  @Deprecated
+  public void execute( TileRenderPoolExecutor tileRenderPoolExecutor ) {
+    execute( tileRenderPoolExecutor, null );
+  }
+
   public void execute( TileRenderPoolExecutor tileRenderPoolExecutor, BitmapRecycler recycler ) {
     if(mState != State.UNASSIGNED){
       return;
@@ -257,7 +262,7 @@ public class Tile {
     }
     mState = State.UNASSIGNED;
     mRenderTimeStamp = null;
-    if( mBitmap != null && !mBitmap.isRecycled() ) {
+    if( mBitmap != null ) {
       BitmapRecycler recycler = mBitmapRecyclerReference.get();
       if( recycler != null ) {
         recycler.recycleBitmap( mBitmap );

@@ -296,8 +296,8 @@ public class TileView extends ZoomPanLayout implements
    *
    * @param bitmapRecycler A class instance that implements BitmapRecycler and must define a recycleBitmap method, which accepts a Bitmap after it is no longer being used
    */
-  public void setBitmapRecycler(BitmapRecycler bitmapRecycler) {
-    mTileCanvasViewGroup.setBitmapRecycler(bitmapRecycler);
+  public void setBitmapRecycler( BitmapRecycler bitmapRecycler ) {
+    mTileCanvasViewGroup.setBitmapRecycler( bitmapRecycler );
   }
 
   /**

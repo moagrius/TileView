@@ -9,5 +9,5 @@ import android.graphics.Bitmap;
  * instances for reuse in a cache or an object pool.
  */
 public interface BitmapRecycler {
-  void recycleBitmap(Bitmap b );
+  void recycleBitmap( Bitmap soylentGreen );
 }
