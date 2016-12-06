@@ -126,7 +126,7 @@ public class TileCanvasViewGroup extends ViewGroup {
     mBitmapProvider = bitmapProvider;
   }
 
-  public void setBitmapRecycler( BitmapRecycler bitmapRecycler ){
+  public void setBitmapRecycler( BitmapRecycler bitmapRecycler ) {
     mBitmapRecycler = bitmapRecycler;
   }
 
