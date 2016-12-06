@@ -266,8 +266,6 @@ public class Tile {
       BitmapRecycler recycler = mBitmapRecyclerReference.get();
       if( recycler != null ) {
         recycler.recycleBitmap( mBitmap );
-      } else {
-        mBitmap.recycle();
       }
     }
     mBitmap = null;
