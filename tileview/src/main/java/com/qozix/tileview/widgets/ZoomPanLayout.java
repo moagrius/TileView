@@ -713,7 +713,9 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
-    mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY, 0, getScrollLimitX(), 0, getScrollLimitY() );
+    mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY,
+                     getScrollMinX(), getScrollLimitX(), getScrollMinY(), getScrollLimitY() );
+
     mIsFlinging = true;
     ViewCompat.postInvalidateOnAnimation( this );
     broadcastFlingBegin();
