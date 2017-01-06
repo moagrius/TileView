@@ -85,7 +85,6 @@ public class ZoomPanLayout extends ViewGroup implements
     super( context, attrs, defStyleAttr );
     setWillNotDraw( false );
     setClipChildren( false );
-    mScroller = new Scroller( context );
     mGestureDetector = new GestureDetector( context, this );
     mScaleGestureDetector = new ScaleGestureDetector( context, this );
     mTouchUpGestureDetector = new TouchUpGestureDetector( this );
@@ -317,6 +316,10 @@ public class ZoomPanLayout extends ViewGroup implements
    * @return The Scroller instance use to manage dragging and flinging.
    */
   public Scroller getScroller() {
+    // Instantiate default scroller if none is available
+    if( mScroller == null ){
+      mScroller = new Scroller( getContext() );
+    }
     return mScroller;
   }
 
