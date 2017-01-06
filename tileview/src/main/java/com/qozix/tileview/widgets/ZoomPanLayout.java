@@ -589,18 +589,18 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public void computeScroll() {
-    if( mScroller.computeScrollOffset() ) {
+    if( getScroller().computeScrollOffset() ) {
       int startX = getScrollX();
       int startY = getScrollY();
-      int endX = getConstrainedScrollX( mScroller.getCurrX() );
-      int endY = getConstrainedScrollY( mScroller.getCurrY() );
+      int endX = getConstrainedScrollX( getScroller().getCurrX() );
+      int endY = getConstrainedScrollY( getScroller().getCurrY() );
       if( startX != endX || startY != endY ) {
         scrollTo( endX, endY );
         if( mIsFlinging ) {
           broadcastFlingUpdate();
         }
       }
-      if( mScroller.isFinished() ) {
+      if( getScroller().isFinished() ) {
         if( mIsFlinging ) {
           mIsFlinging = false;
           broadcastFlingEnd();
@@ -631,19 +631,19 @@ public class ZoomPanLayout extends ViewGroup implements
 
   private void broadcastFlingBegin() {
     for( ZoomPanListener listener : mZoomPanListeners ) {
-      listener.onPanBegin( mScroller.getStartX(), mScroller.getStartY(), ZoomPanListener.Origination.FLING );
+      listener.onPanBegin( getScroller().getStartX(), getScroller().getStartY(), ZoomPanListener.Origination.FLING );
     }
   }
 
   private void broadcastFlingUpdate() {
     for( ZoomPanListener listener : mZoomPanListeners ) {
-      listener.onPanUpdate( mScroller.getCurrX(), mScroller.getCurrY(), ZoomPanListener.Origination.FLING );
+      listener.onPanUpdate( getScroller().getCurrX(), getScroller().getCurrY(), ZoomPanListener.Origination.FLING );
     }
   }
 
   private void broadcastFlingEnd() {
     for( ZoomPanListener listener : mZoomPanListeners ) {
-      listener.onPanEnd( mScroller.getFinalX(), mScroller.getFinalY(), ZoomPanListener.Origination.FLING );
+      listener.onPanEnd( getScroller().getFinalX(), getScroller().getFinalY(), ZoomPanListener.Origination.FLING );
     }
   }
 
@@ -703,8 +703,8 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public boolean onDown( MotionEvent event ) {
-    if( mIsFlinging && !mScroller.isFinished() ) {
-      mScroller.forceFinished( true );
+    if( mIsFlinging && !getScroller().isFinished() ) {
+      getScroller().forceFinished( true );
       mIsFlinging = false;
       broadcastFlingEnd();
     }
@@ -713,7 +713,7 @@ public class ZoomPanLayout extends ViewGroup implements
 
   @Override
   public boolean onFling( MotionEvent event1, MotionEvent event2, float velocityX, float velocityY ) {
-    mScroller.fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY,
+    getScroller().fling( getScrollX(), getScrollY(), (int) -velocityX, (int) -velocityY,
                      getScrollMinX(), getScrollLimitX(), getScrollMinY(), getScrollLimitY() );
 
     mIsFlinging = true;
