@@ -230,4 +230,39 @@ public class CoordinateTranslater {
     return path;
   }
 
+  /**
+   * Get the left boundary.
+   *
+   * @return The left boundary (e.g., west longitude).
+   */
+  public double getLeft() {
+      return mLeft;
+  }
+
+  /**
+   * Get the right boundary.
+   *
+   * @return The right boundary (e.g., east longitude).
+   */
+  public double getRight() {
+      return mRight;
+  }
+
+  /**
+   * Get the top boundary.
+   *
+   * @return The top boundary (e.g., north latitude).
+   */
+  public double getTop() {
+      return mTop;
+  }
+
+  /**
+   * Get the bottom boundary.
+   *
+   * @return The bottom boundary (e.g., south latitude).
+   */
+  public double getBottom() {
+      return mBottom;
+  }
 }
