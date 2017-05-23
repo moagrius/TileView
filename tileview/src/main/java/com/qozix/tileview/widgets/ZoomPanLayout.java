@@ -49,6 +49,8 @@ public class ZoomPanLayout extends ViewGroup implements
   private int mOffsetY;
 
   private float mEffectiveMinScale = 0;
+  private float mMinimumScaleX;
+  private float mMinimumScaleY;
   private boolean mShouldLoopScale = true;
 
   private boolean mIsFlinging;
@@ -538,9 +540,9 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   private void calculateMinimumScaleToFit() {
-    float minimumScaleX = getWidth() / (float) mBaseWidth;
-    float minimumScaleY = getHeight() / (float) mBaseHeight;
-    float recalculatedMinScale = calculatedMinScale(minimumScaleX, minimumScaleY);
+    mMinimumScaleX = getWidth() / (float) mBaseWidth;
+    mMinimumScaleY = getHeight() / (float) mBaseHeight;
+    float recalculatedMinScale = calculatedMinScale(mMinimumScaleX, mMinimumScaleY);
     if( recalculatedMinScale != mEffectiveMinScale ) {
       mEffectiveMinScale = recalculatedMinScale;
       if( mScale < mEffectiveMinScale ){
@@ -567,10 +569,20 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   protected int getConstrainedScrollX( int x ) {
+    if ( mMinimumScaleMode == MinimumScaleMode.FIT &&  mScale < mMinimumScaleX ) {
+      float scaleFactor = mScale / ( mMinimumScaleX - mMinimumScaleY ) +
+              mMinimumScaleY / ( mMinimumScaleY - mMinimumScaleX );
+      return (int) ( scaleFactor * getScrollX() );
+    }
     return Math.max( getScrollMinX(), Math.min( x, getScrollLimitX() ) );
   }
 
   protected int getConstrainedScrollY( int y ) {
+    if ( mMinimumScaleMode == MinimumScaleMode.FIT && mScale < mMinimumScaleY ) {
+      float scaleFactor = mScale / ( mMinimumScaleY - mMinimumScaleX ) +
+              mMinimumScaleX / ( mMinimumScaleX - mMinimumScaleY );
+      return (int) ( scaleFactor * getScrollY() );
+    }
     return Math.max( getScrollMinY(), Math.min( y, getScrollLimitY() ) );
   }
 
