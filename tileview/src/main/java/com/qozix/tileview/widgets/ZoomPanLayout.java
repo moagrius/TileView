@@ -568,19 +568,30 @@ public class ZoomPanLayout extends ViewGroup implements
     return FloatMathHelper.scale( getHeight(), 0.5f );
   }
 
+  /**
+   * When the scale is less than {@code mMinimumScaleX}, either because we are using
+   * {@link MinimumScaleMode#FIT} or {@link MinimumScaleMode#NONE}, the scroll position takes a
+   * value between its starting value and 0. A linear interpolation between the
+   * {@code mMinimumScaleX} and the {@code mEffectiveMinScale} is used. <p>
+   * This strategy is used to avoid that a custom return value of {@link #getScrollMinX} (which
+   * default to 0) become the return value of this method which shifts the whole TileView.
+   */
   protected int getConstrainedScrollX( int x ) {
-    if ( mMinimumScaleMode == MinimumScaleMode.FIT &&  mScale < mMinimumScaleX ) {
-      float scaleFactor = mScale / ( mMinimumScaleX - mMinimumScaleY ) +
-              mMinimumScaleY / ( mMinimumScaleY - mMinimumScaleX );
+    if ( mScale < mMinimumScaleX && mEffectiveMinScale != mMinimumScaleX ) {
+      float scaleFactor = mScale / ( mMinimumScaleX - mEffectiveMinScale ) +
+              mEffectiveMinScale / ( mEffectiveMinScale - mMinimumScaleX );
       return (int) ( scaleFactor * getScrollX() );
     }
     return Math.max( getScrollMinX(), Math.min( x, getScrollLimitX() ) );
   }
 
+  /**
+   * See {@link #getConstrainedScrollX(int)}
+   */
   protected int getConstrainedScrollY( int y ) {
-    if ( mMinimumScaleMode == MinimumScaleMode.FIT && mScale < mMinimumScaleY ) {
-      float scaleFactor = mScale / ( mMinimumScaleY - mMinimumScaleX ) +
-              mMinimumScaleX / ( mMinimumScaleX - mMinimumScaleY );
+    if ( mScale < mMinimumScaleY && mEffectiveMinScale != mMinimumScaleY ) {
+      float scaleFactor = mScale / ( mMinimumScaleY - mEffectiveMinScale ) +
+              mEffectiveMinScale / ( mEffectiveMinScale - mMinimumScaleY );
       return (int) ( scaleFactor * getScrollY() );
     }
     return Math.max( getScrollMinY(), Math.min( y, getScrollLimitY() ) );
