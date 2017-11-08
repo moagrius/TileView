@@ -362,8 +362,11 @@ public class TileCanvasViewGroup extends ViewGroup {
   }
 
   private void beginRenderTask() {
-    // update the detail level properties considering the visible viewport
-    mDetailLevelToRender.computeCurrentState();
+    // if visible columns and rows are same as previously computed, fast-fail
+    boolean changed = mDetailLevelToRender.computeCurrentState();
+    if( !changed && mTilesInCurrentViewport.size() > 0 ) {
+      return;
+    }
     // determine tiles are mathematically within the current viewport; force re-computation
     mDetailLevelToRender.computeVisibleTilesFromViewport();
     // get rid of anything outside, use previously computed intersections
