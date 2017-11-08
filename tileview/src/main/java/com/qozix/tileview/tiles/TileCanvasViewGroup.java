@@ -39,8 +39,6 @@ public class TileCanvasViewGroup extends ViewGroup {
   private BitmapRecycler mBitmapRecycler;
 
   private DetailLevel mDetailLevelToRender;
-  private DetailLevel mLastRenderedDetailLevel;
-
 
   private boolean mRenderIsCancelled = false;
   private boolean mRenderIsSuppressed = false;
@@ -364,11 +362,8 @@ public class TileCanvasViewGroup extends ViewGroup {
   }
 
   private void beginRenderTask() {
-    // if visible columns and rows are same as previously computed, fast-fail
-    boolean changed = mDetailLevelToRender.computeCurrentState();
-    if( !changed && mDetailLevelToRender.equals( mLastRenderedDetailLevel ) ) {
-      return;
-    }
+    // update the detail level properties considering the visible viewport
+    mDetailLevelToRender.computeCurrentState();
     // determine tiles are mathematically within the current viewport; force re-computation
     mDetailLevelToRender.computeVisibleTilesFromViewport();
     // get rid of anything outside, use previously computed intersections
@@ -495,7 +490,6 @@ public class TileCanvasViewGroup extends ViewGroup {
       if( mTileRenderListener != null ) {
         mTileRenderListener.onRenderComplete();
       }
-      mLastRenderedDetailLevel = mDetailLevelToRender;
       requestRender();
     }
   };
