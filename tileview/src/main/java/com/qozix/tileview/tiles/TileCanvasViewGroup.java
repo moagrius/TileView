@@ -39,8 +39,6 @@ public class TileCanvasViewGroup extends ViewGroup {
   private BitmapRecycler mBitmapRecycler;
 
   private DetailLevel mDetailLevelToRender;
-  private DetailLevel mLastRenderedDetailLevel;
-
 
   private boolean mRenderIsCancelled = false;
   private boolean mRenderIsSuppressed = false;
@@ -366,7 +364,7 @@ public class TileCanvasViewGroup extends ViewGroup {
   private void beginRenderTask() {
     // if visible columns and rows are same as previously computed, fast-fail
     boolean changed = mDetailLevelToRender.computeCurrentState();
-    if( !changed && mDetailLevelToRender.equals( mLastRenderedDetailLevel ) ) {
+    if( !changed && mTilesInCurrentViewport.size() > 0 ) {
       return;
     }
     // determine tiles are mathematically within the current viewport; force re-computation
@@ -495,7 +493,6 @@ public class TileCanvasViewGroup extends ViewGroup {
       if( mTileRenderListener != null ) {
         mTileRenderListener.onRenderComplete();
       }
-      mLastRenderedDetailLevel = mDetailLevelToRender;
       requestRender();
     }
   };
