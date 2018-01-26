@@ -16,6 +16,10 @@ public class MarkerLayout extends ViewGroup {
 
   private MarkerTapListener mMarkerTapListener;
 
+  public static final int POS_RELATIVE = 0;               // Position is relative
+  public static final int POS_ABSOLUTE_LEFT_TOP = 1;      // Position is absolute calculated from left or top of marker
+  public static final int POS_ABSOLUTE_RIGHT_BOTTOM = 2;  // Position is absolute calculated from right or bottom of marker
+
   public MarkerLayout( Context context ) {
     super( context );
     setClipChildren( false );
@@ -62,6 +66,20 @@ public class MarkerLayout extends ViewGroup {
     markerLayoutParams.y = y;
     markerLayoutParams.anchorX = aX;
     markerLayoutParams.anchorY = aY;
+    return addMarker( view, markerLayoutParams );
+  }
+
+  public View addMarker( View view, int x, int y, Float aX, Float aY, int typeX, int typeY ) {
+    ViewGroup.LayoutParams defaultLayoutParams = view.getLayoutParams();
+    LayoutParams markerLayoutParams = (defaultLayoutParams != null)
+            ? generateLayoutParams(defaultLayoutParams)
+            : generateDefaultLayoutParams();
+    markerLayoutParams.x = x;
+    markerLayoutParams.y = y;
+    markerLayoutParams.anchorX = aX;
+    markerLayoutParams.anchorY = aY;
+    markerLayoutParams.typeAnchorX = typeX;
+    markerLayoutParams.typeAnchorY = typeY;
     return addMarker( view, markerLayoutParams );
   }
 
@@ -120,15 +138,25 @@ public class MarkerLayout extends ViewGroup {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
         MarkerLayout.LayoutParams layoutParams = (MarkerLayout.LayoutParams) child.getLayoutParams();
-        // get anchor offsets
-        float widthMultiplier = (layoutParams.anchorX == null) ? mAnchorX : layoutParams.anchorX;
-        float heightMultiplier = (layoutParams.anchorY == null) ? mAnchorY : layoutParams.anchorY;
         // actual sizes of children
         int actualWidth = child.getMeasuredWidth();
         int actualHeight = child.getMeasuredHeight();
-        // offset dimensions by anchor values
+        // get anchor offsets
+        float widthMultiplier = (layoutParams.anchorX == null) ? mAnchorX : layoutParams.anchorX;
+        float heightMultiplier = (layoutParams.anchorY == null) ? mAnchorY : layoutParams.anchorY;
+        // offset dimensions by anchor values (default typeAnchor = 0)
         float widthOffset = actualWidth * widthMultiplier;
         float heightOffset = actualHeight * heightMultiplier;
+        // handle typeAnchorX options other than 0
+        switch (layoutParams.typeAnchorX) {
+          case POS_ABSOLUTE_LEFT_TOP:     widthOffset = widthMultiplier;                break;
+          case POS_ABSOLUTE_RIGHT_BOTTOM: widthOffset = widthMultiplier - actualWidth;  break;
+        }
+        // handle typeAnchorY options other than 0
+        switch (layoutParams.typeAnchorY) {
+          case POS_ABSOLUTE_LEFT_TOP:     heightOffset = heightMultiplier;                break;
+          case POS_ABSOLUTE_RIGHT_BOTTOM: heightOffset = heightMultiplier - actualHeight; break;
+        }
         // get offset position
         int scaledX = FloatMathHelper.scale( layoutParams.x, mScale );
         int scaledY = FloatMathHelper.scale( layoutParams.y, mScale );
@@ -199,6 +227,12 @@ public class MarkerLayout extends ViewGroup {
      */
     public Float anchorY = null;
 
+    /**
+     * Flag to determine if anchorX/Y are relative or absolute values
+     */
+    public int typeAnchorX = 0;
+    public int typeAnchorY = 0;
+
     private int mTop;
     private int mLeft;
     private int mBottom;
@@ -266,6 +300,16 @@ public class MarkerLayout extends ViewGroup {
       y = top;
       anchorX = anchorLeft;
       anchorY = anchorTop;
+    }
+
+    public LayoutParams( int width, int height, int left, int top, Float anchorLeft, Float anchorTop, int typeAnchorX, int typeAnchorY ) {
+      super( width, height );
+      x = left;
+      y = top;
+      anchorX = anchorLeft;
+      anchorY = anchorTop;
+      this.typeAnchorX = typeAnchorX;
+      this.typeAnchorY = typeAnchorY;
     }
 
   }
