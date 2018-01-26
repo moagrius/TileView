@@ -39,6 +39,7 @@ public class ZoomPanLayout extends ViewGroup implements
   private int mBaseHeight;
   private int mScaledWidth;
   private int mScaledHeight;
+  private int mExtraBorder = 0;
 
   private float mScale = 1;
 
@@ -194,6 +195,15 @@ public class ZoomPanLayout extends ViewGroup implements
     calculateMinimumScaleToFit();
     constrainScrollToLimits();
     requestLayout();
+  }
+
+  /**
+   * Sets the size of an extended border around the view.
+   *
+   * @param border  Extra size of the scaled view.
+   */
+  public void setExtraBorder(int border) {
+    mExtraBorder = border;
   }
 
   /**
@@ -598,19 +608,19 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   protected int getScrollLimitX() {
-    return mScaledWidth - getWidth();
+    return mScaledWidth - getWidth() + FloatMathHelper.scale(mExtraBorder, mScale);
   }
 
   protected int getScrollLimitY() {
-    return mScaledHeight - getHeight();
+    return mScaledHeight - getHeight() + FloatMathHelper.scale(mExtraBorder, mScale);
   }
 
   protected int getScrollMinX(){
-    return 0;
+    return -FloatMathHelper.scale(mExtraBorder, mScale);
   }
 
   protected int getScrollMinY(){
-    return 0;
+    return -FloatMathHelper.scale(mExtraBorder, mScale);
   }
 
   @Override
