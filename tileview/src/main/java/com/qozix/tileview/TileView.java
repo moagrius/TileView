@@ -511,18 +511,18 @@ public class TileView extends ZoomPanLayout implements
    * @param view    View instance to be added to the TileView.
    * @param x       Relative x position the View instance should be positioned at.
    * @param y       Relative y position the View instance should be positioned at.
-   * @param anchorX The x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value.
-   * @param anchorY The y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value.
-   * @param typeAnchorX The x-axis position type of a marker. See POS_* flags in MarkerLayout.
-   * @param typeAnchorY The y-axis position type of a marker. See POS_* flags in MarkerLayout.
+   * @param relativeAnchorX The x-axis position of a marker will be offset by a number equal to the width of the marker multiplied by this value.
+   * @param relativeAnchorY The y-axis position of a marker will be offset by a number equal to the height of the marker multiplied by this value.
+   * @param absoluteAnchorX The x-axis position of a marker will be offset by this value.
+   * @param absoluteAnchorY The y-axis position of a marker will be offset by this value.
    * @return The View instance added to the TileView.
    */
-  public View addMarker( View view, double x, double y, Float anchorX, Float anchorY, int typeAnchorX, int typeAnchorY ) {
+  public View addMarker( View view, double x, double y, Float relativeAnchorX, Float relativeAnchorY, float absoluteAnchorX, float absoluteAnchorY ) {
     return mMarkerLayout.addMarker( view,
             mCoordinateTranslater.translateX( x ),
             mCoordinateTranslater.translateY( y ),
-            anchorX, anchorY,
-            typeAnchorX, typeAnchorY
+            relativeAnchorX, relativeAnchorY,
+            absoluteAnchorX, absoluteAnchorY
     );
   }
 

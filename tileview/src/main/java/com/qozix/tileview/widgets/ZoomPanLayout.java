@@ -39,7 +39,8 @@ public class ZoomPanLayout extends ViewGroup implements
   private int mBaseHeight;
   private int mScaledWidth;
   private int mScaledHeight;
-  private int mExtraBorder = 0;
+  private int mImagePadding;
+  private int mScaledImagePadding;
 
   private float mScale = 1;
 
@@ -198,12 +199,14 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   /**
-   * Sets the size of an extended border around the view.
+   * Adds extra padding around the tiled image, making it possible to scroll past the end of
+   * the border even when zoomed in.
    *
-   * @param border  Extra size of the scaled view.
+   * @param padding  Additional empty padding around the tiled image.
    */
-  public void setExtraBorder(int border) {
-    mExtraBorder = border;
+  public void setImagePadding(int padding) {
+    mImagePadding = padding;
+    recalculateImagePadding();
   }
 
   /**
@@ -254,6 +257,7 @@ public class ZoomPanLayout extends ViewGroup implements
       mScale = scale;
       updateScaledDimensions();
       constrainScrollToLimits();
+      recalculateImagePadding();
       onScaleChanged( scale, previous );
       invalidate();
     }
@@ -608,19 +612,23 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   protected int getScrollLimitX() {
-    return mScaledWidth - getWidth() + FloatMathHelper.scale(mExtraBorder, mScale);
+    return mScaledWidth - getWidth() + mScaledImagePadding;
   }
 
   protected int getScrollLimitY() {
-    return mScaledHeight - getHeight() + FloatMathHelper.scale(mExtraBorder, mScale);
+    return mScaledHeight - getHeight() + mScaledImagePadding;
   }
 
   protected int getScrollMinX(){
-    return -FloatMathHelper.scale(mExtraBorder, mScale);
+    return -mScaledImagePadding;
   }
 
   protected int getScrollMinY(){
-    return -FloatMathHelper.scale(mExtraBorder, mScale);
+    return -mScaledImagePadding;
+  }
+
+  private void recalculateImagePadding() {
+    mScaledImagePadding = FloatMathHelper.scale(mImagePadding, mScale);
   }
 
   @Override

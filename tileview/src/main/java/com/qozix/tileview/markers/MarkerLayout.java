@@ -16,9 +16,9 @@ public class MarkerLayout extends ViewGroup {
 
   private MarkerTapListener mMarkerTapListener;
 
-  public static final int POS_RELATIVE = 0;               // Position is relative
-  public static final int POS_ABSOLUTE_LEFT_TOP = 1;      // Position is absolute calculated from left or top of marker
-  public static final int POS_ABSOLUTE_RIGHT_BOTTOM = 2;  // Position is absolute calculated from right or bottom of marker
+  public static final int ANCHOR_BEHAVIOUR_RELATIVE = 0;               // Position is relative
+  public static final int ANCHOR_BEHAVIOUR_ABSOLUTE_LEFT_TOP = 1;      // Position is absolute calculated from left or top of marker
+  public static final int ANCHOR_BEHAVIOUR_ABSOLUTE_RIGHT_BOTTOM = 2;  // Position is absolute calculated from right or bottom of marker
 
   public MarkerLayout( Context context ) {
     super( context );
@@ -69,17 +69,17 @@ public class MarkerLayout extends ViewGroup {
     return addMarker( view, markerLayoutParams );
   }
 
-  public View addMarker( View view, int x, int y, Float aX, Float aY, int typeX, int typeY ) {
+  public View addMarker( View view, int x, int y, Float relativeX, Float relativeY, float absoluteX, float absoluteY ) {
     ViewGroup.LayoutParams defaultLayoutParams = view.getLayoutParams();
     LayoutParams markerLayoutParams = (defaultLayoutParams != null)
             ? generateLayoutParams(defaultLayoutParams)
             : generateDefaultLayoutParams();
     markerLayoutParams.x = x;
     markerLayoutParams.y = y;
-    markerLayoutParams.anchorX = aX;
-    markerLayoutParams.anchorY = aY;
-    markerLayoutParams.typeAnchorX = typeX;
-    markerLayoutParams.typeAnchorY = typeY;
+    markerLayoutParams.anchorX = relativeX;
+    markerLayoutParams.anchorY = relativeY;
+    markerLayoutParams.absoluteAnchorX = absoluteX;
+    markerLayoutParams.absoluteAnchorY = absoluteY;
     return addMarker( view, markerLayoutParams );
   }
 
@@ -144,19 +144,9 @@ public class MarkerLayout extends ViewGroup {
         // get anchor offsets
         float widthMultiplier = (layoutParams.anchorX == null) ? mAnchorX : layoutParams.anchorX;
         float heightMultiplier = (layoutParams.anchorY == null) ? mAnchorY : layoutParams.anchorY;
-        // offset dimensions by anchor values (default typeAnchor = 0)
-        float widthOffset = actualWidth * widthMultiplier;
-        float heightOffset = actualHeight * heightMultiplier;
-        // handle typeAnchorX options other than 0
-        switch (layoutParams.typeAnchorX) {
-          case POS_ABSOLUTE_LEFT_TOP:     widthOffset = widthMultiplier;                break;
-          case POS_ABSOLUTE_RIGHT_BOTTOM: widthOffset = widthMultiplier - actualWidth;  break;
-        }
-        // handle typeAnchorY options other than 0
-        switch (layoutParams.typeAnchorY) {
-          case POS_ABSOLUTE_LEFT_TOP:     heightOffset = heightMultiplier;                break;
-          case POS_ABSOLUTE_RIGHT_BOTTOM: heightOffset = heightMultiplier - actualHeight; break;
-        }
+        // calculate combined anchor offsets
+        float widthOffset = actualWidth * widthMultiplier + layoutParams.absoluteAnchorX;
+        float heightOffset = actualHeight * heightMultiplier + layoutParams.absoluteAnchorY;
         // get offset position
         int scaledX = FloatMathHelper.scale( layoutParams.x, mScale );
         int scaledY = FloatMathHelper.scale( layoutParams.y, mScale );
@@ -228,10 +218,11 @@ public class MarkerLayout extends ViewGroup {
     public Float anchorY = null;
 
     /**
-     * Flag to determine if anchorX/Y are relative or absolute values
+     * Similar to anchorX/Y, but for absolute offsets. This value is used in addition to anchorX/Y
+     * Set to 0 by default which means no absolute offset.
      */
-    public int typeAnchorX = 0;
-    public int typeAnchorY = 0;
+    public float absoluteAnchorX;
+    public float absoluteAnchorY;
 
     private int mTop;
     private int mLeft;
@@ -302,14 +293,26 @@ public class MarkerLayout extends ViewGroup {
       anchorY = anchorTop;
     }
 
-    public LayoutParams( int width, int height, int left, int top, Float anchorLeft, Float anchorTop, int typeAnchorX, int typeAnchorY ) {
+    /**
+     * Creates a new set of layout parameters with the specified values.
+     *
+     * @param width               Information about how wide the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param height              Information about how tall the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param left                Sets the absolute x value of the view's position in pixels.
+     * @param top                 Sets the absolute y value of the view's position in pixels.
+     * @param relativeAnchorLeft  Sets the relative horizontal offset of the view from the left.
+     * @param relativeAnchorTop   Sets the relative vertical offset of the view from the top.
+     * @param absoluteAnchorLeft  Sets the absolute horizontal offset of the view.
+     * @param absoluteAnchorTop   Sets the absolute horizontal offset of the view.
+     */
+    public LayoutParams( int width, int height, int left, int top, Float relativeAnchorLeft, Float relativeAnchorTop, float absoluteAnchorLeft, float absoluteAnchorTop ) {
       super( width, height );
       x = left;
       y = top;
-      anchorX = anchorLeft;
-      anchorY = anchorTop;
-      this.typeAnchorX = typeAnchorX;
-      this.typeAnchorY = typeAnchorY;
+      anchorX = relativeAnchorLeft;
+      anchorY = relativeAnchorTop;
+      absoluteAnchorX = absoluteAnchorLeft;
+      absoluteAnchorY = absoluteAnchorTop;
     }
 
   }
