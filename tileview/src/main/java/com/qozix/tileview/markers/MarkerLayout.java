@@ -16,10 +16,6 @@ public class MarkerLayout extends ViewGroup {
 
   private MarkerTapListener mMarkerTapListener;
 
-  public static final int ANCHOR_BEHAVIOUR_RELATIVE = 0;               // Position is relative
-  public static final int ANCHOR_BEHAVIOUR_ABSOLUTE_LEFT_TOP = 1;      // Position is absolute calculated from left or top of marker
-  public static final int ANCHOR_BEHAVIOUR_ABSOLUTE_RIGHT_BOTTOM = 2;  // Position is absolute calculated from right or bottom of marker
-
   public MarkerLayout( Context context ) {
     super( context );
     setClipChildren( false );
