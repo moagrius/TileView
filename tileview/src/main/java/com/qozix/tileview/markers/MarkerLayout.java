@@ -65,6 +65,20 @@ public class MarkerLayout extends ViewGroup {
     return addMarker( view, markerLayoutParams );
   }
 
+  public View addMarker( View view, int x, int y, Float relativeX, Float relativeY, float absoluteX, float absoluteY ) {
+    ViewGroup.LayoutParams defaultLayoutParams = view.getLayoutParams();
+    LayoutParams markerLayoutParams = (defaultLayoutParams != null)
+            ? generateLayoutParams(defaultLayoutParams)
+            : generateDefaultLayoutParams();
+    markerLayoutParams.x = x;
+    markerLayoutParams.y = y;
+    markerLayoutParams.anchorX = relativeX;
+    markerLayoutParams.anchorY = relativeY;
+    markerLayoutParams.absoluteAnchorX = absoluteX;
+    markerLayoutParams.absoluteAnchorY = absoluteY;
+    return addMarker( view, markerLayoutParams );
+  }
+
   public View addMarker( View view, LayoutParams params ) {
     addView( view, params );
     return view;
@@ -120,15 +134,15 @@ public class MarkerLayout extends ViewGroup {
       View child = getChildAt( i );
       if( child.getVisibility() != GONE ) {
         MarkerLayout.LayoutParams layoutParams = (MarkerLayout.LayoutParams) child.getLayoutParams();
-        // get anchor offsets
-        float widthMultiplier = (layoutParams.anchorX == null) ? mAnchorX : layoutParams.anchorX;
-        float heightMultiplier = (layoutParams.anchorY == null) ? mAnchorY : layoutParams.anchorY;
         // actual sizes of children
         int actualWidth = child.getMeasuredWidth();
         int actualHeight = child.getMeasuredHeight();
-        // offset dimensions by anchor values
-        float widthOffset = actualWidth * widthMultiplier;
-        float heightOffset = actualHeight * heightMultiplier;
+        // get anchor offsets
+        float widthMultiplier = (layoutParams.anchorX == null) ? mAnchorX : layoutParams.anchorX;
+        float heightMultiplier = (layoutParams.anchorY == null) ? mAnchorY : layoutParams.anchorY;
+        // calculate combined anchor offsets
+        float widthOffset = actualWidth * widthMultiplier + layoutParams.absoluteAnchorX;
+        float heightOffset = actualHeight * heightMultiplier + layoutParams.absoluteAnchorY;
         // get offset position
         int scaledX = FloatMathHelper.scale( layoutParams.x, mScale );
         int scaledY = FloatMathHelper.scale( layoutParams.y, mScale );
@@ -199,6 +213,13 @@ public class MarkerLayout extends ViewGroup {
      */
     public Float anchorY = null;
 
+    /**
+     * Similar to anchorX/Y, but for absolute offsets. This value is used in addition to anchorX/Y
+     * Set to 0 by default which means no absolute offset.
+     */
+    public float absoluteAnchorX;
+    public float absoluteAnchorY;
+
     private int mTop;
     private int mLeft;
     private int mBottom;
@@ -266,6 +287,28 @@ public class MarkerLayout extends ViewGroup {
       y = top;
       anchorX = anchorLeft;
       anchorY = anchorTop;
+    }
+
+    /**
+     * Creates a new set of layout parameters with the specified values.
+     *
+     * @param width               Information about how wide the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param height              Information about how tall the view wants to be.  This should generally be WRAP_CONTENT or a fixed value.
+     * @param left                Sets the absolute x value of the view's position in pixels.
+     * @param top                 Sets the absolute y value of the view's position in pixels.
+     * @param relativeAnchorLeft  Sets the relative horizontal offset of the view from the left.
+     * @param relativeAnchorTop   Sets the relative vertical offset of the view from the top.
+     * @param absoluteAnchorLeft  Sets the absolute horizontal offset of the view.
+     * @param absoluteAnchorTop   Sets the absolute horizontal offset of the view.
+     */
+    public LayoutParams( int width, int height, int left, int top, Float relativeAnchorLeft, Float relativeAnchorTop, float absoluteAnchorLeft, float absoluteAnchorTop ) {
+      super( width, height );
+      x = left;
+      y = top;
+      anchorX = relativeAnchorLeft;
+      anchorY = relativeAnchorTop;
+      absoluteAnchorX = absoluteAnchorLeft;
+      absoluteAnchorY = absoluteAnchorTop;
     }
 
   }
