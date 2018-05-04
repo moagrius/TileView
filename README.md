@@ -44,7 +44,7 @@ Javadocs are [here](http://moagrius.github.io/TileView/index.html?com/qozix/tile
 ### Installation
 Gradle:
 ```
-compile 'com.qozix:tileview:2.2.9'
+implementation 'com.qozix:tileview:2.2.9'
 ```
 
 The library is hosted on jcenter, and is not currently available from maven.
