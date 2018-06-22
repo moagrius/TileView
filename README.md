@@ -14,13 +14,13 @@ Out of the box, the TileView will manage the tiled image, including subsampling 
 
 Additional plugins are provided to allow adding overlaying Views (markers), info windows, hot spots, path drawing, and coordinate translation.
 
-This is the first release (June 20) of TileView version 3.0.  TileView version 2.0 was released nearly 5 years ago, and is showing its age.  TileView3 is much improved, much more modern, and much simpler, and I hope everyone will take advantage of what I've learned in that time.
+This is the first release (June 20) of TileView version 3.0.  TileView version 2.0 was released nearly 5 years ago, and is showing its age.  TileView3 is much improved, much more modern, and much simpler.
 
-**Please note that TileView3 is in beta.**  Actually, probably closer to an alpha, but other than help from some great contributors, I'm the sole maintainer, so this is as close as I'm going to get to a beta without dedicated time.
+**Please note that TileView3 is in beta.**  Really, probably closer to an alpha.  There are bugs, but I think the core is solid and ready for beta testing.
 
 This is a major upgrade and is not backwards compatible with TileView version 2.  If you're need a stable version, the last release of version 2 is 2.7.7, and is available as a branch, here: https://github.com/moagrius/TileView/tree/version-2.7.7, or from the [releases page](https://github.com/moagrius/TileView/releases).  No further work will be done on version 2.
 
-**This is truly open source.**  I'm very happy to accept improvements or bug fixes; create an issue, branch, and create a PR.  I'm not super interested in finding bugs - I already know what most of them are, and will start to document them as this make its way into the wild.
+**This is truly open source.**  I'm very happy to accept improvements or bug fixes - no caveats; create an issue, branch, and create a PR.  I'm not super interested in finding bugs and don't want the issues page to become a wasteland - I already know what most of them are, and will start to document them as this make its way into the wild.
 
 ## Installation
 Add this to your app module's build.gradle.

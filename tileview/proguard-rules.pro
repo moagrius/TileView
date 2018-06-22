@@ -18,3 +18,4 @@
 -keep class com.qozix** {*;}
 -keepattributes InnerClasses
 -keepattributes EnclosingMethod
+-dontwarn java.lang.invoke.**
