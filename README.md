@@ -2,19 +2,18 @@
 
 :tada: TileView V3 released June 21, 2018 :tada:
 
+This is the first release (June 21) of TileView version 3.0.  TileView version 2.0 was released nearly 5 years ago, and is showing its age.  TileView3 is much improved, much more modern, and much simpler.
+
 # TileView3
 The TileView widget is a subclass of ViewGroup renders and positions bitmap tiles to compose a larger, original image, often one too large to display normally.
 
 ![tileview](https://user-images.githubusercontent.com/701344/41755597-c5986472-759d-11e8-83d9-f588b04f475d.gif)
-
 
 Very large images in Android will often result in an `OutOfMemoryError`.  Memory is finite, and bitmaps take a great deal of it.  `TileView` solves this by stitching together small pieces of the image (tiles) and displaying them reconstructed in the area of the screen visible to your user.
 
 Out of the box, the TileView will manage the tiled image, including subsampling when needed, flinging, dragging, scaling, and multiple levels of detail.
 
 Additional plugins are provided to allow adding overlaying Views (markers), info windows, hot spots, path drawing, and coordinate translation.
-
-This is the first release (June 20) of TileView version 3.0.  TileView version 2.0 was released nearly 5 years ago, and is showing its age.  TileView3 is much improved, much more modern, and much simpler.
 
 **Please note that TileView3 is in beta.**  Really, probably closer to an alpha.  There are bugs, but I think the core is solid and ready for beta testing.
 
@@ -33,7 +32,7 @@ implementation 'com.qozix:tileview:3.0'
 2. Name the tiles by the column and row number, e.g., 'tile-1-2.png' for the image tile that would be at the 2nd column from left and 3rd row from top.
 3. Create a new application with a single activity ('Main').
 4. Save the image tiles to your assets directory.
-5. Add the [latest version](##installation) to your gradle dependencies.
+5. Add the [latest version](#installation) to your gradle dependencies.
 6. In the Main Activity, use this for onCreate:
 ```
 @Override
@@ -54,7 +53,7 @@ Note that String replacements for rows and columns is not required - you can sup
 As a user, the biggest things you'll notice are:
 1.  You no longer need redandant tile sets or detail levels.  If your image doesn't change the details (e.g., show different images or labels at different zoom levels), you don't need to create tiles sets besides the original, full size one.  The program will now use subsampling to do this work for you without any setup on your part: one call to `defineDetail(anyObject)` is sufficient.
 1.  No more `BitmapProvider`.  We're just doing way too much management of Bitmaps, including re-use and caching, to allow any stray Bitmap to wander in.  This may change in the future, but the replacement for now is `StreamProvider` - basically the same thing but you just return an `InputStream` _instead of a `Bitmap`, and we take care of the rest.
-1.  Greatly improved bitmap management.  For details, see [How It Works](### How It Works)
+1.  Greatly improved bitmap management.  For details, see [How It Works](#how-it-works)
 1.  Plugin architecture.  Only sign up for things you need - if you don't need markers, don't install the plugin, and keep things snappy and simple.  Check `TileViewDemoSimple` for a very bare implementation, and `TileViewDemoAdvanced` for a more dressed up version.
 1.  Much smaller codebase.  Almost all the magic now happens in either `Tile` or `TileView` - if you understand those 2 classes, you understand the majority of the project.
 1.  Decomposition.  This takes a little explanation.  There are now 3 major, public widgets: `ScrollView`, `ScalingScrollView`, and `TileView`.  Each inherits from the last.  You'll notice the demo module has `Activities` for each of these classes.
@@ -78,7 +77,7 @@ From here down may be a bit dry but might be interesting to people interested in
 ## How It Works
 
 ##### Problem
-You have an image too large to display with an OutOfMemoryError.
+You have an image too large to display with an `OutOfMemoryError`.
 
 ##### Solution
 Chop the image into tiles and reconstruct them to fill the viewport, and only the viewport.  As the user scrolls (or scales), aggressively recycle any bitmap data that is not visible to the user at any given time, and render any new "tiles" that are not within the viewable area.
@@ -92,11 +91,12 @@ From start column to end column and start row to end row are the tiles (imagine 
 
 For example, let's consider...
 
-> image is 10,000 square
-viewport is 1080 by 1920
-viewport is at scroll position (1000, 500)
-so our computed viewport is (1000, 500 - 2080, 2420)
-out tiles are 256 square
+* image is 10,000 square
+* viewport is 1080 by 1920
+* viewport is at scroll position (1000, 500)
+* so our computed viewport is (1000, 500 - 2080, 2420)
+* out tiles are 256 square
+
 so grid is
 
   1. start column 1000 / 256 = 3
@@ -179,6 +179,6 @@ The default providers assume we're reading tiles from disk already, so the only 
 Reusing bimaps prevents frequent, large memory allocation and de-allocation, and can greatly improve the perceived performance of your app.  I'll let Colt explain: https://www.youtube.com/watch?v=_ioFW3cyRV0
 
 #### Threading
-Threading is accomplished using a dedicated ThreadPoolExecutor.  It's basically a fixed size pool with a pool size equal to the number of cores on the device (so 2 or 4 commonly, on newer phones as much as 8).  There's a 0 keep-alive and tasks are queued with a `LinkedBlockingQueue`.  A custom factory provides `Thread` instances that use `Thread.MIN_PRIORITY` to we don't consume resource the main thread needs to perform nice scrolls and flings.  Going further on this, each `Tile` (which is a `Runnable` submitted to the `ThreadPoolExecutor` also calls `Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);` which gives a larger range than `Thread.setPriority`, and this is actually very noticeable.  On a real Nexus 6, the jank without call to `setThreadPriority` isnt' terrible but is obvious, and immediately remedied with the call just mentioned.
+Threading is accomplished using a dedicated `ThreadPoolExecutor`.  It's basically a fixed size pool with a pool size equal to the number of cores on the device (so 2 or 4 commonly, on newer phones as much as 8).  There's a 0 keep-alive and tasks are queued with a `LinkedBlockingQueue`.  A custom factory provides `Thread` instances that use `Thread.MIN_PRIORITY` to we don't consume resource the main thread needs to perform nice scrolls and flings.  Going further on this, each `Tile` (which is a `Runnable` submitted to the `ThreadPoolExecutor` also calls `Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);` which gives a larger range than `Thread.setPriority`, and this is actually very noticeable.  On a real Nexus 6, the jank without call to `setThreadPriority` isnt' terrible but is obvious, and immediately remedied with the call just mentioned.
 
 This general approach is very similar to what you'd get with `Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())`.
