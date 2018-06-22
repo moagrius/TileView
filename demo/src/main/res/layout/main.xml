@@ -2,83 +2,48 @@
             xmlns:tools="http://schemas.android.com/tools"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:context=".TileViewDemoActivity" >
+            tools:context=".MainActivity">
 
-    <LinearLayout
-      android:orientation="vertical"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
-        <TextView
-          android:padding="20dp"
-          android:id="@+id/show_image"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:textSize="20sp"
-          android:gravity="center"
-          android:text="Large Image" />
+    <TextView
+      android:id="@+id/textview_demos_scrollview_vertical"
+      android:text="ScrollView Demo (Vertical)"
+      style="@style/DemoRow" />
 
-        <View
-          android:layout_width="match_parent"
-          android:layout_height="1dp"
-          android:background="#FFCCCCCC"
-          />
+    <TextView
+      android:id="@+id/textview_demos_scrollview_horizontal"
+      android:text="ScrollView Demo (Horizontal)"
+      style="@style/DemoRow" />
 
-        <TextView
-          android:padding="20dp"
-          android:id="@+id/show_plans"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:textSize="20sp"
-          android:gravity="center"
-          android:text="Building Plans" />
+    <TextView
+      android:id="@+id/textview_demos_scrollview_universal"
+      android:text="ScrollView Demo (Universal)"
+      style="@style/DemoRow" />
 
-        <View
-          android:layout_width="match_parent"
-          android:layout_height="1dp"
-          android:background="#FFCCCCCC"
-          />
+    <TextView
+      android:id="@+id/textview_demos_scalingscrollview_textviews"
+      android:text="ScalingScrollView Demo (TextViews)"
+      style="@style/DemoRow" />
 
-        <TextView
-          android:padding="20dp"
-          android:id="@+id/show_fiction"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:textSize="20sp"
-          android:gravity="center"
-          android:text="Fictional Map" />
+    <TextView
+      android:id="@+id/textview_demos_scalingscrollview_tiger"
+      android:text="ScalingScrollView Demo (SVG Tiger)"
+      style="@style/DemoRow" />
 
-        <View
-          android:layout_width="match_parent"
-          android:layout_height="1dp"
-          android:background="#FFCCCCCC"
-          />
+    <TextView
+        android:id="@+id/textview_demos_tileview_simple"
+        android:text="TileView Demo (Simple)"
+        style="@style/DemoRow" />
+    
+    <TextView
+      android:id="@+id/textview_demos_tileview_advanced"
+      android:text="TileView Demo (Advanced)"
+      style="@style/DemoRow" />
 
-        <TextView
-          android:padding="20dp"
-          android:id="@+id/show_map"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:textSize="20sp"
-          android:gravity="center"
-          android:text="Real Map" />
-
-        <View
-          android:layout_width="match_parent"
-          android:layout_height="1dp"
-          android:background="#FFCCCCCC"
-          />
-
-        <TextView
-          android:padding="20dp"
-          android:id="@+id/show_internet"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:textSize="20sp"
-          android:gravity="center"
-          android:text="Real Map Http" />
-
-    </LinearLayout>
-
+  </LinearLayout>
 
 </ScrollView>

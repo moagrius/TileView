@@ -1,29 +1,34 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "21.1.2"
-    defaultConfig {
-        minSdkVersion 11
-        targetSdkVersion 23
-        versionCode 40
-        versionName "2.2.9"
+  compileSdkVersion 27
+  buildToolsVersion '27.0.3'
+  defaultConfig {
+    minSdkVersion 19
+    targetSdkVersion 27
+    versionCode 41
+    versionName "3.0"
+  }
+  buildTypes {
+    release {
+      minifyEnabled true
+      proguardFiles 'proguard-rules.pro'
     }
-    buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles 'proguard-rules.pro'
-        }
-    }
-    lintOptions {
-        abortOnError false
-    }
+  }
+  lintOptions {
+    abortOnError false
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.2.1'
+  implementation fileTree(include: ['*.jar'], dir: 'libs')
+  testImplementation 'junit:junit:4.12'
+  implementation 'com.android.support:appcompat-v7:27.1.1'
+  implementation 'com.jakewharton:disklrucache:2.0.2'
 }
 
 apply from: 'aar-release.gradle'

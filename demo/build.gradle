@@ -1,31 +1,36 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "21.1.2"
+  compileSdkVersion 27
+  buildToolsVersion '27.0.3'
 
-    defaultConfig {
-        applicationId "tileview.demo"
-        minSdkVersion 11
-        targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
+  defaultConfig {
+    vectorDrawables.useSupportLibrary = true
+    applicationId "tileview.demo"
+    minSdkVersion 19
+    targetSdkVersion 27
+    versionCode 1
+    versionName "1.0"
+  }
+  buildTypes {
+    release {
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-    lintOptions {
-        abortOnError false
-    }
+  }
+  lintOptions {
+    abortOnError false
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.2.1'
-    compile 'com.squareup.picasso:picasso:2.5.2'
-    compile project(':tileview')
+  implementation fileTree(include: ['*.jar'], dir: 'libs')
+  testImplementation 'junit:junit:4.12'
+  implementation 'com.android.support:appcompat-v7:27.1.1'
+  implementation 'com.facebook.stetho:stetho:1.5.0'
+  implementation project(':tileview')
 }
