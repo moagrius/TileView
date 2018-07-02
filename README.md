@@ -59,7 +59,7 @@ As a user, the biggest things you'll notice are:
 1.  Decomposition.  This takes a little explanation.  There are now 3 major, public widgets: `ScrollView`, `ScalingScrollView`, and `TileView`.  Each inherits from the last.  You'll notice the demo module has `Activities` for each of these classes.
 
 ##### ScrollView
-`com.qozix.widgets.ScrollView` is a clone of AOSP's `ScrollView` and `HorizontalScrollView`, with some inspiration taken from `RecyclerView` and `GestureDetector`.  That means the APIs will be very familiar to anyone who's used the framework-provided `ScrollView`.  The big difference here is that `com.qozix.widgets.ScrollView` functions along both axes, without configuation.  If you have a layout that matches parent with and expands vertically, `ScrollView` will scroll it vertically - the converse holds.  If you have a layout that larger in both directions than the parent, `ScrollView` will scroll in any direction.
+`com.qozix.widgets.ScrollView` is a clone of AOSP's `ScrollView` and `HorizontalScrollView`, with some inspiration taken from `RecyclerView` and `GestureDetector`.  That means the APIs will be very familiar to anyone who's used the framework-provided `ScrollView`.  The big difference here is that `com.qozix.widgets.ScrollView` functions along both axes, without configuation.  For example, if you have a layout that matches parent width and expands vertically, `ScrollView` will scroll it vertically - the converse holds.  If you have a layout that larger in both directions than the parent, `ScrollView` will scroll in any direction.
 
 Again, no configration is required - there is no `orientation` attribute - it does it's best to figure out what makes sense.
 
@@ -125,7 +125,7 @@ And your grid looks like this:
 As long as there's only the one size, scale is uniformly applied - just multiple tile size in the previous math by the current scale, and your grid remains intact.
 
 ##### Scaling
-At every half way point, the image is 50% or small, so subsample it to save memory: https://developer.android.com/topic/performance/graphics/load-bitmap#load-bitmap
+At every half way point, the image is at 50% or smaller, so subsample it to save memory: https://developer.android.com/topic/performance/graphics/load-bitmap#load-bitmap
 
 Remember that each subsample (representing half the size) will actually quarter the amount of memory required for the bitmap.  Do this at every half: 50%, 25, 12.5, 6.25, 3.625, etc.
 
@@ -142,8 +142,8 @@ When you add another detail level, things get a little more complicated, but not
 
 ##### Patching
 - "Patching" is basically grabbing as many subsampled tiles as needed to create a full sized tiles, stitching them together into a single bitmap, and stuffing that in the cache
-- A very important number here is the "image subsample".  this is distince from the "zoom sample" described above
-- The image subsampe is derived from the _distance_ you are from the last provided detail level.  so if you have only 1 detail level (0) and you're at 20%, you're at image subsample 4 (50% would be 2, 25% would be 4, 12.5% would be 8, etc)
+- A very important number here is the "image subsample".  this is distinct from the "zoom sample" described above
+- The image subsample is derived from the _distance_ you are from the last provided detail level.  so if you have only 1 detail level (0) and you're at 20%, you're at image subsample 4 (50% would be 2, 25% would be 4, 12.5% would be 8, etc)
 - To do that, your grid math has to change a little.  you now have to round down to the nearest image subsample on the west and north, and round up to the nearest image subsample on the south and east, and skip a number of columns and rows equal to the image subsample
 - So now your viewport computation becomes very different:
 ```
@@ -172,7 +172,7 @@ To remedy this, we:
 So all the preceding "works" pretty well, but decoding the same data over and over is a lot of work that we can probably skip if we're smart about it.
 
 ##### Bitmap Caching and Re-use
-Emphasis on **and reuse** - the reuse bit is as important (maybe mores) than the traditional caching piece.
+Emphasis on **and reuse** - the reuse bit is as important as (maybe even more than) the traditional caching piece.
 
 The default providers assume we're reading tiles from disk already, so the only thing that goes into disk-cache are the patched tiles, mentioned above (this behavior can be modified, if for example you're reading tiles from a server).  Everything, however, is subject to a memory cache.  The default is one-quarter of available RAM, but the more you can spare for this, the better your performance will be.  This serves as both a straight bitmap cache, and a pool of re-usable objects: **When we first go to decode a tile, we check if that exact bitmap is in the memory cache - if it is, great, use it - if it's not, grab the oldest bitmap in the cache and re-use the underlying bitmap (BitmapFactory.Options.inBitmap)**
 
