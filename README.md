@@ -24,7 +24,7 @@ This is a major upgrade and is not backwards compatible with TileView version 2.
 ## Installation
 Add this to your app module's build.gradle.
 ```
-implementation 'com.qozix:tileview:3.0'
+implementation 'com.qozix:tileview:3.0.1'
 ```
 
 ##### Quick Setup
