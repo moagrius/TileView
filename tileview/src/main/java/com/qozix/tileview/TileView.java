@@ -35,11 +35,12 @@ public class TileView extends ScalingScrollView implements
   // constants
   private static final int RENDER_THROTTLE_ID = 0;
   private static final int RENDER_THROTTLE_INTERVAL = 15;
+  private static final short DEFAULT_TILE_SIZE = 256;
 
   // variables (settable)
   private int mZoom = 0;
   private int mImageSample = 1; // sample will always be one unless we don't have a defined detail level, then its 1 shl for every zoom level from the last defined detail
-  private int mTileSize;
+  private int mTileSize = DEFAULT_TILE_SIZE;
   private boolean mIsPrepared;
   private boolean mIsLaidOut;
   private boolean mHasRunOnReady;
@@ -437,10 +438,13 @@ public class TileView extends ScalingScrollView implements
   }
 
   private void prepare() {
+    if (mIsPrepared) {
+      return;
+    }
     if (mDetailList.isEmpty()) {
       throw new IllegalStateException("TileView requires at least one defined detail level");
     }
-    if (mTilingBitmapView.getLayoutParams().width == 0 || mTilingBitmapView.getLayoutParams().height == 0) {
+    if (!mContainer.hasValidDimensions()) {
       throw new IllegalStateException("TileView requires height and width be provided via Builder.setSize");
     }
     mIsPrepared = true;
@@ -521,6 +525,10 @@ public class TileView extends ScalingScrollView implements
       requestLayout();
     }
 
+    public boolean hasValidDimensions() {
+      return mWidth > 0 && mHeight > 0;
+    }
+
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
       for (int i = 0; i < getChildCount(); i++) {
@@ -543,12 +551,8 @@ public class TileView extends ScalingScrollView implements
 
     private TileView mTileView;
     private StreamProvider mStreamProvider;
-
-    private Bitmap.Config mConfig = Bitmap.Config.RGB_565;
-    private int mTileSize = 256;
     private int mMemoryCacheSize = (int) ((Runtime.getRuntime().maxMemory() / 1024) / 4);
     private int mDiskCacheSize = 1024 * 100;
-    private DiskCachePolicy mDiskCachePolicy = DiskCachePolicy.CACHE_PATCHES;
 
     public Builder(TileView tileView) {
       mTileView = tileView;
@@ -593,17 +597,17 @@ public class TileView extends ScalingScrollView implements
     }
 
     public Builder setBitmapConfig(Bitmap.Config config) {
-      mConfig = config;
+      mTileView.mBitmapConfig = config;
       return this;
     }
 
     public Builder setTileSize(int tileSize) {
-      mTileSize = tileSize;
+      mTileView.mTileSize = tileSize;
       return this;
     }
 
     public Builder setDiskCachePolicity(DiskCachePolicy policy) {
-      mDiskCachePolicy = policy;
+      mTileView.mDiskCachePolicy = policy;
       return this;
     }
 
@@ -628,27 +632,15 @@ public class TileView extends ScalingScrollView implements
       return this;
     }
 
-    // getters
-
-    private StreamProvider getStreamProvider() {
-      if (mStreamProvider == null) {
-        mStreamProvider = new StreamProviderAssets();
-      }
-      return mStreamProvider;
-    }
-
     public TileView build() {
-      mTileView.mTileSize = mTileSize;
-      mTileView.mBitmapConfig = mConfig;
       // if the user provided a custom provider, use that, otherwise default to assets
-      mTileView.mStreamProvider = getStreamProvider();
+      mTileView.mStreamProvider = mStreamProvider == null ? new StreamProviderAssets() : mStreamProvider;
       // use memory cache instance for both memory cache and bitmap pool.  maybe allows these to be set in the future
       MemoryCache memoryCache = new MemoryCache(mMemoryCacheSize);
       mTileView.mMemoryCache = memoryCache;
       mTileView.mBitmapPool = memoryCache;
-      mTileView.mDiskCachePolicy = mDiskCachePolicy;
       // if the policy is to cache something and the size is not 0, try to create a disk cache
-      if (mDiskCachePolicy != DiskCachePolicy.CACHE_NONE && mDiskCacheSize > 0) {
+      if (mTileView.mDiskCachePolicy != DiskCachePolicy.CACHE_NONE && mDiskCacheSize > 0) {
         try {
           // TODO: async?
           mTileView.mDiskCache = new DiskCache(mTileView.getContext(), mDiskCacheSize);
