@@ -225,7 +225,6 @@ public class TileView extends ScalingScrollView implements
       mTilesVisibleInViewport.clear();
       determineCurrentDetail();
     }
-    updateScaledViewport();
     updateViewportAndComputeTilesThrottled();
     // if this is setDirty or postInvalidate, things get wonky
     mTilingBitmapView.invalidate();
@@ -253,6 +252,7 @@ public class TileView extends ScalingScrollView implements
     Detail exactMatch = mDetailList.get(mZoom);
     if (exactMatch != null) {
       mCurrentDetail = exactMatch;
+      mImageSample = 1;
       return;
     }
     // it's not bigger than what we have defined, but we don't have an exact match, start at the requested zoom and work back

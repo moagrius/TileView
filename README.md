@@ -19,7 +19,7 @@ Additional plugins are provided to allow adding overlaying Views (markers), info
 
 This is a major upgrade and is not backwards compatible with TileView version 2.  If you're need a stable version, the last release of version 2 is 2.7.7, and is available as a branch, here: https://github.com/moagrius/TileView/tree/version-2.7.7, or from the [releases page](https://github.com/moagrius/TileView/releases).  No further work will be done on version 2.
 
-**This is truly open source.**  I'm very happy to accept improvements or bug fixes - no caveats; create an issue, branch, and create a PR.  I'm not super interested in finding bugs and don't want the issues page to become a wasteland - I already know what most of them are, and will start to document them as this make its way into the wild.
+**This is truly open source.**  I'm very happy to accept improvements or bug fixes - no caveats; create an issue, branch, and create a PR.  While I'm not super interested in finding bugs and don't want the issues page to become a wasteland (I already know what most of them are, and will start to document them as this make its way into the wild), I am very interested in fixing those bugs - if you have the time to locate and correct a bug, please open a PR.
 
 ## Installation
 Add this to your app module's build.gradle.
@@ -54,6 +54,7 @@ As a user, the biggest things you'll notice are:
 1.  You no longer need redandant tile sets or detail levels.  If your image doesn't change the details (e.g., show different images or labels at different zoom levels), you don't need to create tiles sets besides the original, full size one.  The program will now use subsampling to do this work for you without any setup on your part: one call to `defineDetail(anyObject)` is sufficient.
 1.  No more `BitmapProvider`.  We're just doing way too much management of Bitmaps, including re-use and caching, to allow any stray Bitmap to wander in.  This may change in the future, but the replacement for now is `StreamProvider` - basically the same thing but you just return an `InputStream` _instead of a `Bitmap`, and we take care of the rest.
 1.  Greatly improved bitmap management.  For details, see [How It Works](#how-it-works)
+1.  Touch events are now managed appropriately, rather than blindly consumed.  We now use the same logic as the framework's `ScrollView`, so you can assign normal `OnClickListeners` or similiar gesture management devices on things like markers and callouts, without interrupting drag or fling operations.
 1.  Plugin architecture.  Only sign up for things you need - if you don't need markers, don't install the plugin, and keep things snappy and simple.  Check `TileViewDemoSimple` for a very bare implementation, and `TileViewDemoAdvanced` for a more dressed up version.
 1.  Much smaller codebase.  Almost all the magic now happens in either `Tile` or `TileView` - if you understand those 2 classes, you understand the majority of the project.
 1.  Decomposition.  This takes a little explanation.  There are now 3 major, public widgets: `ScrollView`, `ScalingScrollView`, and `TileView`.  Each inherits from the last.  You'll notice the demo module has `Activities` for each of these classes.
