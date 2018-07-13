@@ -17,7 +17,7 @@ public class LowFidelityBackgroundPlugin implements TileView.Plugin {
   public void install(TileView tileView) {
     ImageView imageView = new ImageView(tileView.getContext());
     imageView.setImageBitmap(mBitmap);
-    tileView.getContainer().addView(imageView, 0);
+    tileView.addView(imageView, 0);
   }
 
 }

@@ -23,7 +23,7 @@ public class InfoWindowPlugin extends FrameLayout implements TileView.Plugin, Ti
 
   @Override
   public void install(TileView tileView) {
-    tileView.getContainer().addView(this);
+    tileView.addView(this);
     tileView.addListener(this);
     tileView.addTouchListener(this);
   }

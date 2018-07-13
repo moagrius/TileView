@@ -105,10 +105,46 @@ public class TileView extends ScalingScrollView implements
     // we'll draw bitmaps to this view
     mTilingBitmapView = new TilingBitmapView(this);
     mContainer.addView(mTilingBitmapView);
-    addView(mContainer);
+    // call the full signature, otherwise one overloaded signature may call another
+    // e.g., ViewGroup.addView(child) will call ViewGroup.addView(child, -1, ...)
+    // which will end up placing the child in the TileView rather than the container
+    super.addView(mContainer, -1, generateDefaultLayoutParams());
   }
 
-  // TODO: override addViews?
+  @Override
+  public void addView(View child) {
+    mContainer.addView(child);
+  }
+
+  @Override
+  public void addView(View child, int index) {
+    mContainer.addView(child, index);
+  }
+
+  @Override
+  public void addView(View child, ViewGroup.LayoutParams params) {
+    mContainer.addView(child, params);
+  }
+
+  @Override
+  public void addView(View child, int index, ViewGroup.LayoutParams params) {
+    mContainer.addView(child, index, params);
+  }
+
+  @Override
+  public void removeAllViews() {
+    mContainer.removeAllViews();
+  }
+
+  @Override
+  public void removeViewAt(int index) {
+    mContainer.removeViewAt(index);
+  }
+
+  @Override
+  public void removeViews(int start, int count) {
+    mContainer.removeViews(start, count);
+  }
 
   // public
 
@@ -160,8 +196,6 @@ public class TileView extends ScalingScrollView implements
   public <T extends Plugin> T getPlugin(Class<T> clazz) {
     return (T) mPlugins.get(clazz);
   }
-
-  // not
 
   private void defineZoomLevel(int zoom, Object data) {
     mDetailList.set(zoom, new Detail(zoom, data));
