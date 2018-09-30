@@ -1,5 +1,6 @@
 package com.qozix.tileview.geom;
 
+import android.graphics.Matrix;
 import android.graphics.Path;
 
 import java.util.List;
@@ -20,6 +21,9 @@ public class CoordinateTranslater {
 
   private double mDiffX;
   private double mDiffY;
+
+  private double mCenterX;
+  private double mCenterY;
 
   private int mWidth;
   private int mHeight;
@@ -53,6 +57,8 @@ public class CoordinateTranslater {
     mBottom = bottom;
     mDiffX = mRight - mLeft;
     mDiffY = mBottom - mTop;
+    mCenterX = mDiffX / 2 + mLeft;
+    mCenterY = mDiffY / 2 + mTop;
   }
 
   public void unsetBounds() {
@@ -63,6 +69,8 @@ public class CoordinateTranslater {
     mBottom = mHeight;
     mDiffX = mWidth;
     mDiffY = mHeight;
+    mCenterX = mDiffX / 2 + mLeft;
+    mCenterY = mDiffY / 2 + mTop;
   }
 
   /**
@@ -87,6 +95,56 @@ public class CoordinateTranslater {
    */
   public int translateAndScaleX( double x, float scale ) {
     return FloatMathHelper.scale( translateX( x ), scale );
+  }
+
+  /**
+   * Translate a relative X position to an absolute pixel value, considering a scale value as well.
+   *
+   * @param x The relative X position (e.g., longitude) to translate to absolute pixels.
+   * @return The translated position as a pixel value.
+   */
+  public float [] translateAndScaleAndRotateXY( double x, double y, float scale, int degrees ) {
+    Matrix matrix = new Matrix();
+    matrix.setScale(scale,scale);
+    matrix.postRotate(degrees,translateAndScaleX(mCenterX,scale),translateAndScaleY(mCenterY,scale));
+
+    float[] src = {translateX(x), translateY(y)};
+    float[] dist = new float[2];
+    matrix.mapPoints(dist,src);
+    return dist;
+  }
+
+  /**
+   * Translate a relative X position to an absolute pixel value, considering a scale value as well.
+   *
+   * @param x The relative X position (e.g., longitude) to translate to absolute pixels.
+   * @return The translated position as a pixel value.
+   */
+  public float [] scaleAndRotateXY( double x, double y, float scale, int degrees ) {
+    Matrix matrix = new Matrix();
+    matrix.setScale(scale,scale);
+    matrix.postRotate(degrees,translateAndScaleX(mCenterX,scale),translateAndScaleY(mCenterY,scale));
+
+    float[] src = {(float) x, (float) y};
+    float[] dist = new float[2];
+    matrix.mapPoints(dist,src);
+    return dist;
+  }
+
+  /**
+   * Translate a relative X position to an absolute pixel value, considering a scale value as well.
+   *
+   * @param x The relative X position (e.g., longitude) to translate to absolute pixels.
+   * @return The translated position as a pixel value.
+   */
+  public float [] rotateXY( double x, double y, float scale, int degrees ) {
+    Matrix matrix = new Matrix();
+    matrix.postRotate(degrees,translateAndScaleX(mCenterX,scale),translateAndScaleY(mCenterY,scale));
+
+    float[] src = {(float) x, (float) y};
+    float[] dist = new float[2];
+    matrix.mapPoints(dist,src);
+    return dist;
   }
 
   /**
