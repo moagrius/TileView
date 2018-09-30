@@ -146,9 +146,11 @@ public class DetailLevelManager {
     boolean detailLevelChanged = false;
     if( !mDetailLevelLocked ) {
       DetailLevel matchingLevel = getDetailLevelForScale();
-      if( matchingLevel != null ) {
-        detailLevelChanged = !matchingLevel.equals( mCurrentDetailLevel );
+      if (matchingLevel != null) {
+        detailLevelChanged = !matchingLevel.equals(mCurrentDetailLevel);
         mCurrentDetailLevel = matchingLevel;
+      } else {
+        mCurrentDetailLevel = null;
       }
     }
     mScaledWidth = FloatMathHelper.scale( mBaseWidth, mScale );
