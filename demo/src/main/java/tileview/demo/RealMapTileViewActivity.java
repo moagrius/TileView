@@ -36,7 +36,7 @@ public class RealMapTileViewActivity extends TileViewActivity {
     tileView.addDetailLevel( 1.0000f, "tiles/map/phi-500000-%d_%d.jpg" );
 
     // markers should align to the coordinate along the horizontal center and vertical bottom
-    tileView.setMarkerAnchorPoints( -0.5f, -1.0f );
+    tileView.setMarkerAnchorPoints( -0.5f, -0.5f ); //changed here for rotational purposes.
 
     // provide the corner coordinates for relative positioning
     tileView.defineBounds(
@@ -61,7 +61,7 @@ public class RealMapTileViewActivity extends TileViewActivity {
       // interrupt dragging
       tileView.getMarkerLayout().setMarkerTapListener( markerTapListener );
       // add it to the view tree
-      tileView.addMarker( marker, point[0], point[1], null, null );
+      tileView.addMarker( marker, point[0], point[1], null, null,true );
     }
 
     // let's start off framed to the center of all points
@@ -90,6 +90,8 @@ public class RealMapTileViewActivity extends TileViewActivity {
 
   }
 
+  private int rotation = 0;
+
   private MarkerLayout.MarkerTapListener markerTapListener = new MarkerLayout.MarkerTapListener() {
 
     @Override
@@ -109,6 +111,18 @@ public class RealMapTileViewActivity extends TileViewActivity {
       // stub out some text
       callout.setTitle( "MAP CALLOUT" );
       callout.setSubtitle( "Info window at coordinate:\n" + position[1] + ", " + position[0] );
+
+      //Testing code. Will rotate the map
+      tileView.setRotational(true);
+
+      tileView.rotate(rotation);
+
+      rotation += 30;
+
+      if(rotation >= 360){
+        rotation -= 360;
+      }
+
     }
   };
 
