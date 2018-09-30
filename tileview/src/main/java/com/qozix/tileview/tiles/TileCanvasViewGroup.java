@@ -2,6 +2,7 @@ package com.qozix.tileview.tiles;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.Region;
 import android.os.Handler;
@@ -375,8 +376,12 @@ public class TileCanvasViewGroup extends ViewGroup {
   }
 
   private void beginRenderTask() {
+
+    //Get the rotation and scaling matrix to compute the viewport.
+    Matrix matrix = new Matrix();
+    matrix.setRotate(-rotationDegrees,mBaseWidth*mScale/2,mBaseHeight*mScale/2);
     // if visible columns and rows are same as previously computed, fast-fail
-    boolean changed = mDetailLevelToRender.computeCurrentState();
+    boolean changed = mDetailLevelToRender.computeCurrentState(matrix);
     if( !changed && mTilesInCurrentViewport.size() > 0 ) {
       return;
     }
