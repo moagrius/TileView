@@ -640,13 +640,25 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   private void calculateMinimumScaleToFit() {
-    mMinimumScaleX = getWidth() / (float) mBaseWidth;
-    mMinimumScaleY = getHeight() / (float) mBaseHeight;
-    float recalculatedMinScale = calculatedMinScale(mMinimumScaleX, mMinimumScaleY);
-    if( recalculatedMinScale != mEffectiveMinScale ) {
-      mEffectiveMinScale = recalculatedMinScale;
-      if( mScale < mEffectiveMinScale ){
-        setScale( mEffectiveMinScale );
+    if(rotational){
+      mMinimumScaleX = getWidth() / (float) (mRotationMaxWidth - mRotationMinWidth);
+      mMinimumScaleY = getHeight() / (float) (mRotationMaxHeight - mRotationMinHeight);
+      float recalculatedMinScale = calculatedMinScale(mMinimumScaleX, mMinimumScaleY);
+      if( recalculatedMinScale != mEffectiveMinScale ) {
+        mEffectiveMinScale = recalculatedMinScale;
+        if( mScale < mEffectiveMinScale ){
+          setScale( mEffectiveMinScale );
+        }
+      }
+    }else{
+      mMinimumScaleX = getWidth() / (float) (mBaseWidth );
+      mMinimumScaleY = getHeight() / (float) (mBaseHeight);
+      float recalculatedMinScale = calculatedMinScale(mMinimumScaleX, mMinimumScaleY);
+      if( recalculatedMinScale != mEffectiveMinScale ) {
+        mEffectiveMinScale = recalculatedMinScale;
+        if( mScale < mEffectiveMinScale ){
+          setScale( mEffectiveMinScale );
+        }
       }
     }
   }
