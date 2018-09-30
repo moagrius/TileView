@@ -3,6 +3,10 @@ package com.qozix.tileview.widgets;
 import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.Matrix;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
@@ -17,7 +21,9 @@ import com.qozix.tileview.geom.FloatMathHelper;
 import com.qozix.tileview.view.TouchUpGestureDetector;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * ZoomPanLayout extends ViewGroup to provide support for scrolling and zooming.
@@ -41,6 +47,7 @@ public class ZoomPanLayout extends ViewGroup implements
   private int mScaledHeight;
   private int mImagePadding;
   private int mScaledImagePadding;
+
 
   private float mScale = 1;
 
@@ -71,6 +78,20 @@ public class ZoomPanLayout extends ViewGroup implements
   private GestureDetector mGestureDetector;
   private TouchUpGestureDetector mTouchUpGestureDetector;
   private MinimumScaleMode mMinimumScaleMode = MinimumScaleMode.FILL;
+
+  private int mRotationScaledMaxWidth;
+  private int mRotationScaledMinWidth;
+  private int mRotationScaledMaxHeight;
+  private int mRotationScaledMinHeight;
+
+  private int mRotationMaxWidth;
+  private int mRotationMinWidth;
+  private int mRotationMaxHeight;
+  private int mRotationMinHeight;
+
+  private boolean rotational = false;
+
+
 
   /**
    * Constructor to use when creating a ZoomPanLayout from code.
