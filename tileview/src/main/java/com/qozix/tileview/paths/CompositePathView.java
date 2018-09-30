@@ -15,6 +15,9 @@ public class CompositePathView extends View {
   private static final int DEFAULT_STROKE_WIDTH = 10;
 
   private float mScale = 1;
+  private int rotationDegrees = 0;
+  private int mBaseWidth;
+  private int mBaseHeight;
 
   private boolean mShouldDraw = true;
 
@@ -37,15 +40,38 @@ public class CompositePathView extends View {
     setWillNotDraw( false );
   }
 
+  public void setSize( int width, int height ) {
+    mBaseWidth = width;
+    mBaseHeight = height;
+  }
+
+  public void setRotationDegrees(int rotationDegrees) {
+    this.rotationDegrees = rotationDegrees;
+    updateMatrix();
+    invalidate();
+  }
+
+  public int getRotationDegrees() {
+    return rotationDegrees;
+  }
+
+  public void setScale(float scale) {
+    mScale = scale;
+    updateMatrix();
+    invalidate();
+  }
+
+  private void updateMatrix() {
+    mMatrix.setScale(mScale,mScale);
+    mMatrix.postRotate(rotationDegrees,mBaseWidth*mScale/2,mBaseHeight*mScale/2);
+  }
+
+
+
   public float getScale() {
     return mScale;
   }
 
-  public void setScale( float scale ) {
-    mScale = scale;
-    mMatrix.setScale( mScale, mScale );
-    invalidate();
-  }
 
   public Paint getDefaultPaint() {
     return mDefaultPaint;
