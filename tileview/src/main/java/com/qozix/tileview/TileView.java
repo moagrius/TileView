@@ -325,20 +325,22 @@ public class TileView extends ZoomPanLayout implements
     mTileCanvasViewGroup.setShouldRecycleBitmaps( shouldRecycleBitmaps );
   }
 
-  /**
-   * Defines the total size, in pixels, of the tile set at 100% scale.
-   * The TileView wills pan within it's layout dimensions, with the content (scrollable)
-   * size defined by this method.
-   *
-   * @param width  Total width of the tiled set.
-   * @param height Total height of the tiled set.
-   */
-  @Override
-  public void setSize( int width, int height ) {
-    super.setSize( width, height );
-    mDetailLevelManager.setSize( width, height );
-    mCoordinateTranslater.setSize( width, height );
-  }
+    /**
+     * Defines the total size, in pixels, of the tile set at 100% scale.
+     * The TileView wills pan within it's layout dimensions, with the content (scrollable)
+     * size defined by this method.
+     *
+     * @param width  Total width of the tiled set.
+     * @param height Total height of the tiled set.
+     */
+    @Override
+    public void setSize( int width, int height ) {
+        super.setSize( width, height );
+        mDetailLevelManager.setSize( width, height );
+        mCoordinateTranslater.setSize( width, height );
+        mTileCanvasViewGroup.setSize( width, height );
+        mCompositePathView.setSize( width, height );
+    }
 
     /**
      * Rotate.
