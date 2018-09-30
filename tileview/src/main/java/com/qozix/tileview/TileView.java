@@ -88,6 +88,9 @@ public class TileView extends ZoomPanLayout implements
   private boolean mShouldRenderWhilePanning = false;
   private boolean mShouldUpdateDetailLevelWhileZooming = false;
 
+  private int rotationDegrees = 0;
+  private int lastMapHeading = 0;
+
   /**
    * Constructor to use when creating a TileView from code.
    *
@@ -336,6 +339,31 @@ public class TileView extends ZoomPanLayout implements
     mDetailLevelManager.setSize( width, height );
     mCoordinateTranslater.setSize( width, height );
   }
+
+    /**
+     * Rotate.
+     * This method will take an integer for rotation degrees
+     * and rotate the child views
+     * @param rotationDegrees the rotation in degrees
+     */
+    public void rotate(int rotationDegrees) {
+        this.rotationDegrees = rotationDegrees;
+        if (lastMapHeading <= 0 && rotationDegrees > 0) {
+            rotationDegrees = rotationDegrees - 360;
+        }
+        getCompositePathView().setRotationDegrees(rotationDegrees);
+        getMarkerLayout().setRotation(rotationDegrees);
+        getTileCanvasViewGroup().setRotationDegrees(rotationDegrees);
+
+        updateScrollLimitsWithRotation(rotationDegrees);
+
+        lastMapHeading = rotationDegrees;
+
+    }
+
+    public int getRotationDegrees() {
+        return rotationDegrees;
+    }
 
   /**
    * Register a tile set to be used for a particular detail level.
