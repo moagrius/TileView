@@ -461,21 +461,6 @@ public class TileView extends ZoomPanLayout implements
     }
 
     /**
-     * Scrolls (instantly) the TileView to the x and y positions provided,
-     * then nearly centers the viewport to the position.
-     *
-     * @param x The relative x position to move to.
-     * @param y The relative y position to move to.
-     */
-    public void scrollToAndNearCenter( double x, double y ) {
-        float[] coordinates = mCoordinateTranslater.translateAndScaleAndRotateXY(x,y,getScale(),getRotationDegrees());
-        scrollToAndNearCenter(
-                (int)coordinates[0],
-                (int)coordinates[1]
-        );
-    }
-
-    /**
      * Scrolls (with animation) the TileView to the relative x and y positions provided.
      *
      * @param x The relative x position to move to.
