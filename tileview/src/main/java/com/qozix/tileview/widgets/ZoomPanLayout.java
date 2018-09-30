@@ -145,9 +145,14 @@ public class ZoomPanLayout extends ViewGroup implements
   protected void onLayout( boolean changed, int l, int t, int r, int b ) {
     final int width = getWidth();
     final int height = getHeight();
+    if(rotational){
+      mOffsetX = (mRotationScaledMaxWidth - mRotationScaledMinWidth) >= width ? 0 : width / 2 -(mRotationScaledMaxWidth - mRotationScaledMinWidth) / 2;
+      mOffsetY = (mRotationScaledMaxHeight - mRotationScaledMinHeight) >= height ? 0 : height / 2 - (mRotationScaledMaxHeight - mRotationScaledMinHeight)  / 2;
+    } else{
+          mOffsetX = mScaledWidth >= width ? 0 : width / 2 - mScaledWidth / 2;
+          mOffsetY = mScaledHeight >= height ? 0 : height / 2 - mScaledHeight / 2;
+    }
 
-    mOffsetX = mScaledWidth >= width ? 0 : width / 2 - mScaledWidth / 2;
-    mOffsetY = mScaledHeight >= height ? 0 : height / 2 - mScaledHeight / 2;
 
     for( int i = 0; i < getChildCount(); i++ ) {
       View child = getChildAt( i );
