@@ -1,6 +1,8 @@
 package com.qozix.tileview.detail;
 
+import android.graphics.Matrix;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.support.annotation.NonNull;
 
 import com.qozix.tileview.tiles.Tile;
@@ -14,6 +16,7 @@ public class DetailLevel implements Comparable<DetailLevel> {
   private int mTileWidth;
   private int mTileHeight;
   private Object mData;
+
 
   private DetailLevelManager mDetailLevelManager;
 
@@ -36,9 +39,10 @@ public class DetailLevel implements Comparable<DetailLevel> {
   /**
    * Returns true if there has been a change, false otherwise.
    *
+   * @param matrix rotation matrix of the system
    * @return True if there has been a change, false otherwise.
    */
-  public boolean computeCurrentState() {
+  public boolean computeCurrentState(Matrix matrix) {
     float relativeScale = getRelativeScale();
     int drawableWidth = mDetailLevelManager.getScaledWidth();
     int drawableHeight = mDetailLevelManager.getScaledHeight();
@@ -49,10 +53,12 @@ public class DetailLevel implements Comparable<DetailLevel> {
     viewport.left = Math.max( viewport.left, 0 );
     viewport.right = Math.min( viewport.right, drawableWidth );
     viewport.bottom = Math.min( viewport.bottom, drawableHeight );
-    int rowStart = (int) Math.floor( viewport.top / offsetHeight );
-    int rowEnd = (int) Math.ceil( viewport.bottom / offsetHeight );
-    int columnStart = (int) Math.floor( viewport.left / offsetWidth );
-    int columnEnd = (int) Math.ceil( viewport.right / offsetWidth );
+    RectF viewportRotated = new RectF(viewport);
+    matrix.mapRect(viewportRotated); //Rotate map
+    int rowStart = (int) Math.floor( viewportRotated.top / offsetHeight );
+    int rowEnd = (int) Math.ceil( viewportRotated.bottom / offsetHeight );
+    int columnStart = (int) Math.floor( viewportRotated.left / offsetWidth );
+    int columnEnd = (int) Math.ceil( viewportRotated.right / offsetWidth );
     StateSnapshot stateSnapshot = new StateSnapshot( this, rowStart, rowEnd, columnStart, columnEnd );
     boolean sameState = stateSnapshot.equals( mLastStateSnapshot );
     mLastStateSnapshot = stateSnapshot;
