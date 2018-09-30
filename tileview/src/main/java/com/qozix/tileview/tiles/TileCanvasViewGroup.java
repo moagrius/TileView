@@ -45,6 +45,9 @@ public class TileCanvasViewGroup extends ViewGroup {
   }
 
   private int rotationDegrees = 0;
+  private int mBaseWidth;
+  private int mBaseHeight;
+
   private BitmapProvider mBitmapProvider;
   private BitmapRecycler mBitmapRecycler;
 
@@ -461,6 +464,11 @@ public class TileCanvasViewGroup extends ViewGroup {
     canvas.scale( mScale, mScale );
     drawTiles( canvas );
     canvas.restore();
+  }
+
+  public void setSize(int width, int height) {
+    mBaseWidth = width;
+    mBaseHeight = height;
   }
 
   private static class TileRenderThrottleHandler extends Handler {
