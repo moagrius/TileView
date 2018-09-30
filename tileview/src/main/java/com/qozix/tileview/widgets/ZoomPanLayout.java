@@ -253,11 +253,43 @@ public class ZoomPanLayout extends ViewGroup implements
   }
 
   /**
+   * Takes a rotation degree and calculates the scroll limits
+   * according to the rotation. Calculations are done based on whole map.
+   *
+   * @param rotationDegrees degrees to rotate the map.
+   * */
+  public void updateScrollLimitsWithRotation(int rotationDegrees){
+    if(!rotational){
+      //Not rotational
+      return;
+    }
+
+    Matrix transformMatrix = new Matrix();
+    transformMatrix.setRotate(rotationDegrees, mBaseWidth/2, mBaseHeight/2);
+    RectF viewRectangle = new RectF(0,0,mBaseWidth,mBaseHeight);
+    transformMatrix.mapRect(viewRectangle);
+
+    mRotationMaxHeight = (int) viewRectangle.bottom;
+    mRotationMinHeight = (int) viewRectangle.top;
+    mRotationMaxWidth = (int) viewRectangle.right;
+    mRotationMinWidth = (int) viewRectangle.left;
+
+    calculateMinimumScaleToFit();
+    updateScaledDimensions();
+    constrainScrollToLimits();
+    requestLayout();
+  }
+
+
+    /**
    * Returns the base (not scaled) width of the underlying composite image.
    *
    * @return The base (not scaled) width of the underlying composite image.
    */
   public int getBaseWidth() {
+    if(rotational){
+      return mRotationMaxWidth - mRotationMinWidth;
+    }
     return mBaseWidth;
   }
 
@@ -267,7 +299,10 @@ public class ZoomPanLayout extends ViewGroup implements
    * @return The base (not scaled) height of the underlying composite image.
    */
   public int getBaseHeight() {
-    return mBaseHeight;
+    if(rotational){
+      return mRotationMaxHeight - mRotationMinHeight;
+    }
+      return mBaseHeight;
   }
 
   /**
@@ -654,24 +689,40 @@ public class ZoomPanLayout extends ViewGroup implements
     return Math.max( getScrollMinY(), Math.min( y, getScrollLimitY() ) );
   }
 
+  /**
+   * ImagePadding is not handled in this code.
+   * */
   protected int getScrollLimitX() {
+    if(rotational){
+      return mRotationScaledMaxWidth - getWidth();
+    }
     return mScaledWidth - getWidth() + mScaledImagePadding;
   }
 
   protected int getScrollLimitY() {
+    if(rotational){
+      return mRotationScaledMaxHeight - getHeight();
+    }
     return mScaledHeight - getHeight() + mScaledImagePadding;
   }
 
   protected int getScrollMinX(){
-    return -mScaledImagePadding;
+   if(rotational){
+      return mRotationScaledMinWidth;
+    }
+    return - mScaledImagePadding;
   }
 
   protected int getScrollMinY(){
-    return -mScaledImagePadding;
+      if(rotational){
+          return mRotationScaledMinHeight;
+      }
+      return - mScaledImagePadding;
   }
 
   private void recalculateImagePadding() {
     mScaledImagePadding = FloatMathHelper.scale(mImagePadding, mScale);
+
   }
 
   @Override
