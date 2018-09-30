@@ -572,6 +572,14 @@ public class ZoomPanLayout extends ViewGroup implements
   private void updateScaledDimensions() {
     mScaledWidth = FloatMathHelper.scale( mBaseWidth, mScale );
     mScaledHeight = FloatMathHelper.scale( mBaseHeight, mScale );
+
+    if(rotational){
+      mRotationScaledMinWidth = FloatMathHelper.scale( mRotationMinWidth, mScale );
+      mRotationScaledMaxWidth = FloatMathHelper.scale( mRotationMaxWidth, mScale );
+      mRotationScaledMinHeight = FloatMathHelper.scale( mRotationMinHeight, mScale );
+      mRotationScaledMaxHeight = FloatMathHelper.scale( mRotationMaxHeight, mScale );
+    }
+
   }
 
   protected ZoomPanAnimator getAnimator() {
