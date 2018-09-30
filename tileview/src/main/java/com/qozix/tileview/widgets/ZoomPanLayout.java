@@ -164,6 +164,23 @@ public class ZoomPanLayout extends ViewGroup implements
     constrainScrollToLimits();
   }
 
+  public boolean isRotational() {
+    return rotational;
+  }
+
+  public void setRotational(boolean rotational) {
+    this.rotational = rotational;
+    mRotationMinHeight = 0;
+    mRotationMaxHeight = mBaseHeight;
+    mRotationMinWidth = 0;
+    mRotationMaxWidth = mBaseWidth;
+
+    calculateMinimumScaleToFit();
+    updateScaledDimensions();
+    constrainScrollToLimits();
+    requestLayout();
+  }
+
   /**
    * Determines whether the ZoomPanLayout should limit it's minimum scale to no less than what
    * would be required to fill it's container.
