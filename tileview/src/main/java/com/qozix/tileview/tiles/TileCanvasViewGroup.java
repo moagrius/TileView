@@ -35,6 +35,16 @@ public class TileCanvasViewGroup extends ViewGroup {
 
   private float mScale = 1;
 
+  public int getRotationDegrees() {
+    return rotationDegrees;
+  }
+
+  public void setRotationDegrees(int rotationDegrees) {
+    this.rotationDegrees = rotationDegrees;
+    setRotation(rotationDegrees);
+  }
+
+  private int rotationDegrees = 0;
   private BitmapProvider mBitmapProvider;
   private BitmapRecycler mBitmapRecycler;
 
