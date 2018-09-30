@@ -34,6 +34,17 @@ public class MarkerLayout extends ViewGroup {
     requestLayout();
   }
 
+  public void setRotation(float degrees) {
+    super.setRotation(degrees);
+    for (int i = 0; i < getChildCount(); i++) {
+      View child = getChildAt(i);
+      LayoutParams lp = (LayoutParams) child.getLayoutParams();
+      if (lp.rotatable) {
+        child.setRotation(-degrees);
+      }
+    }
+  }
+
   /**
    * Sets the scale (0-1) of the MarkerLayout.
    *
@@ -219,6 +230,8 @@ public class MarkerLayout extends ViewGroup {
      */
     public float absoluteAnchorX;
     public float absoluteAnchorY;
+
+    public boolean rotatable = true;
 
     private int mTop;
     private int mLeft;
