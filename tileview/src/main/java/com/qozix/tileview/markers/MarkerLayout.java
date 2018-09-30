@@ -90,6 +90,19 @@ public class MarkerLayout extends ViewGroup {
     return addMarker( view, markerLayoutParams );
   }
 
+    public View addMarker( View view, int x, int y, Float aX, Float aY , boolean rotatable) {
+        ViewGroup.LayoutParams defaultLayoutParams = view.getLayoutParams();
+        LayoutParams markerLayoutParams = (defaultLayoutParams != null)
+                ? generateLayoutParams(defaultLayoutParams)
+                : generateDefaultLayoutParams();
+        markerLayoutParams.x = x;
+        markerLayoutParams.y = y;
+        markerLayoutParams.anchorX = aX;
+        markerLayoutParams.anchorY = aY;
+        markerLayoutParams.rotatable = rotatable;
+        return addMarker( view, markerLayoutParams );
+    }
+
   public View addMarker( View view, LayoutParams params ) {
     addView( view, params );
     return view;
