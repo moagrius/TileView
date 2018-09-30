@@ -429,77 +429,97 @@ public class TileView extends ZoomPanLayout implements
     mCoordinateTranslater.unsetBounds();
   }
 
-  /**
-   * Scrolls (instantly) the TileView to the x and y positions provided.  The is an overload
-   * of scrollTo( int x, int y ) that accepts doubles; if the TileView has relative bounds defined,
-   * those relative doubles will be converted to absolute pixel positions.
-   *
-   * @param x The relative x position to move to.
-   * @param y The relative y position to move to.
-   */
-  public void scrollTo( double x, double y ) {
-    scrollTo(
-      mCoordinateTranslater.translateAndScaleX( x, getScale() ),
-      mCoordinateTranslater.translateAndScaleY( y, getScale() )
-    );
-  }
+    /**
+     * Scrolls (instantly) the TileView to the x and y positions provided.  The is an overload
+     * of scrollTo( int x, int y ) that accepts doubles; if the TileView has relative bounds defined,
+     * those relative doubles will be converted to absolute pixel positions.
+     *
+     * @param x The relative x position to move to.
+     * @param y The relative y position to move to.
+     */
+    public void scrollTo( double x, double y ) {
+        float[] coordinates = mCoordinateTranslater.translateAndScaleAndRotateXY(x,y,getScale(),getRotationDegrees());
+        scrollTo(
+                coordinates[0],
+                coordinates[1]
+        );
+    }
 
-  /**
-   * Scrolls (instantly) the TileView to the x and y positions provided,
-   * then centers the viewport to the position.
-   *
-   * @param x The relative x position to move to.
-   * @param y The relative y position to move to.
-   */
-  public void scrollToAndCenter( double x, double y ) {
-    scrollToAndCenter(
-      mCoordinateTranslater.translateAndScaleX( x, getScale() ),
-      mCoordinateTranslater.translateAndScaleY( y, getScale() )
-    );
-  }
+    /**
+     * Scrolls (instantly) the TileView to the x and y positions provided,
+     * then centers the viewport to the position.
+     *
+     * @param x The relative x position to move to.
+     * @param y The relative y position to move to.
+     */
+    public void scrollToAndCenter( double x, double y ) {
+        float[] coordinates = mCoordinateTranslater.translateAndScaleAndRotateXY(x,y,getScale(),getRotationDegrees());
+        scrollToAndCenter(
+                (int)coordinates[0],
+                (int)coordinates[1]
+        );
+    }
 
-  /**
-   * Scrolls (with animation) the TileView to the relative x and y positions provided.
-   *
-   * @param x The relative x position to move to.
-   * @param y The relative y position to move to.
-   */
-  public void slideTo( double x, double y ) {
-    slideTo(
-      mCoordinateTranslater.translateAndScaleX( x, getScale() ),
-      mCoordinateTranslater.translateAndScaleY( y, getScale() )
-    );
-  }
+    /**
+     * Scrolls (instantly) the TileView to the x and y positions provided,
+     * then nearly centers the viewport to the position.
+     *
+     * @param x The relative x position to move to.
+     * @param y The relative y position to move to.
+     */
+    public void scrollToAndNearCenter( double x, double y ) {
+        float[] coordinates = mCoordinateTranslater.translateAndScaleAndRotateXY(x,y,getScale(),getRotationDegrees());
+        scrollToAndNearCenter(
+                (int)coordinates[0],
+                (int)coordinates[1]
+        );
+    }
 
-  /**
-   * Scrolls (with animation) the TileView to the x and y positions provided,
-   * then centers the viewport to the position.
-   *
-   * @param x The relative x position to move to.
-   * @param y The relative y position to move to.
-   */
-  public void slideToAndCenter( double x, double y ) {
-    slideToAndCenter(
-      mCoordinateTranslater.translateAndScaleX( x, getScale() ),
-      mCoordinateTranslater.translateAndScaleY( y, getScale() )
-    );
-  }
+    /**
+     * Scrolls (with animation) the TileView to the relative x and y positions provided.
+     *
+     * @param x The relative x position to move to.
+     * @param y The relative y position to move to.
+     */
+    public void slideTo( double x, double y ) {
+        float[] coordinates = mCoordinateTranslater.translateAndScaleAndRotateXY(x,y,getScale(),getRotationDegrees());
+        slideTo(
+                (int)coordinates[0],
+                (int)coordinates[1]
+        );
+    }
 
-  /**
-   * Scrolls and scales (with animation) the TileView to the specified x, y and scale provided.
-   * The TileView will be centered to the coordinates passed.
-   *
-   * @param x     The relative x position to move to.
-   * @param y     The relative y position to move to.
-   * @param scale The scale the TileView should be at when the animation is complete.
-   */
-  public void slideToAndCenterWithScale( double x, double y, float scale ) {
-    slideToAndCenterWithScale(
-      mCoordinateTranslater.translateAndScaleX( x, scale ),
-      mCoordinateTranslater.translateAndScaleY( y, scale ),
-      scale
-    );
-  }
+    /**
+     * Scrolls (with animation) the TileView to the x and y positions provided,
+     * then centers the viewport to the position.
+     *
+     * @param x The relative x position to move to.
+     * @param y The relative y position to move to.
+     */
+    public void slideToAndCenter( double x, double y ) {
+        float[] coordinates = mCoordinateTranslater.translateAndScaleAndRotateXY(x,y,getScale(),getRotationDegrees());
+        slideToAndCenter(
+                (int)coordinates[0],
+                (int)coordinates[1]
+        );
+    }
+
+    /**
+     * Scrolls and scales (with animation) the TileView to the specified x, y and scale provided.
+     * The TileView will be centered to the coordinates passed.
+     *
+     * @param x     The relative x position to move to.
+     * @param y     The relative y position to move to.
+     * @param scale The scale the TileView should be at when the animation is complete.
+     */
+    public void slideToAndCenterWithScale( double x, double y, float scale ) {
+        float[] coordinates = mCoordinateTranslater.translateAndScaleAndRotateXY(x,y,scale,getRotationDegrees());
+        slideToAndCenterWithScale(
+                (int)coordinates[0],
+                (int)coordinates[1],
+                scale
+        );
+    }
 
   /**
    * Markers added to this TileView will have anchor logic applied on the values provided here.
@@ -556,14 +576,24 @@ public class TileView extends ZoomPanLayout implements
     );
   }
 
-  /**
-   * Removes a marker View from the TileView's view tree.
-   *
-   * @param view The marker View to be removed.
-   */
-  public void removeMarker( View view ) {
-    mMarkerLayout.removeMarker( view );
-  }
+
+    public View addMarker(View view, double x, double y, Float anchorX, Float anchorY, boolean rotatable) {
+        return mMarkerLayout.addMarker(view,
+                mCoordinateTranslater.translateX(x),
+                mCoordinateTranslater.translateY(y),
+                anchorX, anchorY,
+                rotatable
+        );
+    }
+
+    /**
+     * Removes a marker View from the TileView's view tree.
+     *
+     * @param view The marker View to be removed.
+     */
+    public void removeMarker( View view ) {
+        mMarkerLayout.removeMarker( view );
+    }
 
   /**
    * Moves an existing marker to another position.
@@ -578,28 +608,30 @@ public class TileView extends ZoomPanLayout implements
       mCoordinateTranslater.translateY( y ) );
   }
 
-  /**
-   * Scroll the TileView so that the View passed is centered in the viewport.
-   *
-   * @param view          The View marker that the TileView should center on.
-   * @param shouldAnimate True if the movement should use a transition effect.
-   */
-  public void moveToMarker( View view, boolean shouldAnimate ) {
-    if( mMarkerLayout.indexOfChild( view ) == -1 ) {
-      throw new IllegalStateException( "The view passed is not an existing marker" );
+    /**
+     * Scroll the TileView so that the View passed is centered in the viewport.
+     *
+     * @param view          The View marker that the TileView should center on.
+     * @param shouldAnimate True if the movement should use a transition effect.
+     */
+    public void moveToMarker( View view, boolean shouldAnimate ) {
+        if( mMarkerLayout.indexOfChild( view ) == -1 ) {
+            throw new IllegalStateException( "The view passed is not an existing marker" );
+        }
+        LayoutParams params = view.getLayoutParams();
+        if( params instanceof MarkerLayout.LayoutParams ) {
+            MarkerLayout.LayoutParams anchorLayoutParams = (MarkerLayout.LayoutParams) params;
+            float[] markerCoordinates = mCoordinateTranslater.scaleAndRotateXY(anchorLayoutParams.x,anchorLayoutParams.y,getScale(),getRotationDegrees());
+            int markerX = (int) markerCoordinates[0];
+            int markerY = (int) markerCoordinates[1];
+
+            if( shouldAnimate ) {
+                slideToAndCenter( markerX, markerY );
+            } else {
+                scrollToAndCenter( markerX, markerY );
+            }
+        }
     }
-    ViewGroup.LayoutParams params = view.getLayoutParams();
-    if( params instanceof MarkerLayout.LayoutParams ) {
-      MarkerLayout.LayoutParams anchorLayoutParams = (MarkerLayout.LayoutParams) params;
-      int scaledX = FloatMathHelper.scale( anchorLayoutParams.x, getScale() );
-      int scaledY = FloatMathHelper.scale( anchorLayoutParams.y, getScale() );
-      if( shouldAnimate ) {
-        slideToAndCenter( scaledX, scaledY );
-      } else {
-        scrollToAndCenter( scaledX, scaledY );
-      }
-    }
-  }
 
   /**
    * Register a MarkerTapListener for the TileView instance (rather than on a single marker view).
@@ -923,6 +955,11 @@ public class TileView extends ZoomPanLayout implements
   public boolean onSingleTapConfirmed( MotionEvent event ) {
     int x = getScrollX() + (int) event.getX() - getOffsetX();
     int y = getScrollY() + (int) event.getY() - getOffsetY();
+    if(isRotational()){
+      float [] rotatedPoint = getCoordinateTranslater().rotateXY(x,y,getScale(),-getRotationDegrees());
+      x = (int) rotatedPoint[0];
+      y = (int) rotatedPoint[1];
+    }
     mMarkerLayout.processHit( x, y );
     mHotSpotManager.processHit( x, y );
     return super.onSingleTapConfirmed( event );
