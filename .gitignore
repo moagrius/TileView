@@ -1,0 +1,15 @@
+build/
+/*/build/
+local.properties
+.gradle/
+.idea/
+.signing/
+.DS_Store
+.DS_Store?
+._*
+.Trashes
+proguard/
+*.log
+.navigation/
+captures/
+*.iml
