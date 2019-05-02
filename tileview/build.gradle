@@ -1,7 +1,7 @@
 apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'com.android.library'
 
-def version = "4.0.0"
+def version = "4.0.1"
 
 buildscript {
   repositories {
@@ -39,17 +39,11 @@ android {
 
 }
 
-repositories {
-  maven {
-    url "https://dl.bintray.com/moagrius/maven"
-  }
-}
-
 dependencies {
   implementation fileTree(dir: 'libs', include: ['*.jar'])
   implementation 'com.android.support:appcompat-v7:28.0.0'
   implementation 'com.jakewharton:disklrucache:2.0.2'
-  api 'com.moagrius:scrollview:1.0.2'
+  api 'com.moagrius:scrollview:1.0.3'
 }
 
 publish {

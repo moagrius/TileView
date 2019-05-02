@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
+import android.util.Log;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -30,6 +31,9 @@ public class MemoryCache implements TileView.BitmapCache, TileView.BitmapPool {
   @Override
   public synchronized Bitmap put(String key, Bitmap value) {
     if (value == null) {
+      return null;
+    }
+    if (value.getConfig() == null) {
       return null;
     }
     mSize += sizeOf(value);
@@ -80,6 +84,7 @@ public class MemoryCache implements TileView.BitmapCache, TileView.BitmapPool {
         break;
       }
       if (qualifies(candidate, options)) {
+        Log.d("TV", "got a qualfied bitmap");
         iterator.remove();
         mSize -= sizeOf(candidate);
         candidate.eraseColor(Color.BLACK);
