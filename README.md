@@ -5,9 +5,10 @@ The TileView widget is a subclass of ViewGroup renders and positions bitmap tile
 
 ![tileview](https://user-images.githubusercontent.com/701344/41755597-c5986472-759d-11e8-83d9-f588b04f475d.gif)
 
-Vesion 4 is basically the promotion of version 3 from beta to production-ready, fixing the issues brought up by you, the users.  While normally this'd probably be done using a series of minor version bumps, and this might be 3.4.11, there was a change to the base package name, and this requires a major change according to semver, since it's a breaking change for past versions.
+Vesion 4 is effectively the promotion of version 3 from beta to production-ready, fixing the issues brought up by you, the users.  While normally this'd probably be done using a
+series of minor version bumps, and this might be 3.4.11, there was a change to the base package name, and this requires a major change according to semver, since it's a breaking change for past versions.
 
-Also of note, the universal (2-D) ScrollView class, and related classes like ScalingScrollView (which is a subclass of the 2D universal ScrollView, but also manages scaling and scale gestures) is now it's own repository: https://github.com/moagrius/ScrollView, and available with `implementation `com.moagrius:scrollview:1.0.3'`.  It is now included in the TileView project using normal gradle dependency operations, specifically using `api` rather than `implementation` but otherwise similar to other dependencies and is being pulled down from jcenter and reconciled normally.
+Also of note, the universal (2-D) ScrollView class, and related classes like ScalingScrollView (which is a subclass of the 2D universal ScrollView, but also manages scaling and scale gestures) is now it's own repository: https://github.com/moagrius/ScrollView, and available with `implementation 'com.moagrius:scrollview:1.0.3'`.  It is now included in the TileView project using normal gradle dependency operations, specifically using `api` rather than `implementation` but otherwise similar to other dependencies and is being pulled down from jcenter and reconciled normally.
 
 Demos for ScrollView are in the ScrollView repo.  Demos for TileView are in this repository.
 
@@ -35,7 +36,7 @@ implementation 'com.moagrius:tileview:4.0.1'
 ```
 
 ##### Quick Setup
-1. Tile an image into image slices of a set size, e.g., 256x256 [instructions](https://github.com/moagrius/TileView/wiki/Creating-Tiles)
+1. Tile an image into image slices of a set size, e.g., 256x256 [instructions](https://github.com/moagrius/TileView/wiki/Creating-Tiles) // TODO
 2. Name the tiles by the column and row number, e.g., 'tile-1-2.png' for the image tile that would be at the 2nd column from left and 3rd row from top.
 3. Create a new application with a single activity ('Main').
 4. Save the image tiles to your assets directory.
