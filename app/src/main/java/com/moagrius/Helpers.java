@@ -1,9 +1,9 @@
 package com.moagrius;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
-import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
@@ -32,9 +32,9 @@ public class Helpers {
     }
   }
 
-  public static void copyAssetTilesToDirectory(Context context, File destination) throws Exception {
+  public static void copyAssetTilesToDirectory(Activity activity, File destination, Runnable onProgress, Runnable onComplete) throws Exception {
     Log.d("TV", "about to copy asset tiles to " + destination);
-    AssetManager assetManager = context.getAssets();
+    AssetManager assetManager = activity.getAssets();
     String[] assetPaths = assetManager.list("tiles");
     for (String assetPath : assetPaths) {
       InputStream assetStream = assetManager.open("tiles/" + assetPath);
@@ -42,6 +42,7 @@ public class Helpers {
       FileOutputStream outputStream = new FileOutputStream(dest);
       copyStreams(assetStream, outputStream);
       Log.d("TV", assetPath + " copied to " + dest);
+      activity.runOnUiThread(onProgress);
     }
     Log.d("TV", "done copying files");
   }
@@ -55,20 +56,6 @@ public class Helpers {
 
   public static boolean getBooleanPreference(Context context, String key) {
     return context.getSharedPreferences(PREFS_FILE_NAME, Context.MODE_PRIVATE).getBoolean(key, false);
-  }
-
-  public static void copyAssetTilesToInternalStorage(Context context) throws Exception {
-    File directory = context.getFilesDir();
-    Log.d("TV", "copying to internal storage: " + directory);
-    copyAssetTilesToDirectory(context, directory);
-    saveBooleanPreference(context, INTERNAL_STORAGE_KEY, true);
-  }
-
-  public static void copyAssetTilesToExternalStorage(Context context) throws Exception {
-    File sdcard = Environment.getExternalStorageDirectory();
-    Log.d("TV", "copying to SD card: " + sdcard);
-    copyAssetTilesToDirectory(context, sdcard);
-    saveBooleanPreference(context, EXTERNAL_STORAGE_KEY, true);
   }
 
 }

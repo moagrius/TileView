@@ -1,6 +1,5 @@
 package com.moagrius;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
@@ -12,7 +11,7 @@ import com.moagrius.tileview.io.StreamProviderFiles;
 import java.io.File;
 import java.util.Arrays;
 
-public class TileViewDemoExternalStorage extends Activity {
+public class TileViewDemoExternalStorage extends TileViewDemoActivity {
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -29,6 +28,7 @@ public class TileViewDemoExternalStorage extends Activity {
         .setSize(17934, 13452)
         .setStreamProvider(new StreamProviderFiles())
         .defineZoomLevel(sdcard.getAbsolutePath() + "/phi-1000000-%1$d_%2$d.jpg")
+        .addReadyListener(this)
         .build();
   }
 

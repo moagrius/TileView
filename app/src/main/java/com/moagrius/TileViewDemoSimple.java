@@ -1,12 +1,11 @@
 package com.moagrius;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
 import com.moagrius.tileview.TileView;
 
-public class TileViewDemoSimple extends Activity {
+public class TileViewDemoSimple extends TileViewDemoActivity {
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -18,6 +17,7 @@ public class TileViewDemoSimple extends Activity {
     new TileView.Builder(tileView)
         .setSize(17934, 13452)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
+        .addReadyListener(this)
         .build();
 
   }

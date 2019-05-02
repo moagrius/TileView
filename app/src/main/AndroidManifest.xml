@@ -20,6 +20,7 @@
     </activity>
     <activity android:name=".TileViewDemoInternalStorage" />
     <activity android:name=".TileViewDemoExternalStorage" />
+    <activity android:name=".TileViewDemoHttp" />
     <activity android:name=".TileViewDemoSimple" />
     <activity android:name=".TileViewDemoAdvanced" />
   </application>

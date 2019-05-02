@@ -32,21 +32,8 @@
     <TextView
         android:id="@+id/textview_demos_tileview_advanced"
         style="@style/DemoRow"
+        android:background="#FFFFF0F2"
         android:text="TileView Demo (Advanced)" />
-
-    <View android:layout_width="match_parent" android:layout_height="10dp" />
-
-    <Button
-        android:id="@+id/button_copy_to_internal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Copy tiles to internal" />
-
-    <Button
-        android:id="@+id/button_copy_to_external"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Copy tiles to external" />
 
   </LinearLayout>
 

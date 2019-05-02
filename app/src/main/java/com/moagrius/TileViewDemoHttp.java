@@ -1,13 +1,12 @@
 package com.moagrius;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
 import com.moagrius.tileview.TileView;
 import com.moagrius.tileview.io.StreamProviderHttp;
 
-public class TileViewDemoHttp extends Activity {
+public class TileViewDemoHttp extends TileViewDemoActivity {
 
   // https://raw.githubusercontent.com/moagrius/tv4/master/app/src/main/assets/tiles/phi-1000000-0_0.jpg
 
@@ -24,6 +23,7 @@ public class TileViewDemoHttp extends Activity {
         .defineZoomLevel("https://raw.githubusercontent.com/moagrius/tv4/master/app/src/main/assets/tiles/phi-1000000-%1$d_%2$d.jpg")
         .defineZoomLevel(1, "https://raw.githubusercontent.com/moagrius/tv4/master/app/src/main/assets/tiles/phi-500000-%1$d_%2$d.jpg")
         .defineZoomLevel(2, "https://raw.githubusercontent.com/moagrius/tv4/master/app/src/main/assets/tiles/phi-250000-%1$d_%2$d.jpg")
+        .addReadyListener(this)
         .build();
   }
 

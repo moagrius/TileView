@@ -1,6 +1,5 @@
 package com.moagrius;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -11,7 +10,7 @@ import com.moagrius.tileview.io.StreamProviderFiles;
 import java.io.File;
 import java.util.Arrays;
 
-public class TileViewDemoInternalStorage extends Activity {
+public class TileViewDemoInternalStorage extends TileViewDemoActivity {
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -26,6 +25,7 @@ public class TileViewDemoInternalStorage extends Activity {
         .setSize(17934, 13452)
         .setStreamProvider(new StreamProviderFiles())
         .defineZoomLevel(directory.getAbsolutePath() + "/phi-1000000-%1$d_%2$d.jpg")
+        .addReadyListener(this)
         .build();
 
   }
