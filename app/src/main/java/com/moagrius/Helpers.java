@@ -32,7 +32,7 @@ public class Helpers {
     }
   }
 
-  private static void copyAssetTilesToDirectory(Context context, File destination) throws Exception {
+  public static void copyAssetTilesToDirectory(Context context, File destination) throws Exception {
     Log.d("TV", "about to copy asset tiles to " + destination);
     AssetManager assetManager = context.getAssets();
     String[] assetPaths = assetManager.list("tiles");

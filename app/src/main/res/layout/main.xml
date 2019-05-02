@@ -25,6 +25,11 @@
         android:text="TileView Demo (External Storage)" />
 
     <TextView
+        android:id="@+id/textview_demos_tileview_remote"
+        style="@style/DemoRow"
+        android:text="TileView Demo (Remote HTTP)" />
+
+    <TextView
         android:id="@+id/textview_demos_tileview_advanced"
         style="@style/DemoRow"
         android:text="TileView Demo (Advanced)" />
