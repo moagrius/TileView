@@ -1,13 +1,8 @@
 package com.moagrius;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.AssetManager;
-import android.util.Log;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,21 +25,6 @@ public class Helpers {
       inputStream.close();
       outputStream.close();
     }
-  }
-
-  public static void copyAssetTilesToDirectory(Activity activity, File destination, Runnable onProgress, Runnable onComplete) throws Exception {
-    Log.d("TV", "about to copy asset tiles to " + destination);
-    AssetManager assetManager = activity.getAssets();
-    String[] assetPaths = assetManager.list("tiles");
-    for (String assetPath : assetPaths) {
-      InputStream assetStream = assetManager.open("tiles/" + assetPath);
-      File dest = new File(destination, assetPath);
-      FileOutputStream outputStream = new FileOutputStream(dest);
-      copyStreams(assetStream, outputStream);
-      Log.d("TV", assetPath + " copied to " + dest);
-      activity.runOnUiThread(onProgress);
-    }
-    Log.d("TV", "done copying files");
   }
 
   public static void saveBooleanPreference(Context context, String key, boolean value) {
