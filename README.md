@@ -71,8 +71,6 @@ As a user, the biggest things you'll notice are:
 
 Again, no configration is required - there is no `orientation` attribute - it does it's best to figure out what makes sense.
 
-At some point, `ScrollView` will be it's own repository, and will be a dependency of `ScalingScrollView`.
-
 ##### ScalingScrollView
 `ScalingScrollView` extends `ScrollView` and adds scaling APIs, as well as built-in scaling gesture managent (pinch and double tap to zoom).  By default, it will visually scale its content, but that can be disabled with a single setter `setShouldVisuallyScaleContents(false)`, and you can manage your content with a porportional scaled value.  Similarly, it will lay itself out to the current scale value, unless that too is disabled `setWillHandleContentSize(true)`
 
