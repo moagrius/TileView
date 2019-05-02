@@ -68,7 +68,9 @@ As a user, the biggest things you'll notice are:
 1.  Decomposition.  This takes a little explanation.  There are now 3 major, public widgets: `ScrollView`, `ScalingScrollView`, and `TileView`.  Each inherits from the last.  You'll notice the demo module has `Activities` for each of these classes.
 
 ##### ScrollView
-`com.qozix.widgets.ScrollView` is a clone of AOSP's `ScrollView` and `HorizontalScrollView`, with some inspiration taken from `RecyclerView` and `GestureDetector`.  That means the APIs will be very familiar to anyone who's used the framework-provided `ScrollView`.  The big difference here is that `com.qozix.widgets.ScrollView` functions along both axes, without configuation.  For example, if you have a layout that matches parent width and expands vertically, `ScrollView` will scroll it vertically - the converse holds.  If you have a layout that larger in both directions than the parent, `ScrollView` will scroll in any direction.
+`com.moagrius.widgets.ScrollView` is a clone of AOSP's `ScrollView` and `HorizontalScrollView`, with some inspiration taken from `RecyclerView` and `GestureDetector`.  That means
+the APIs will be very familiar to anyone who's used the framework-provided `ScrollView`.  The big difference here is that `com.moagrius.widgets.ScrollView` functions along both
+axes, without configuation.  For example, if you have a layout that matches parent width and expands vertically, `ScrollView` will scroll it vertically - the converse holds.  If you have a layout that larger in both directions than the parent, `ScrollView` will scroll in any direction.
 
 Again, no configration is required - there is no `orientation` attribute - it does it's best to figure out what makes sense.
 
