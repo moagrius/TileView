@@ -14,7 +14,8 @@ public class TileViewDemoExternalStorage extends Activity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
     TileView tileView = findViewById(R.id.tileview);
-    new TileView.Builder(tileView).setSize(17934, 13452).defineZoomLevel("/storage/emulated/0/Android/data/com.moagrius.demo/files/phi-1000000-%1$d_%2$d.jpg").build();
+    // "/storage/emulated/0/Android/data/com.moagrius/files/phi-1000000-%1$d_%2$d.jpg"
+    new TileView.Builder(tileView).setSize(17934, 13452).defineZoomLevel("/storage/emulated/0/phi-1000000-%1$d_%2$d.jpg").build();
 
   }
 

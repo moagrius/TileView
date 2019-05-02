@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,6 +33,7 @@ public class Helpers {
   }
 
   private static void copyAssetTilesToDirectory(Context context, File destination) throws Exception {
+    Log.d("TV", "about to copy asset tiles to " + destination);
     AssetManager assetManager = context.getAssets();
     String[] assetPaths = assetManager.list("tiles");
     for (String assetPath : assetPaths) {
@@ -39,7 +41,9 @@ public class Helpers {
       File dest = new File(destination, assetPath);
       FileOutputStream outputStream = new FileOutputStream(dest);
       copyStreams(assetStream, outputStream);
+      Log.d("TV", assetPath + " copied to " + dest);
     }
+    Log.d("TV", "done copying files");
   }
 
   public static void saveBooleanPreference(Context context, String key, boolean value) {
@@ -54,13 +58,15 @@ public class Helpers {
   }
 
   public static void copyAssetTilesToInternalStorage(Context context) throws Exception {
-    File sdcard = context.getFilesDir();
-    copyAssetTilesToDirectory(context, sdcard);
+    File directory = context.getFilesDir();
+    Log.d("TV", "copying to internal storage: " + directory);
+    copyAssetTilesToDirectory(context, directory);
     saveBooleanPreference(context, INTERNAL_STORAGE_KEY, true);
   }
 
   public static void copyAssetTilesToExternalStorage(Context context) throws Exception {
     File sdcard = Environment.getExternalStorageDirectory();
+    Log.d("TV", "copying to SD card: " + sdcard);
     copyAssetTilesToDirectory(context, sdcard);
     saveBooleanPreference(context, EXTERNAL_STORAGE_KEY, true);
   }

@@ -14,7 +14,7 @@ public class TileViewDemoInternalStorage extends Activity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
     TileView tileView = findViewById(R.id.tileview);
-    new TileView.Builder(tileView).setSize(17934, 13452).defineZoomLevel("/data/user/0/com.moagrius.demo/files/phi-1000000-%1$d_%2$d.jpg").build();
+    new TileView.Builder(tileView).setSize(17934, 13452).defineZoomLevel("/data/user/0/com.moagrius/files/phi-1000000-%1$d_%2$d.jpg").build();
 
   }
 

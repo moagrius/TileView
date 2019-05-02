@@ -29,6 +29,8 @@
         style="@style/DemoRow"
         android:text="TileView Demo (Advanced)" />
 
+    <View android:layout_width="match_parent" android:layout_height="10dp" />
+
     <Button
         android:id="@+id/button_copy_to_internal"
         android:layout_width="match_parent"

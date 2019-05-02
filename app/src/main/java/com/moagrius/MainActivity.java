@@ -1,13 +1,19 @@
 package com.moagrius;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
+
+  private static final int WRITE_REQUEST_CODE = 1;
 
   private Button buttonInternalStorage;
   private Button buttonExternalStorage;
@@ -39,7 +45,7 @@ public class MainActivity extends Activity {
 
   private void showExternalStorageDemoOrWarning(View view) {
     if (Helpers.getBooleanPreference(this, Helpers.EXTERNAL_STORAGE_KEY)) {
-      startDemo(TileViewDemoInternalStorage.class);
+      startDemo(TileViewDemoExternalStorage.class);
     } else {
       showToast("Copy tiles to external storage using the buttons below first");
     }
@@ -51,11 +57,28 @@ public class MainActivity extends Activity {
   }
 
   private void copyToExternalAsync(View view) {
+    Log.d("TV", "copy to external async");
     if (Helpers.getBooleanPreference(this, Helpers.EXTERNAL_STORAGE_KEY)) {
       showWarning();
       return;
     }
-    new Thread(this::copyToExternalSync).start();
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+      requestPermissions(permissions, WRITE_REQUEST_CODE);
+    } else {
+      new Thread(this::copyToExternalSync).start();
+    }
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    switch (requestCode) {
+      case WRITE_REQUEST_CODE:
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          new Thread(this::copyToExternalSync).start();
+        }
+        break;
+    }
   }
 
   private void copyToInternalAsync(View view) {
@@ -67,19 +90,22 @@ public class MainActivity extends Activity {
   }
 
   private void copyToExternalSync() {
+    Log.d("TV", "copy to external sync");
     try {
+      Log.d("TV", "about to copy assets to external storage");
       Helpers.copyAssetTilesToExternalStorage(this);
     } catch (Exception e) {
-      showToast("Error copying files: " + e.getMessage());
+      Log.d("TV", "there was an error copying files: " + e.getMessage());
+      showToast("Error copying files to external storage: " + e.getMessage());
     }
     showToast("Files copied to external storage");
   }
 
   private void copyToInternalSync() {
     try {
-      Helpers.copyAssetTilesToExternalStorage(this);
+      Helpers.copyAssetTilesToInternalStorage(this);
     } catch (Exception e) {
-      showToast("Error copying files: " + e.getMessage());
+      showToast("Error copying files to internal storage: " + e.getMessage());
     }
     showToast("Files copied to internal storage");
   }
@@ -89,7 +115,7 @@ public class MainActivity extends Activity {
   }
 
   private void showWarning() {
-    showToast("You have already copied these files");
+    showToast("You have already copied these files. If this is not correct, please reinstall the demo");
   }
 
 
