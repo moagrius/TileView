@@ -3,6 +3,8 @@
           xmlns:android="http://schemas.android.com/apk/res/android">
 
   <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
   <application
       android:allowBackup="true"
@@ -16,8 +18,11 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
-    <activity android:name=".TileViewDemoAdvanced" />
+    <activity android:name=".TileViewDemoInternalStorage" />
+    <activity android:name=".TileViewDemoExternalStorage" />
+    <activity android:name=".TileViewDemoHttp" />
     <activity android:name=".TileViewDemoSimple" />
+    <activity android:name=".TileViewDemoAdvanced" />
   </application>
 
 </manifest>

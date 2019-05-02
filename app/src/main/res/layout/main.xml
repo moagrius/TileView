@@ -15,8 +15,24 @@
         android:text="TileView Demo (Simple)" />
 
     <TextView
+        android:id="@+id/textview_demos_tileview_internal"
+        style="@style/DemoRow"
+        android:text="TileView Demo (Internal Storage)" />
+
+    <TextView
+        android:id="@+id/textview_demos_tileview_external"
+        style="@style/DemoRow"
+        android:text="TileView Demo (External Storage)" />
+
+    <TextView
+        android:id="@+id/textview_demos_tileview_remote"
+        style="@style/DemoRow"
+        android:text="TileView Demo (Remote HTTP)" />
+
+    <TextView
         android:id="@+id/textview_demos_tileview_advanced"
         style="@style/DemoRow"
+        android:background="#FFFFF0F2"
         android:text="TileView Demo (Advanced)" />
 
   </LinearLayout>

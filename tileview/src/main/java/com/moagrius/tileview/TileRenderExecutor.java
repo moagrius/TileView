@@ -9,11 +9,7 @@ import java.util.concurrent.TimeUnit;
 public class TileRenderExecutor extends ThreadPoolExecutor {
 
   public TileRenderExecutor(int size) {
-    super(size, size, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), task -> {
-      Thread thread = new Thread(task);
-      thread.setPriority(Thread.MIN_PRIORITY);
-      return thread;
-    });
+    super(size, size, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
   }
 
   public TileRenderExecutor() {
