@@ -457,7 +457,7 @@ public class TileView extends ScalingScrollView implements
   @Override
   public void onTileDecodeError(Tile tile, Exception e) {
     // no op for now, probably expose this to the user
-    Log.d("TV", "tile decode error: " + e.getMessage());
+    Log.d("TV", "tile decode error: " + e.getClass() + ", " + e.getMessage());
   }
 
   public void destroy() {
