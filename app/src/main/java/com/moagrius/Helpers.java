@@ -31,7 +31,7 @@ public class Helpers {
     }
   }
 
-  private static void copyAssetTilesToDirectory(Context context, File destination, Runnable onComplete) throws Exception {
+  private static void copyAssetTilesToDirectory(Context context, File destination) throws Exception {
     AssetManager assetManager = context.getAssets();
     String[] assetPaths = assetManager.list("tiles");
     for (String assetPath : assetPaths) {
@@ -40,7 +40,6 @@ public class Helpers {
       FileOutputStream outputStream = new FileOutputStream(dest);
       copyStreams(assetStream, outputStream);
     }
-    onComplete.run();
   }
 
   public static void saveBooleanPreference(Context context, String key, boolean value) {
@@ -54,15 +53,15 @@ public class Helpers {
     return context.getSharedPreferences(PREFS_FILE_NAME, Context.MODE_PRIVATE).getBoolean(key, false);
   }
 
-  public static void copyAssetTilesToInternalStorage(Context context, Runnable onComplete) throws Exception {
+  public static void copyAssetTilesToInternalStorage(Context context) throws Exception {
     File sdcard = context.getFilesDir();
-    copyAssetTilesToDirectory(context, sdcard, onComplete);
+    copyAssetTilesToDirectory(context, sdcard);
     saveBooleanPreference(context, INTERNAL_STORAGE_KEY, true);
   }
 
-  public static void copyAssetTilesToExternalStorage(Context context, Runnable onComplete) throws Exception {
+  public static void copyAssetTilesToExternalStorage(Context context) throws Exception {
     File sdcard = Environment.getExternalStorageDirectory();
-    copyAssetTilesToDirectory(context, sdcard, onComplete);
+    copyAssetTilesToDirectory(context, sdcard);
     saveBooleanPreference(context, EXTERNAL_STORAGE_KEY, true);
   }
 

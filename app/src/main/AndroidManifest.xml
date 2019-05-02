@@ -16,8 +16,10 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
-    <activity android:name=".TileViewDemoAdvanced" />
+    <activity android:name=".TileViewDemoInternalStorage" />
+    <activity android:name=".TileViewDemoExternalStorage" />
     <activity android:name=".TileViewDemoSimple" />
+    <activity android:name=".TileViewDemoAdvanced" />
   </application>
 
 </manifest>
