@@ -20,9 +20,11 @@ Out of the box, the TileView will manage the tiled image, including subsampling 
 
 Additional plugins are provided to allow adding overlaying Views (markers), info windows, hot spots, path drawing, and coordinate translation.
 
-**Please note that TileView3 is in beta.**  Really, probably closer to an alpha.  There are bugs, but I think the core is solid and ready for beta testing.
+Version 4 is fairly young.  If you're need a stable version, the last release of version 2 is 2.7.7, and is available as a branch, here: https://github
+.com/moagrius/TileView/tree/version-2.7.7, or from the [releases page](https://github.com/moagrius/TileView/releases).  You can also get it from gradle using the old namespace:
+`implementation 'com.qozix:tileview:2.7.7'`
 
-This is a major upgrade and is not backwards compatible with TileView version 2.  If you're need a stable version, the last release of version 2 is 2.7.7, and is available as a branch, here: https://github.com/moagrius/TileView/tree/version-2.7.7, or from the [releases page](https://github.com/moagrius/TileView/releases).  No further work will be done on version 2.
+No further work will be done on version 2.
 
 **This is truly open source.**  I'm very happy to accept improvements or bug fixes - no caveats; create an issue, branch, and create a PR.  While I'm not super interested in finding bugs and don't want the issues page to become a wasteland (I already know what most of them are, and will start to document them as this make its way into the wild), I am very interested in fixing those bugs - if you have the time to locate and correct a bug, please open a PR.
 
