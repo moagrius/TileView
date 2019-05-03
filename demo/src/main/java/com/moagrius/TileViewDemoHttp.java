@@ -16,9 +16,9 @@ public class TileViewDemoHttp extends TileViewDemoActivity {
     new TileView.Builder(tileView)
         .setSize(17934, 13452)
         .setStreamProvider(new StreamProviderHttp())
-        .defineZoomLevel("https://raw.githubusercontent.com/moagrius/tv4/master/app/src/main/assets/tiles/phi-1000000-%1$d_%2$d.jpg")
-        .defineZoomLevel(1, "https://raw.githubusercontent.com/moagrius/tv4/master/app/src/main/assets/tiles/phi-500000-%1$d_%2$d.jpg")
-        .defineZoomLevel(2, "https://raw.githubusercontent.com/moagrius/tv4/master/app/src/main/assets/tiles/phi-250000-%1$d_%2$d.jpg")
+        .defineZoomLevel("https://raw.githubusercontent.com/moagrius/tv4/master/demo/src/main/assets/tiles/phi-1000000-%1$d_%2$d.jpg")
+        .defineZoomLevel(1, "https://raw.githubusercontent.com/moagrius/tv4/master/demo/src/main/assets/tiles/phi-500000-%1$d_%2$d.jpg")
+        .defineZoomLevel(2, "https://raw.githubusercontent.com/moagrius/tv4/master/demo/src/main/assets/tiles/phi-250000-%1$d_%2$d.jpg")
         .addReadyListener(this)
         .build();
   }
