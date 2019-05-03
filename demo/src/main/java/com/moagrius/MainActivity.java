@@ -7,10 +7,10 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.moagrius.helpers.FileCopier;
+import com.moagrius.helpers.Helpers;
 
 import java.io.File;
 
@@ -25,7 +25,7 @@ public class MainActivity extends Activity implements FileCopier.Listener {
     findViewById(R.id.textview_demos_tileview_internal).setOnClickListener(view -> showStorageDemoOrWarning(Helpers.INTERNAL_STORAGE_KEY, getFilesDir(), TileViewDemoInternalStorage.class));
     findViewById(R.id.textview_demos_tileview_external).setOnClickListener(view -> showStorageDemoOrWarning(Helpers.EXTERNAL_STORAGE_KEY, Environment.getExternalStorageDirectory(), TileViewDemoExternalStorage.class));
     findViewById(R.id.textview_demos_tileview_remote).setOnClickListener(view -> startDemo(TileViewDemoHttp.class));
-    findViewById(R.id.textview_demos_tileview_simple).setOnClickListener(view -> startDemo(TileViewDemoSimple.class));
+    findViewById(R.id.textview_demos_tileview_assets).setOnClickListener(view -> startDemo(TileViewDemoAssets.class));
     findViewById(R.id.textview_demos_tileview_advanced).setOnClickListener(view -> startDemo(TileViewDemoAdvanced.class));
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -53,7 +53,6 @@ public class MainActivity extends Activity implements FileCopier.Listener {
   }
 
   private void copyAssetTilesToDirectory(String preference, File directory) {
-    Log.d("TV", "copy to external async");
     if (Helpers.getBooleanPreference(this, preference)) {
       showWarning(preference, directory);
       return;

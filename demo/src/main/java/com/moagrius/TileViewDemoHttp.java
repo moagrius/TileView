@@ -8,13 +8,9 @@ import com.moagrius.tileview.io.StreamProviderHttp;
 
 public class TileViewDemoHttp extends TileViewDemoActivity {
 
-  // https://raw.githubusercontent.com/moagrius/tv4/master/app/src/main/assets/tiles/phi-1000000-0_0.jpg
-
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
-
     super.onCreate(savedInstanceState);
-
     setContentView(R.layout.activity_demos_tileview);
     TileView tileView = findViewById(R.id.tileview);
     new TileView.Builder(tileView)

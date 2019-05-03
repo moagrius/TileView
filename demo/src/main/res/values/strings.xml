@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">TV4</string>
+  <string name="app_name">TileView Demo</string>
   <string name="label_ignore">IGNORE</string>
   <string name="label_accept">YES</string>
   <string name="label_cancel">CANCEL</string>

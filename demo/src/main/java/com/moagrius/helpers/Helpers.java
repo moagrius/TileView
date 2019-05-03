@@ -1,4 +1,4 @@
-package com.moagrius;
+package com.moagrius.helpers;
 
 import android.content.Context;
 import android.content.SharedPreferences;

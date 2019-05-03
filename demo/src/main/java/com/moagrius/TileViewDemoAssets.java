@@ -5,14 +5,12 @@ import android.support.annotation.Nullable;
 
 import com.moagrius.tileview.TileView;
 
-public class TileViewDemoSimple extends TileViewDemoActivity {
+public class TileViewDemoAssets extends TileViewDemoActivity {
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
-
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
-
     TileView tileView = findViewById(R.id.tileview);
     new TileView.Builder(tileView)
         .setSize(17934, 13452)

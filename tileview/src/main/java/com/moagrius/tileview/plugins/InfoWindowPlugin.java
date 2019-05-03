@@ -13,12 +13,12 @@ public class InfoWindowPlugin extends FrameLayout implements TileView.Plugin, Ti
   public InfoWindowPlugin(View view) {
     super(view.getContext());
     mView = view;
-    hide();
     if (mView.getLayoutParams() == null) {
       LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
       mView.setLayoutParams(lp);
     }
     addView(mView);
+    hide();
   }
 
   @Override
@@ -34,15 +34,25 @@ public class InfoWindowPlugin extends FrameLayout implements TileView.Plugin, Ti
   }
 
   public void show(int x, int y, float anchorX, float anchorY) {
-    LayoutParams lp = (LayoutParams) mView.getLayoutParams();
-    lp.leftMargin = (int) (x + mView.getMeasuredWidth() * anchorX);
-    lp.topMargin = (int) (y + mView.getMeasuredHeight() * anchorY);
-    mView.setVisibility(View.VISIBLE);
+    setPosition(
+        (int) (x + mView.getMeasuredWidth() * anchorX),
+        (int) (y + mView.getMeasuredHeight() * anchorY));
     bringToFront();
   }
 
   public void hide() {
-    mView.setVisibility(View.GONE);
+    setPosition(-mView.getMeasuredWidth(), -mView.getMeasuredHeight());
+  }
+
+  private void setPosition(int x, int y) {
+    LayoutParams lp = (LayoutParams) mView.getLayoutParams();
+    if (lp == null) {
+      lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+      mView.setLayoutParams(lp);
+    }
+    lp.leftMargin = x;
+    lp.topMargin = y;
+    mView.requestLayout();
   }
 
   @Override

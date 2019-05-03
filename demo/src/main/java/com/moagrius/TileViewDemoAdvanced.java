@@ -7,9 +7,11 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -48,29 +50,34 @@ public class TileViewDemoAdvanced extends Activity {
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
-
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
-
-    View infoView = new TextView(this);
-    infoView.setPadding(100, 100, 100, 100);
-    infoView.setBackgroundColor(Color.GRAY);
-
     TileView tileView = findViewById(R.id.tileview);
-
     new TileView.Builder(tileView)
         .setSize(17934, 13452)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
         .defineZoomLevel(1, "tiles/phi-500000-%1$d_%2$d.jpg")
         .defineZoomLevel(2, "tiles/phi-250000-%1$d_%2$d.jpg")
         .installPlugin(new MarkerPlugin(this))
-        .installPlugin(new InfoWindowPlugin(infoView))
+        .installPlugin(new InfoWindowPlugin(getInfoView()))
         .installPlugin(new CoordinatePlugin(WEST, NORTH, EAST, SOUTH))
         .installPlugin(new HotSpotPlugin())
         .installPlugin(new PathPlugin())
         .addReadyListener(this::onReady)
         .build();
+  }
 
+  private View getInfoView() {
+    int elevation = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+    int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, getResources().getDisplayMetrics());
+    TextView infoView = new TextView(this);
+    infoView.setPadding(padding, padding, padding, padding);
+    infoView.setBackgroundColor(Color.WHITE);
+    infoView.setGravity(Gravity.CENTER);
+    infoView.setLineSpacing(0, 1.3f);
+    infoView.setTextSize(11);
+    ViewCompat.setElevation(infoView, elevation);
+    return infoView;
   }
 
   private void onReady(TileView tileView) {
@@ -86,7 +93,7 @@ public class TileViewDemoAdvanced extends Activity {
       double[] coordinate = (double[]) view.getTag();
       int x = coordinatePlugin.longitudeToX(coordinate[1]);
       int y = coordinatePlugin.latitudeToY(coordinate[0]);
-      tileView.smoothScrollTo(x - tileView.getMeasuredWidth() / 2, y - tileView.getMeasuredHeight() / 2);
+      tileView.smoothScrollTo(x - tileView.getWidth() / 2, y - tileView.getHeight() / 2);
       String label = String.format(Locale.US, template, coordinate[0], coordinate[1]);
       TextView infoView = infoWindowPlugin.getView();
       infoView.setText(label);

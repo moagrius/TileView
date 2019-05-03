@@ -10,9 +10,9 @@
       android:orientation="vertical">
 
     <TextView
-        android:id="@+id/textview_demos_tileview_simple"
+        android:id="@+id/textview_demos_tileview_assets"
         style="@style/DemoRow"
-        android:text="TileView Demo (Simple)" />
+        android:text="TileView Demo (Assets)" />
 
     <TextView
         android:id="@+id/textview_demos_tileview_internal"

@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.content.res.AssetManager;
 import android.util.Log;
 
-import com.moagrius.Helpers;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
