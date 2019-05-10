@@ -21,8 +21,7 @@ Out of the box, the TileView will manage the tiled image, including subsampling 
 
 Additional plugins are provided to allow adding overlaying Views (markers), info windows, hot spots, path drawing, and coordinate translation.
 
-Version 4 is fairly young.  If you're need a stable version, the last release of version 2 is 2.7.7, and is available as a branch, here: https://github
-.com/moagrius/TileView/tree/version-2.7.7, or from the [releases page](https://github.com/moagrius/TileView/releases).  You can also get it from gradle using the old namespace:
+Version 4 is fairly young.  If you're need a stable version, the last release of version 2 is 2.7.7, and is available as a branch, here: https://github.com/moagrius/TileView/tree/version-2.7.7, or from the [releases page](https://github.com/moagrius/TileView/releases).  You can also get it from gradle using the old namespace:
 `implementation 'com.qozix:tileview:2.7.7'`
 
 No further work will be done on version 2.
