@@ -21,7 +21,6 @@ public class TileViewDemoExternalStorage extends TileViewDemoActivity {
         .setSize(17934, 13452)
         .setStreamProvider(new StreamProviderFiles())
         .defineZoomLevel(sdcard.getAbsolutePath() + "/phi-1000000-%1$d_%2$d.jpg")
-        .addReadyListener(this)
         .build();
   }
 

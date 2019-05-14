@@ -15,7 +15,6 @@ public class TileViewDemoAssets extends TileViewDemoActivity {
     new TileView.Builder(tileView)
         .setSize(17934, 13452)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
-        .addReadyListener(this)
         .build();
 
   }
