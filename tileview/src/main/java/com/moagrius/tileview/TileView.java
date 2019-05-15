@@ -263,6 +263,9 @@ public class TileView extends ScalingScrollView implements
 
   @Override
   public void onScaleChanged(ScalingScrollView scalingScrollView, float currentScale, float previousScale) {
+    mContainer.setScale(currentScale);
+    setScrollX(getConstrainedScrollX(getScrollX()));
+    setScrollY(getConstrainedScrollY(getScrollY()));
     centerVisibleChildren();
     for (Listener listener : mListeners) {
       listener.onScaleChanged(currentScale, previousScale);
@@ -305,6 +308,9 @@ public class TileView extends ScalingScrollView implements
       int zoomDelta = mZoom - mCurrentDetail.getZoom();
       mImageSample = 1 << zoomDelta;
       return;
+    }
+    if (mZoom < 0) {
+      mZoom = 0;
     }
     // best case, it's an exact match, use that and set sample to 1
     Detail exactMatch = mDetailList.get(mZoom);
@@ -572,6 +578,7 @@ public class TileView extends ScalingScrollView implements
 
     private int mWidth;
     private int mHeight;
+    private float mScale = 1f;
 
     public FixedSizeViewGroup(Context context) {
       super(context);
@@ -583,24 +590,33 @@ public class TileView extends ScalingScrollView implements
       requestLayout();
     }
 
+    public void setScale(float scale) {
+      mScale = scale;
+      requestLayout();
+    }
+
     public boolean hasValidDimensions() {
       return mWidth > 0 && mHeight > 0;
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+      int width = (int) (mWidth * mScale);
+      int height = (int) (mHeight * mScale);
       for (int i = 0; i < getChildCount(); i++) {
         View child = getChildAt(i);
-        child.layout(0, 0, mWidth, mHeight);
+        child.layout(0, 0, width, height);
       }
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-      int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(mWidth, MeasureSpec.EXACTLY);
-      int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(mHeight, MeasureSpec.EXACTLY);
+      int width = (int) (mWidth * mScale);
+      int height = (int) (mHeight * mScale);
+      int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
+      int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
       measureChildren(childWidthMeasureSpec, childHeightMeasureSpec);
-      setMeasuredDimension(mWidth, mHeight);
+      setMeasuredDimension(width, height);
     }
 
   }
