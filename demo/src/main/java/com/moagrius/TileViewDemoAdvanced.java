@@ -108,8 +108,8 @@ public class TileViewDemoAdvanced extends Activity {
       infoView.setText(label);
       infoWindowPlugin.show(x, y, -0.5f, -1f);
       // TODO: DEBUG MOVING MARKERS, REMOVE BEFORE MERGING
-      x = coordinatePlugin.longitudeToX(sites.get(0)[1]);
-      y = coordinatePlugin.latitudeToY(sites.get(0)[0]);
+      x = coordinatePlugin.longitudeToUnscaledX(sites.get(0)[1]);
+      y = coordinatePlugin.latitudeToUnscaledY(sites.get(0)[0]);
       markerPlugin.moveMarker(view, x, y);
       // TODO: DEBUG REMOVING MARKERS, REMOVE BEFORE MERGING, UNCOMMENT TO DEMONSTRAT
       //markerPlugin.removeMarker(view);
