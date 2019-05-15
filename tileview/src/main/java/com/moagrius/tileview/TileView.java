@@ -153,6 +153,14 @@ public class TileView extends ScalingScrollView implements
     return mZoom;
   }
 
+  public int getScaledWidth() {
+    return (int) (mContainer.getLayoutParams().width * getScale());
+  }
+
+  public int getScaledHeight() {
+    return (int) (mContainer.getLayoutParams().height * getScale());
+  }
+
   public boolean addListener(Listener listener) {
     return mListeners.add(listener);
   }
@@ -206,8 +214,9 @@ public class TileView extends ScalingScrollView implements
   private void centerVisibleChildren() {
     final int scaledWidth = (int) (getScale() * mContainer.getMeasuredWidth());
     final int scaledHeight = (int) (getScale() * mContainer.getMeasuredHeight());
-    final int offsetX = scaledWidth >= getWidth() ? 0 : getWidth() / 2 - mContainer.getMeasuredWidth() / 2;
-    final int offsetY = scaledHeight >= getHeight() ? 0 : getHeight() / 2 - mContainer.getMeasuredHeight() / 2;
+    final int offsetX = scaledWidth >= getWidth() ? 0 : getWidth() / 2 - scaledWidth / 2;
+    final int offsetY = scaledHeight >= getHeight() ? 0 : getHeight() / 2 - scaledHeight / 2;
+    Log.d("TV", "setting left to " + offsetX + ", top to " + offsetY);
     mContainer.setLeft(offsetX);
     mContainer.setTop(offsetY);
   }
