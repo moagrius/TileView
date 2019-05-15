@@ -203,6 +203,15 @@ public class TileView extends ScalingScrollView implements
     determineCurrentDetail();
   }
 
+  private void centerVisibleChildren() {
+    final int scaledWidth = (int) (getScale() * mContainer.getMeasuredWidth());
+    final int scaledHeight = (int) (getScale() * mContainer.getMeasuredHeight());
+    final int offsetX = scaledWidth >= getWidth() ? 0 : getWidth() / 2 - mContainer.getMeasuredWidth() / 2;
+    final int offsetY = scaledHeight >= getHeight() ? 0 : getHeight() / 2 - mContainer.getMeasuredHeight() / 2;
+    mContainer.setLeft(offsetX);
+    mContainer.setTop(offsetY);
+  }
+
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
     super.onLayout(changed, left, top, right, bottom);
@@ -245,6 +254,7 @@ public class TileView extends ScalingScrollView implements
 
   @Override
   public void onScaleChanged(ScalingScrollView scalingScrollView, float currentScale, float previousScale) {
+    centerVisibleChildren();
     for (Listener listener : mListeners) {
       listener.onScaleChanged(currentScale, previousScale);
     }

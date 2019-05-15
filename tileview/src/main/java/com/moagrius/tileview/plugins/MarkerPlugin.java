@@ -95,6 +95,23 @@ public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView
     addView(view, layoutParams);
   }
 
+  public void removeMarker(View view) {
+    if (view.getParent() == this) {
+      removeView(view);
+    }
+  }
+
+  public void moveMarker(View view, int left, int top) {
+    MarkerPlugin.LayoutParams lp = (LayoutParams) view.getLayoutParams();
+    if (lp == null) {
+      return;
+    }
+    lp.mLeft = left;
+    lp.mTop = top;
+    view.setLeft(left);
+    view.setTop(top);
+  }
+
   public static class LayoutParams extends ViewGroup.LayoutParams {
 
     public int x;

@@ -1,7 +1,6 @@
 package com.moagrius;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -20,7 +19,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.moagrius.tileview.TileView;
-import com.moagrius.tileview.io.StreamProvider;
+import com.moagrius.tileview.io.StreamProviderAssets;
 import com.moagrius.tileview.plugins.CoordinatePlugin;
 import com.moagrius.tileview.plugins.HotSpotPlugin;
 import com.moagrius.tileview.plugins.InfoWindowPlugin;
@@ -28,8 +27,6 @@ import com.moagrius.tileview.plugins.LowFidelityBackgroundPlugin;
 import com.moagrius.tileview.plugins.MarkerPlugin;
 import com.moagrius.tileview.plugins.PathPlugin;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -55,19 +52,6 @@ public class TileViewDemoAdvanced extends Activity {
     sites.add(new double[]{-75.1479650, 39.9523130});
   }
 
-  private static class SlowStreamProviderAssets implements StreamProvider {
-    @Override
-    public InputStream getStream(int column, int row, Context context, Object data) throws IOException {
-      String file = String.format(Locale.US, (String) data, column, row);
-      try {
-        Thread.sleep(500);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      return context.getAssets().open(file);
-    }
-  }
-
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -81,7 +65,7 @@ public class TileViewDemoAdvanced extends Activity {
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
         .defineZoomLevel(1, "tiles/phi-500000-%1$d_%2$d.jpg")
         .defineZoomLevel(2, "tiles/phi-250000-%1$d_%2$d.jpg")
-        .setStreamProvider(new SlowStreamProviderAssets())
+        .setStreamProvider(new StreamProviderAssets())
         .installPlugin(new MarkerPlugin(this))
         .installPlugin(new InfoWindowPlugin(getInfoView()))
         .installPlugin(new CoordinatePlugin(WEST, NORTH, EAST, SOUTH))
@@ -123,6 +107,12 @@ public class TileViewDemoAdvanced extends Activity {
       TextView infoView = infoWindowPlugin.getView();
       infoView.setText(label);
       infoWindowPlugin.show(x, y, -0.5f, -1f);
+      // TODO: DEBUG MOVING MARKERS, REMOVE BEFORE MERGING
+      x = coordinatePlugin.longitudeToX(sites.get(0)[1]);
+      y = coordinatePlugin.latitudeToY(sites.get(0)[0]);
+      markerPlugin.moveMarker(view, x, y);
+      // TODO: DEBUG REMOVING MARKERS, REMOVE BEFORE MERGING, UNCOMMENT TO DEMONSTRAT
+      //markerPlugin.removeMarker(view);
     };
 
     for (double[] coordinate : sites) {
