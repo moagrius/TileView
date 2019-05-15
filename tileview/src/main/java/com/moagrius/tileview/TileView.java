@@ -250,6 +250,9 @@ public class TileView extends ScalingScrollView implements
     }
     int previousZoom = mZoom;
     mZoom = Detail.getZoomFromPercent(currentScale);
+    if (mZoom < 0) {
+      mZoom = 0;
+    }
     boolean zoomChanged = mZoom != previousZoom;
     if (zoomChanged) {
       mPreviouslyDrawnTiles.clear();
