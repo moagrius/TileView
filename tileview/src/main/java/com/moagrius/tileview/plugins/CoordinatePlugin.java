@@ -54,8 +54,18 @@ public class CoordinatePlugin implements TileView.Plugin, TileView.Listener, Til
    * @return The pixel value.
    */
   public int longitudeToX(double longitude) {
+    return (int) (longitudeToUnscaledX(longitude) * mScale);
+  }
+
+  /**
+   * Translate longitude coordinate to an x pixel value, without considering scale.
+   *
+   * @param longitude The longitude.
+   * @return The pixel value.
+   */
+  public int longitudeToUnscaledX(double longitude) {
     double factor = (longitude - mWest) / mDistanceLongitude;
-    return (int) ((mPixelWidth * factor) * mScale);
+    return (int) (mPixelWidth * factor);
   }
 
   /**
@@ -65,8 +75,18 @@ public class CoordinatePlugin implements TileView.Plugin, TileView.Listener, Til
    * @return The pixel value.
    */
   public int latitudeToY(double latitude) {
+    return (int) (latitudeToUnscaledY(latitude) * mScale);
+  }
+
+  /**
+   * Translate latitude coordinate to a y pixel value, without considering scale
+   *
+   * @param latitude The latitude.
+   * @return The pixel value.
+   */
+  public int latitudeToUnscaledY(double latitude) {
     double factor = (latitude - mNorth) / mDistanceLatitude;
-    return (int) ((mPixelHeight * factor) * mScale);
+    return (int) (mPixelHeight * factor);
   }
 
   /**

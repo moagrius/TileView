@@ -106,10 +106,11 @@ public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView
     if (lp == null) {
       return;
     }
-    lp.mLeft = left;
-    lp.mTop = top;
-    view.setLeft(left);
-    view.setTop(top);
+    lp.x = left;
+    lp.y = top;
+    populateLayoutParams(view);
+    view.setLeft(lp.mLeft);
+    view.setTop(lp.mTop);
   }
 
   public static class LayoutParams extends ViewGroup.LayoutParams {
