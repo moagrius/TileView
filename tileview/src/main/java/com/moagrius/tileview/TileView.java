@@ -261,9 +261,12 @@ public class TileView extends ScalingScrollView implements
     }
   }
 
+
+
   @Override
   public void onScaleChanged(ScalingScrollView scalingScrollView, float currentScale, float previousScale) {
-    mContainer.setScale(currentScale);
+//    mContainer.setScale(currentScale);
+//    mContainer.layout(0, 0, getScaledWidth(), getScaledHeight());
     setScrollX(getConstrainedScrollX(getScrollX()));
     setScrollY(getConstrainedScrollY(getScrollY()));
     centerVisibleChildren();
@@ -277,6 +280,7 @@ public class TileView extends ScalingScrollView implements
     }
     boolean zoomChanged = mZoom != previousZoom;
     if (zoomChanged) {
+      Log.d("TV", "zoom changed from " + previousZoom + " to " + mZoom);
       mPreviouslyDrawnTiles.clear();
       for (Tile tile : mTilesVisibleInViewport) {
         if (tile.getState() == Tile.State.DECODED) {
