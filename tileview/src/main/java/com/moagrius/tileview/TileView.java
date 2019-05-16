@@ -154,11 +154,11 @@ public class TileView extends ScalingScrollView implements
   }
 
   public int getScaledWidth() {
-    return (int) (mContainer.getLayoutParams().width * getScale());
+    return (int) (mContainer.getFixedWidth() * getScale());
   }
 
   public int getScaledHeight() {
-    return (int) (mContainer.getLayoutParams().height * getScale());
+    return (int) (mContainer.getFixedHeight() * getScale());
   }
 
   public boolean addListener(Listener listener) {
@@ -223,7 +223,15 @@ public class TileView extends ScalingScrollView implements
 
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-    super.onLayout(changed, left, top, right, bottom);
+    //super.onLayout(changed, left, top, right, bottom);
+    final int width = getWidth();
+    final int height = getHeight();
+    final int scaledWidth = getScaledWidth();
+    final int scaledHeight = getScaledHeight();
+    Log.d("TV", "width=" + width + ", scaled=" + getScaledWidth());
+    final int offsetX = scaledWidth >= width ? 0 : width / 2 - scaledWidth / 2;
+    final int offsetY = scaledHeight >= height ? 0 : height / 2 - scaledHeight / 2;
+    mContainer.layout(offsetX, offsetY, scaledWidth + offsetX, scaledHeight + offsetY);
     mIsLaidOut = true;
     if (!attemptOnReady()) {
       updateViewportAndComputeTilesThrottled();
@@ -267,9 +275,9 @@ public class TileView extends ScalingScrollView implements
   public void onScaleChanged(ScalingScrollView scalingScrollView, float currentScale, float previousScale) {
 //    mContainer.setScale(currentScale);
 //    mContainer.layout(0, 0, getScaledWidth(), getScaledHeight());
-    setScrollX(getConstrainedScrollX(getScrollX()));
-    setScrollY(getConstrainedScrollY(getScrollY()));
-    centerVisibleChildren();
+//    setScrollX(getConstrainedScrollX(getScrollX()));
+//    setScrollY(getConstrainedScrollY(getScrollY()));
+//    centerVisibleChildren();
     for (Listener listener : mListeners) {
       listener.onScaleChanged(currentScale, previousScale);
     }
@@ -592,6 +600,14 @@ public class TileView extends ScalingScrollView implements
       mWidth = width;
       mHeight = height;
       requestLayout();
+    }
+
+    public int getFixedWidth() {
+      return mWidth;
+    }
+
+    public int getFixedHeight() {
+      return mHeight;
     }
 
     public void setScale(float scale) {
