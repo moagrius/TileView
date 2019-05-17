@@ -103,6 +103,7 @@ public class TileView extends ScalingScrollView implements
     // by calling it during construction, no other views will be allowed
     // (unless the user hacks intended behavior by removing all views or by index)
     mContainer = new FixedSizeViewGroup(context);
+    mContainer.setClipChildren(false);
     // we'll draw bitmaps to this view
     mTilingBitmapView = new TilingBitmapView(this);
     mContainer.addView(mTilingBitmapView);
@@ -110,6 +111,7 @@ public class TileView extends ScalingScrollView implements
     // e.g., ViewGroup.addView(child) will call ViewGroup.addView(child, -1, ...)
     // which will end up placing the child in the TileView rather than the container
     super.addView(mContainer, -1, generateDefaultLayoutParams());
+    setClipChildren(false);
   }
 
   @Override
@@ -159,6 +161,16 @@ public class TileView extends ScalingScrollView implements
 
   public int getScaledHeight() {
     return (int) (mContainer.getFixedHeight() * getScale());
+  }
+
+  @Override
+  public int getContentWidth() {
+    return getScaledWidth();
+  }
+
+  @Override
+  public int getContentHeight() {
+    return getScaledHeight();
   }
 
   public boolean addListener(Listener listener) {
@@ -223,15 +235,7 @@ public class TileView extends ScalingScrollView implements
 
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-    //super.onLayout(changed, left, top, right, bottom);
-    final int width = getWidth();
-    final int height = getHeight();
-    final int scaledWidth = getScaledWidth();
-    final int scaledHeight = getScaledHeight();
-    Log.d("TV", "width=" + width + ", scaled=" + getScaledWidth());
-    final int offsetX = scaledWidth >= width ? 0 : width / 2 - scaledWidth / 2;
-    final int offsetY = scaledHeight >= height ? 0 : height / 2 - scaledHeight / 2;
-    mContainer.layout(offsetX, offsetY, scaledWidth + offsetX, scaledHeight + offsetY);
+    super.onLayout(changed, left, top, right, bottom);
     mIsLaidOut = true;
     if (!attemptOnReady()) {
       updateViewportAndComputeTilesThrottled();
@@ -270,14 +274,16 @@ public class TileView extends ScalingScrollView implements
   }
 
 
-
   @Override
   public void onScaleChanged(ScalingScrollView scalingScrollView, float currentScale, float previousScale) {
-//    mContainer.setScale(currentScale);
-//    mContainer.layout(0, 0, getScaledWidth(), getScaledHeight());
-//    setScrollX(getConstrainedScrollX(getScrollX()));
-//    setScrollY(getConstrainedScrollY(getScrollY()));
-//    centerVisibleChildren();
+    centerVisibleChildren();
+    Log.d("TV", "scale=" + getScale() +
+        ", scaledWidth=" + getScaledWidth() +
+        ", scrollX=" + getScrollX() +
+        ", tileview width=" + getWidth() +
+        ", max scrollX should be=" + (getScaledWidth() - getWidth()) +
+        ", container width=" + mContainer.getWidth());
+    scrollTo(getScrollX(), getScrollY());
     for (Listener listener : mListeners) {
       listener.onScaleChanged(currentScale, previousScale);
     }
@@ -590,7 +596,6 @@ public class TileView extends ScalingScrollView implements
 
     private int mWidth;
     private int mHeight;
-    private float mScale = 1f;
 
     public FixedSizeViewGroup(Context context) {
       super(context);
@@ -610,33 +615,24 @@ public class TileView extends ScalingScrollView implements
       return mHeight;
     }
 
-    public void setScale(float scale) {
-      mScale = scale;
-      requestLayout();
-    }
-
     public boolean hasValidDimensions() {
       return mWidth > 0 && mHeight > 0;
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-      int width = (int) (mWidth * mScale);
-      int height = (int) (mHeight * mScale);
       for (int i = 0; i < getChildCount(); i++) {
         View child = getChildAt(i);
-        child.layout(0, 0, width, height);
+        child.layout(0, 0, mWidth, mHeight);
       }
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-      int width = (int) (mWidth * mScale);
-      int height = (int) (mHeight * mScale);
-      int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
-      int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
+      int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(mWidth, MeasureSpec.EXACTLY);
+      int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(mHeight, MeasureSpec.EXACTLY);
       measureChildren(childWidthMeasureSpec, childHeightMeasureSpec);
-      setMeasuredDimension(width, height);
+      setMeasuredDimension(mWidth, mHeight);
     }
 
   }
