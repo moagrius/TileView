@@ -96,6 +96,7 @@ public class TileView extends ScalingScrollView implements
 
   public TileView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
     super(context, attrs, defStyleAttr);
+    setClipChildren(false);
     setScaleChangedListener(this);
     // as a ScrollView subclass, we can only use one child.
     // this could be the TilingBitmapView if we didn't allow plugins
@@ -103,7 +104,6 @@ public class TileView extends ScalingScrollView implements
     // by calling it during construction, no other views will be allowed
     // (unless the user hacks intended behavior by removing all views or by index)
     mContainer = new FixedSizeViewGroup(context);
-    mContainer.setClipChildren(false);
     // we'll draw bitmaps to this view
     mTilingBitmapView = new TilingBitmapView(this);
     mContainer.addView(mTilingBitmapView);
@@ -111,7 +111,6 @@ public class TileView extends ScalingScrollView implements
     // e.g., ViewGroup.addView(child) will call ViewGroup.addView(child, -1, ...)
     // which will end up placing the child in the TileView rather than the container
     super.addView(mContainer, -1, generateDefaultLayoutParams());
-    setClipChildren(false);
   }
 
   @Override
@@ -224,14 +223,25 @@ public class TileView extends ScalingScrollView implements
   }
 
   private void centerVisibleChildren() {
-    final int scaledWidth = (int) (getScale() * mContainer.getMeasuredWidth());
-    final int scaledHeight = (int) (getScale() * mContainer.getMeasuredHeight());
+    final int scaledWidth = getScaledWidth();
+    final int scaledHeight = getScaledHeight();
     final int offsetX = scaledWidth >= getWidth() ? 0 : getWidth() / 2 - scaledWidth / 2;
     final int offsetY = scaledHeight >= getHeight() ? 0 : getHeight() / 2 - scaledHeight / 2;
-    Log.d("TV", "setting left to " + offsetX + ", top to " + offsetY);
+    Log.d("TV", "offsetX=" + offsetX + ", offsetY=" + offsetY + ", scaledWidth=" + scaledWidth + ", width=" + getWidth());
     mContainer.setLeft(offsetX);
     mContainer.setTop(offsetY);
   }
+
+//  @Override
+//  protected void calculateMinimumScaleToFit() {
+//    float effectiveWidth = getScaledWidth();
+//    float effectiveHeight = getScaledHeight();
+//    float minimumScaleX = getWidth() / effectiveWidth;
+//    float minimumScaleY = getHeight() / effectiveHeight;
+//    float recalculatedMinScale = computeMinimumScaleForMode(minimumScaleX, minimumScaleY);
+//    setMinimumScale(recalculatedMinScale);
+//    setScale(getScale());
+//  }
 
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
@@ -277,12 +287,6 @@ public class TileView extends ScalingScrollView implements
   @Override
   public void onScaleChanged(ScalingScrollView scalingScrollView, float currentScale, float previousScale) {
     centerVisibleChildren();
-    Log.d("TV", "scale=" + getScale() +
-        ", scaledWidth=" + getScaledWidth() +
-        ", scrollX=" + getScrollX() +
-        ", tileview width=" + getWidth() +
-        ", max scrollX should be=" + (getScaledWidth() - getWidth()) +
-        ", container width=" + mContainer.getWidth());
     scrollTo(getScrollX(), getScrollY());
     for (Listener listener : mListeners) {
       listener.onScaleChanged(currentScale, previousScale);
@@ -294,7 +298,6 @@ public class TileView extends ScalingScrollView implements
     }
     boolean zoomChanged = mZoom != previousZoom;
     if (zoomChanged) {
-      Log.d("TV", "zoom changed from " + previousZoom + " to " + mZoom);
       mPreviouslyDrawnTiles.clear();
       for (Tile tile : mTilesVisibleInViewport) {
         if (tile.getState() == Tile.State.DECODED) {
@@ -599,6 +602,7 @@ public class TileView extends ScalingScrollView implements
 
     public FixedSizeViewGroup(Context context) {
       super(context);
+      setClipChildren(false);
     }
 
     public void setSize(int width, int height) {

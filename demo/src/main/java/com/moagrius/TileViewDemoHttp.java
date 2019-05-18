@@ -20,7 +20,7 @@ public class TileViewDemoHttp extends TileViewDemoActivity {
     Bitmap background = BitmapFactory.decodeResource(getResources(), R.drawable.downsample, options);
     TileView tileView = findViewById(R.id.tileview);
     new TileView.Builder(tileView)
-        .setSize(17934, 13452)
+        .setSize(16384, 13312)
         .setStreamProvider(new StreamProviderHttp())
         .installPlugin(new LowFidelityBackgroundPlugin(background))
         .setDiskCachePolicity(TileView.DiskCachePolicy.CACHE_ALL)

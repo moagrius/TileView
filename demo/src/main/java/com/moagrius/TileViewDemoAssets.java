@@ -1,14 +1,13 @@
 package com.moagrius;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
 import com.moagrius.tileview.TileView;
 import com.moagrius.tileview.io.StreamProvider;
+import com.moagrius.widget.ScalingScrollView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,20 +33,16 @@ public class TileViewDemoAssets extends TileViewDemoActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
 
-    Bitmap background = BitmapFactory.decodeResource(getResources(), R.drawable.downsample);
-
     TileView tileView = findViewById(R.id.tileview);
-    tileView.setBackgroundColor(Color.RED);
-    tileView.getChildAt(0).setBackgroundColor(Color.GREEN);
+    tileView.getChildAt(0).setBackgroundColor(Color.RED);
     tileView.setScaleLimits(0f, 10f);
-    //tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.CONTAIN);
+    tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.CONTAIN);
     // TODO: included for debug
     // tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.COVER);
     // tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.NONE);
     new TileView.Builder(tileView)
-        .setSize(17934, 13452)
+        .setSize(16384, 13312)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
-        //.installPlugin(new LowFidelityBackgroundPlugin(background))
         .build();
 
   }
