@@ -1,7 +1,6 @@
 package com.moagrius;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
@@ -32,9 +31,7 @@ public class TileViewDemoAssets extends TileViewDemoActivity {
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
-
     TileView tileView = findViewById(R.id.tileview);
-    tileView.getChildAt(0).setBackgroundColor(Color.RED);
     tileView.setScaleLimits(0f, 10f);
     tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.CONTAIN);
     // TODO: included for debug

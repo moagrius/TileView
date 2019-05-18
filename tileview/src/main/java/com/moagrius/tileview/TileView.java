@@ -7,6 +7,7 @@ import android.graphics.Rect;
 import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -148,6 +149,12 @@ public class TileView extends ScalingScrollView implements
     mContainer.removeViews(start, count);
   }
 
+  @Override
+  protected void onRestoreInstanceState(Parcelable state) {
+    super.onRestoreInstanceState(state);
+    // TODO: need to consider the prepare mechanic in addition to recomputing tiles
+  }
+
   // public
 
   public int getZoom() {
@@ -227,21 +234,9 @@ public class TileView extends ScalingScrollView implements
     final int scaledHeight = getScaledHeight();
     final int offsetX = scaledWidth >= getWidth() ? 0 : getWidth() / 2 - scaledWidth / 2;
     final int offsetY = scaledHeight >= getHeight() ? 0 : getHeight() / 2 - scaledHeight / 2;
-    Log.d("TV", "offsetX=" + offsetX + ", offsetY=" + offsetY + ", scaledWidth=" + scaledWidth + ", width=" + getWidth());
     mContainer.setLeft(offsetX);
     mContainer.setTop(offsetY);
   }
-
-//  @Override
-//  protected void calculateMinimumScaleToFit() {
-//    float effectiveWidth = getScaledWidth();
-//    float effectiveHeight = getScaledHeight();
-//    float minimumScaleX = getWidth() / effectiveWidth;
-//    float minimumScaleY = getHeight() / effectiveHeight;
-//    float recalculatedMinScale = computeMinimumScaleForMode(minimumScaleX, minimumScaleY);
-//    setMinimumScale(recalculatedMinScale);
-//    setScale(getScale());
-//  }
 
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
