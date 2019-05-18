@@ -1,31 +1,12 @@
 package com.moagrius;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
 import com.moagrius.tileview.TileView;
-import com.moagrius.tileview.io.StreamProvider;
 import com.moagrius.widget.ScalingScrollView;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Locale;
-
 public class TileViewDemoAssets extends TileViewDemoActivity {
-
-  private static class SlowStreamProviderAssets implements StreamProvider {
-    @Override
-    public InputStream getStream(int column, int row, Context context, Object data) throws IOException {
-      String file = String.format(Locale.US, (String) data, column, row);
-      try {
-        Thread.sleep(50);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      return context.getAssets().open(file);
-    }
-  }
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
