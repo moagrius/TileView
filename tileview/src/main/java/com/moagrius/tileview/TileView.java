@@ -1,5 +1,6 @@
 package com.moagrius.tileview;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -26,6 +27,9 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class TileView extends ScalingScrollView implements
     Handler.Callback,
@@ -38,6 +42,7 @@ public class TileView extends ScalingScrollView implements
   private static final int RENDER_THROTTLE_ID = 0;
   private static final int RENDER_THROTTLE_INTERVAL = 15;
   private static final short DEFAULT_TILE_SIZE = 256;
+  private static final int READY_RETRY_DELAY = 250;
 
   // variables (settable)
   private int mZoom = 0;
@@ -85,7 +90,9 @@ public class TileView extends ScalingScrollView implements
 
   private final TilePool mTilePool = new TilePool(this::createTile);
   private final TileRenderExecutor mExecutor = new TileRenderExecutor();
+  private final ThreadPoolExecutor mDiskCacheExecutor = new ThreadPoolExecutor(1, 1, 0L,TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
   private final Handler mRenderThrottle = new Handler(this);
+  private final Handler mReadyHandler = new Handler();
 
   public TileView(Context context) {
     this(context, null);
@@ -463,7 +470,7 @@ public class TileView extends ScalingScrollView implements
   }
 
   public Tile createTile() {
-    return new Tile(mTileSize, mBitmapConfig, this, this, mExecutor, mStreamProvider, mMemoryCache, mDiskCache, mBitmapPool, mDiskCachePolicy);
+    return new Tile(mTileSize, mBitmapConfig, this, this, mExecutor, mDiskCacheExecutor, mStreamProvider, mMemoryCache, mDiskCache, mBitmapPool, mDiskCachePolicy);
   }
 
   private void computeAndRenderTilesInViewport() {
@@ -551,9 +558,12 @@ public class TileView extends ScalingScrollView implements
       for (ReadyListener readyListener : mReadyListeners) {
         readyListener.onReady(this);
       }
-      mReadyListeners.clear();
+      // TODO: this?
+      //mReadyListeners.clear();
       return true;
     }
+    mReadyHandler.removeCallbacksAndMessages(null);
+    mReadyHandler.postDelayed(this::attemptOnReady, READY_RETRY_DELAY);
     return false;
   }
 
@@ -650,6 +660,7 @@ public class TileView extends ScalingScrollView implements
     private StreamProvider mStreamProvider;
     private int mMemoryCacheSize = (int) ((Runtime.getRuntime().maxMemory() / 1024) / 4);
     private int mDiskCacheSize = 1024 * 100;
+    private DiskCachePolicy mDiskCachePolicy;
 
     public Builder(TileView tileView) {
       mTileView = tileView;
@@ -703,8 +714,9 @@ public class TileView extends ScalingScrollView implements
       return this;
     }
 
-    public Builder setDiskCachePolicity(DiskCachePolicy policy) {
-      mTileView.mDiskCachePolicy = policy;
+    public Builder setDiskCachePolicy(DiskCachePolicy policy) {
+      // save a member variable on the Builder so we can check it without having to hit the main thread for view access
+      mDiskCachePolicy = mTileView.mDiskCachePolicy = policy;
       return this;
     }
 
@@ -729,24 +741,46 @@ public class TileView extends ScalingScrollView implements
       return this;
     }
 
-    public TileView build() {
+    public void build() {
+      buildAsync();
+    }
+
+    private void buildAsync() {
+      new Thread(this::buildSync).start();
+    }
+
+    private void buildSync() {
+      Activity activity = (Activity) mTileView.getContext();
+      if (activity == null) {
+        Log.d("TileView", "could not not cast context to activity during preparation");
+        return;
+      }
       // if the user provided a custom provider, use that, otherwise default to assets
-      mTileView.mStreamProvider = mStreamProvider == null ? new StreamProviderAssets() : mStreamProvider;
-      // use memory cache instance for both memory cache and bitmap pool.  maybe allows these to be set in the future
+      if (mStreamProvider == null) {
+        mStreamProvider = new StreamProviderAssets();
+      }
       MemoryCache memoryCache = new MemoryCache(mMemoryCacheSize);
-      mTileView.mMemoryCache = memoryCache;
-      mTileView.mBitmapPool = memoryCache;
-      // if the policy is to cache something and the size is not 0, try to create a disk cache
-      if (mTileView.mDiskCachePolicy != DiskCachePolicy.CACHE_NONE && mDiskCacheSize > 0) {
+      DiskCache diskCache = getDiskCacheSafely(activity);
+      activity.runOnUiThread(() -> {
+        mTileView.mStreamProvider = mStreamProvider;
+        // use memory cache instance for both memory cache and bitmap pool.
+        // maybe allows these to be set in the future
+        mTileView.mMemoryCache = memoryCache;
+        mTileView.mBitmapPool = memoryCache;
+        mTileView.mDiskCache = diskCache;
+        mTileView.prepare();
+      });
+    }
+
+    private DiskCache getDiskCacheSafely(Context context) {
+      if (mDiskCachePolicy != DiskCachePolicy.CACHE_NONE && mDiskCacheSize > 0) {
         try {
-          // TODO: async?
-          mTileView.mDiskCache = new DiskCache(mTileView.getContext(), mDiskCacheSize);
+          return new DiskCache(context, mDiskCacheSize);
         } catch (IOException e) {
-          // no op
+          Log.d("TileView", "Unable to create DiskCache during preparation: " + e.getMessage());
         }
       }
-      mTileView.prepare();
-      return mTileView;
+      return null;
     }
 
   }

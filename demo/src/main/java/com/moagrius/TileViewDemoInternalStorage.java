@@ -14,6 +14,7 @@ public class TileViewDemoInternalStorage extends TileViewDemoActivity {
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
+    frameToCenterOnReady();
     TileView tileView = findViewById(R.id.tileview);
     File directory = getFilesDir();
     new TileView.Builder(tileView)

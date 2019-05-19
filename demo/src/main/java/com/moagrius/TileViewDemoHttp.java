@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 
 import com.moagrius.tileview.TileView;
 import com.moagrius.tileview.io.StreamProviderHttp;
-import com.moagrius.tileview.plugins.LowFidelityBackgroundPlugin;
 
 public class TileViewDemoHttp extends TileViewDemoActivity {
 
@@ -15,6 +14,7 @@ public class TileViewDemoHttp extends TileViewDemoActivity {
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
+    frameToCenterOnReady();
     BitmapFactory.Options options = new BitmapFactory.Options();
     options.inPreferredConfig = Bitmap.Config.RGB_565;
     Bitmap background = BitmapFactory.decodeResource(getResources(), R.drawable.downsample, options);
@@ -22,11 +22,11 @@ public class TileViewDemoHttp extends TileViewDemoActivity {
     new TileView.Builder(tileView)
         .setSize(16384, 13312)
         .setStreamProvider(new StreamProviderHttp())
-        .installPlugin(new LowFidelityBackgroundPlugin(background))
-        .setDiskCachePolicity(TileView.DiskCachePolicy.CACHE_ALL)
-        .defineZoomLevel("https://raw.githubusercontent.com/moagrius/tv4/master/demo/src/main/assets/tiles/phi-1000000-%1$d_%2$d.jpg")
-        .defineZoomLevel(1, "https://raw.githubusercontent.com/moagrius/tv4/master/demo/src/main/assets/tiles/phi-500000-%1$d_%2$d.jpg")
-        .defineZoomLevel(2, "https://raw.githubusercontent.com/moagrius/tv4/master/demo/src/main/assets/tiles/phi-250000-%1$d_%2$d.jpg")
+        //.installPlugin(new LowFidelityBackgroundPlugin(background))
+        .setDiskCachePolicy(TileView.DiskCachePolicy.CACHE_ALL)
+        .defineZoomLevel("http://moagrius.com/public/tiles/phi-1000000-%1$d_%2$d.jpg")
+        //.defineZoomLevel(1, "http://moagrius.com/public/tiles/phi-500000-%1$d_%2$d.jpg")
+        //.defineZoomLevel(2, "http://moagrius.com/public/tiles/phi-250000-%1$d_%2$d.jpg")
         .build();
   }
 

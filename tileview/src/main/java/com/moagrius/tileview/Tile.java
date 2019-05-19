@@ -49,13 +49,25 @@ public class Tile implements Runnable {
   private final TileView.BitmapPool mBitmapPool;
   private final TileView.DiskCachePolicy mDiskCachePolicy;
   private final ThreadPoolExecutor mThreadPoolExecutor;
+  private final ThreadPoolExecutor mDiskCacheExecutor;
 
-  public Tile(int size, Bitmap.Config bitmapConfig, DrawingView drawingView, Listener listener, ThreadPoolExecutor threadPoolExecutor, StreamProvider streamProvider, TileView.BitmapCache memoryCache, TileView.BitmapCache diskCache, TileView.BitmapPool bitmapPool, TileView.DiskCachePolicy diskCachePolicy) {
+  public Tile(int size,
+              Bitmap.Config bitmapConfig,
+              DrawingView drawingView,
+              Listener listener,
+              ThreadPoolExecutor threadPoolExecutor,
+              ThreadPoolExecutor diskCacheExecutor,
+              StreamProvider streamProvider,
+              TileView.BitmapCache memoryCache,
+              TileView.BitmapCache diskCache,
+              TileView.BitmapPool bitmapPool,
+              TileView.DiskCachePolicy diskCachePolicy) {
     mSize = size;
     mDrawingOptions.inPreferredConfig = bitmapConfig;
     mDrawingView = drawingView;
     mListener = listener;
     mThreadPoolExecutor = threadPoolExecutor;
+    mDiskCacheExecutor = diskCacheExecutor;
     mStreamProvider = streamProvider;
     mMemoryCache = memoryCache;
     mDiskCache = diskCache;
@@ -167,7 +179,7 @@ public class Tile implements Runnable {
     if (mImageSample == UNSCALED_SAMPLE_SIZE) {
       // if we cache everything to disk (usually because we're fetching from remote sources)
       // check the disk cache now and return out if we can
-      if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL) {
+      if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL && mDiskCache != null) {
         cached = mDiskCache.get(key);
         if (cached != null) {
           setDecodedBitmap(cached);
@@ -182,16 +194,18 @@ public class Tile implements Runnable {
         Bitmap bitmap = BitmapFactory.decodeStream(stream, null, mDrawingOptions);
         stream.close();
         setDecodedBitmap(bitmap);
-        if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL) {
-          mDiskCache.put(key, bitmap);
+        if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL && mDiskCache != null) {
+          addMutableBitmapToCacheAsync(key, bitmap);
         }
       }
       // we don't have a defined zoom level, so we need to use image sub-sampling and disk cache even if reading files locally
     } else {
-      cached = mDiskCache.get(key);
-      if (cached != null) {
-        setDecodedBitmap(cached);
-        return;
+      if (mDiskCache != null) {
+        cached = mDiskCache.get(key);
+        if (cached != null) {
+          setDecodedBitmap(cached);
+          return;
+        }
       }
       // if we're patching, we need a base bitmap to draw on
       Bitmap bitmap = Bitmap.createBitmap(mSize, mSize, mDrawingOptions.inPreferredConfig);
@@ -216,10 +230,19 @@ public class Tile implements Runnable {
       }
       setDecodedBitmap(bitmap);
       // we need to cache patches to disk even if local
-      if (mDiskCachePolicy != TileView.DiskCachePolicy.CACHE_NONE) {
-        mDiskCache.put(key, bitmap);
+      if (mDiskCachePolicy != TileView.DiskCachePolicy.CACHE_NONE && mDiskCache != null) {
+        addMutableBitmapToCacheAsync(key, bitmap);
       }
     }
+  }
+
+  private void addMutableBitmapToCacheAsync(String key, Bitmap bitmap) {
+    mDiskCacheExecutor.submit(() -> addMutableBitmapToCache(key, bitmap));
+  }
+
+  private void addMutableBitmapToCache(String key, Bitmap bitmap) {
+    bitmap = bitmap.copy(mDrawingOptions.inPreferredConfig, true);
+    mDiskCache.put(key, bitmap);
   }
 
   // we use this signature to call from the Executor, so it can remove tiles via iterator
