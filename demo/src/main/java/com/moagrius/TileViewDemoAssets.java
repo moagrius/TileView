@@ -15,14 +15,10 @@ public class TileViewDemoAssets extends TileViewDemoActivity {
     TileView tileView = findViewById(R.id.tileview);
     tileView.setScaleLimits(0f, 10f);
     tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.CONTAIN);
-    // TODO: included for debug
-    // tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.COVER);
-    // tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.NONE);
     new TileView.Builder(tileView)
         .setSize(16384, 13312)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
         .build();
-
   }
 
 }

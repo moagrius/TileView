@@ -169,6 +169,14 @@ public class TileView extends ScalingScrollView implements
     return (int) (mContainer.getFixedHeight() * getScale());
   }
 
+  public int getUnscaledContentWidth() {
+    return mContainer.getFixedWidth();
+  }
+
+  public int getUnscaledContentHeight() {
+    return mContainer.getFixedHeight();
+  }
+
   @Override
   public int getContentWidth() {
     return getScaledWidth();
