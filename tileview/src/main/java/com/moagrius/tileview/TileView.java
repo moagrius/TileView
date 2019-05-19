@@ -1,5 +1,6 @@
 package com.moagrius.tileview;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -7,6 +8,7 @@ import android.graphics.Rect;
 import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -25,6 +27,9 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class TileView extends ScalingScrollView implements
     Handler.Callback,
@@ -37,6 +42,7 @@ public class TileView extends ScalingScrollView implements
   private static final int RENDER_THROTTLE_ID = 0;
   private static final int RENDER_THROTTLE_INTERVAL = 15;
   private static final short DEFAULT_TILE_SIZE = 256;
+  private static final int READY_RETRY_DELAY = 250;
 
   // variables (settable)
   private int mZoom = 0;
@@ -84,7 +90,9 @@ public class TileView extends ScalingScrollView implements
 
   private final TilePool mTilePool = new TilePool(this::createTile);
   private final TileRenderExecutor mExecutor = new TileRenderExecutor();
+  private final ThreadPoolExecutor mDiskCacheExecutor = new ThreadPoolExecutor(1, 1, 0L,TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
   private final Handler mRenderThrottle = new Handler(this);
+  private final Handler mReadyHandler = new Handler();
 
   public TileView(Context context) {
     this(context, null);
@@ -96,6 +104,7 @@ public class TileView extends ScalingScrollView implements
 
   public TileView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
     super(context, attrs, defStyleAttr);
+    setClipChildren(false);
     setScaleChangedListener(this);
     // as a ScrollView subclass, we can only use one child.
     // this could be the TilingBitmapView if we didn't allow plugins
@@ -147,10 +156,42 @@ public class TileView extends ScalingScrollView implements
     mContainer.removeViews(start, count);
   }
 
+  @Override
+  protected void onRestoreInstanceState(Parcelable state) {
+    super.onRestoreInstanceState(state);
+    // TODO: need to consider the prepare mechanic in addition to recomputing tiles
+  }
+
   // public
 
   public int getZoom() {
     return mZoom;
+  }
+
+  public int getScaledWidth() {
+    return (int) (mContainer.getFixedWidth() * getScale());
+  }
+
+  public int getScaledHeight() {
+    return (int) (mContainer.getFixedHeight() * getScale());
+  }
+
+  public int getUnscaledContentWidth() {
+    return mContainer.getFixedWidth();
+  }
+
+  public int getUnscaledContentHeight() {
+    return mContainer.getFixedHeight();
+  }
+
+  @Override
+  public int getContentWidth() {
+    return getScaledWidth();
+  }
+
+  @Override
+  public int getContentHeight() {
+    return getScaledHeight();
   }
 
   public boolean addListener(Listener listener) {
@@ -203,6 +244,15 @@ public class TileView extends ScalingScrollView implements
     determineCurrentDetail();
   }
 
+  private void centerVisibleChildren() {
+    final int scaledWidth = getScaledWidth();
+    final int scaledHeight = getScaledHeight();
+    final int offsetX = scaledWidth >= getWidth() ? 0 : getWidth() / 2 - scaledWidth / 2;
+    final int offsetY = scaledHeight >= getHeight() ? 0 : getHeight() / 2 - scaledHeight / 2;
+    mContainer.setLeft(offsetX);
+    mContainer.setTop(offsetY);
+  }
+
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
     super.onLayout(changed, left, top, right, bottom);
@@ -243,8 +293,11 @@ public class TileView extends ScalingScrollView implements
     }
   }
 
+
   @Override
   public void onScaleChanged(ScalingScrollView scalingScrollView, float currentScale, float previousScale) {
+    centerVisibleChildren();
+    scrollTo(getScrollX(), getScrollY());
     for (Listener listener : mListeners) {
       listener.onScaleChanged(currentScale, previousScale);
     }
@@ -286,6 +339,9 @@ public class TileView extends ScalingScrollView implements
       int zoomDelta = mZoom - mCurrentDetail.getZoom();
       mImageSample = 1 << zoomDelta;
       return;
+    }
+    if (mZoom < 0) {
+      mZoom = 0;
     }
     // best case, it's an exact match, use that and set sample to 1
     Detail exactMatch = mDetailList.get(mZoom);
@@ -414,7 +470,7 @@ public class TileView extends ScalingScrollView implements
   }
 
   public Tile createTile() {
-    return new Tile(mTileSize, mBitmapConfig, this, this, mExecutor, mStreamProvider, mMemoryCache, mDiskCache, mBitmapPool, mDiskCachePolicy);
+    return new Tile(mTileSize, mBitmapConfig, this, this, mExecutor, mDiskCacheExecutor, mStreamProvider, mMemoryCache, mDiskCache, mBitmapPool, mDiskCachePolicy);
   }
 
   private void computeAndRenderTilesInViewport() {
@@ -502,9 +558,12 @@ public class TileView extends ScalingScrollView implements
       for (ReadyListener readyListener : mReadyListeners) {
         readyListener.onReady(this);
       }
-      mReadyListeners.clear();
+      // TODO: this?
+      //mReadyListeners.clear();
       return true;
     }
+    mReadyHandler.removeCallbacksAndMessages(null);
+    mReadyHandler.postDelayed(this::attemptOnReady, READY_RETRY_DELAY);
     return false;
   }
 
@@ -556,12 +615,21 @@ public class TileView extends ScalingScrollView implements
 
     public FixedSizeViewGroup(Context context) {
       super(context);
+      setClipChildren(false);
     }
 
     public void setSize(int width, int height) {
       mWidth = width;
       mHeight = height;
       requestLayout();
+    }
+
+    public int getFixedWidth() {
+      return mWidth;
+    }
+
+    public int getFixedHeight() {
+      return mHeight;
     }
 
     public boolean hasValidDimensions() {
@@ -592,6 +660,7 @@ public class TileView extends ScalingScrollView implements
     private StreamProvider mStreamProvider;
     private int mMemoryCacheSize = (int) ((Runtime.getRuntime().maxMemory() / 1024) / 4);
     private int mDiskCacheSize = 1024 * 100;
+    private DiskCachePolicy mDiskCachePolicy;
 
     public Builder(TileView tileView) {
       mTileView = tileView;
@@ -645,8 +714,9 @@ public class TileView extends ScalingScrollView implements
       return this;
     }
 
-    public Builder setDiskCachePolicity(DiskCachePolicy policy) {
-      mTileView.mDiskCachePolicy = policy;
+    public Builder setDiskCachePolicy(DiskCachePolicy policy) {
+      // save a member variable on the Builder so we can check it without having to hit the main thread for view access
+      mDiskCachePolicy = mTileView.mDiskCachePolicy = policy;
       return this;
     }
 
@@ -671,24 +741,46 @@ public class TileView extends ScalingScrollView implements
       return this;
     }
 
-    public TileView build() {
+    public void build() {
+      buildAsync();
+    }
+
+    private void buildAsync() {
+      new Thread(this::buildSync).start();
+    }
+
+    private void buildSync() {
+      Activity activity = (Activity) mTileView.getContext();
+      if (activity == null) {
+        Log.d("TileView", "could not not cast context to activity during preparation");
+        return;
+      }
       // if the user provided a custom provider, use that, otherwise default to assets
-      mTileView.mStreamProvider = mStreamProvider == null ? new StreamProviderAssets() : mStreamProvider;
-      // use memory cache instance for both memory cache and bitmap pool.  maybe allows these to be set in the future
+      if (mStreamProvider == null) {
+        mStreamProvider = new StreamProviderAssets();
+      }
       MemoryCache memoryCache = new MemoryCache(mMemoryCacheSize);
-      mTileView.mMemoryCache = memoryCache;
-      mTileView.mBitmapPool = memoryCache;
-      // if the policy is to cache something and the size is not 0, try to create a disk cache
-      if (mTileView.mDiskCachePolicy != DiskCachePolicy.CACHE_NONE && mDiskCacheSize > 0) {
+      DiskCache diskCache = getDiskCacheSafely(activity);
+      activity.runOnUiThread(() -> {
+        mTileView.mStreamProvider = mStreamProvider;
+        // use memory cache instance for both memory cache and bitmap pool.
+        // maybe allows these to be set in the future
+        mTileView.mMemoryCache = memoryCache;
+        mTileView.mBitmapPool = memoryCache;
+        mTileView.mDiskCache = diskCache;
+        mTileView.prepare();
+      });
+    }
+
+    private DiskCache getDiskCacheSafely(Context context) {
+      if (mDiskCachePolicy != DiskCachePolicy.CACHE_NONE && mDiskCacheSize > 0) {
         try {
-          // TODO: async?
-          mTileView.mDiskCache = new DiskCache(mTileView.getContext(), mDiskCacheSize);
+          return new DiskCache(context, mDiskCacheSize);
         } catch (IOException e) {
-          // no op
+          Log.d("TileView", "Unable to create DiskCache during preparation: " + e.getMessage());
         }
       }
-      mTileView.prepare();
-      return mTileView;
+      return null;
     }
 
   }

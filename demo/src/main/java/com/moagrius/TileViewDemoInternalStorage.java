@@ -14,13 +14,13 @@ public class TileViewDemoInternalStorage extends TileViewDemoActivity {
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
+    frameToCenterOnReady();
     TileView tileView = findViewById(R.id.tileview);
     File directory = getFilesDir();
     new TileView.Builder(tileView)
-        .setSize(17934, 13452)
+        .setSize(16384, 13312)
         .setStreamProvider(new StreamProviderFiles())
         .defineZoomLevel(directory.getAbsolutePath() + "/phi-1000000-%1$d_%2$d.jpg")
-        .addReadyListener(this)
         .build();
   }
 

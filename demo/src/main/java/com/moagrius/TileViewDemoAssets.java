@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 
 import com.moagrius.tileview.TileView;
+import com.moagrius.widget.ScalingScrollView;
 
 public class TileViewDemoAssets extends TileViewDemoActivity {
 
@@ -12,12 +13,13 @@ public class TileViewDemoAssets extends TileViewDemoActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
     TileView tileView = findViewById(R.id.tileview);
-    tileView.setScaleLimits(1f, 2f);
+    frameToCenterOnReady();
+    tileView.setScaleLimits(0f, 10f);
+    tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.CONTAIN);
     new TileView.Builder(tileView)
-        .setSize(17934, 13452)
+        .setSize(16384, 13312)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
         .build();
-
   }
 
 }
