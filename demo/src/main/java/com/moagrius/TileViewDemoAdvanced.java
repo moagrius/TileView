@@ -55,9 +55,6 @@ public class TileViewDemoAdvanced extends Activity {
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
-    BitmapFactory.Options options = new BitmapFactory.Options();
-    options.inPreferredConfig = Bitmap.Config.RGB_565;
-    Bitmap background = BitmapFactory.decodeResource(getResources(), R.drawable.downsample, options);
     TileView tileView = findViewById(R.id.tileview);
     tileView.setScaleLimits(0, 2f);
     new TileView.Builder(tileView)
@@ -70,7 +67,7 @@ public class TileViewDemoAdvanced extends Activity {
         .installPlugin(new CoordinatePlugin(WEST, NORTH, EAST, SOUTH))
         .installPlugin(new HotSpotPlugin())
         .installPlugin(new PathPlugin())
-        .installPlugin(new LowFidelityBackgroundPlugin(background))
+        .installPlugin(new LowFidelityBackgroundPlugin(getBackgroundBitmap()))
         .addReadyListener(this::onReady)
         .build();
   }
@@ -86,6 +83,12 @@ public class TileViewDemoAdvanced extends Activity {
     infoView.setTextSize(11);
     ViewCompat.setElevation(infoView, elevation);
     return infoView;
+  }
+
+  public Bitmap getBackgroundBitmap() {
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inPreferredConfig = Bitmap.Config.RGB_565;
+    return BitmapFactory.decodeResource(getResources(), R.drawable.downsample, options);
   }
 
   private void onReady(TileView tileView) {

@@ -300,8 +300,8 @@ public class Tile implements Runnable {
     }
     if (obj instanceof Tile) {
       Tile compare = (Tile) obj;
-      //return compare.mColumn == mColumn && compare.mRow == mRow && compare.mImageSample == mImageSample && compare.mDetail.getZoom() == mDetail.getZoom();
-      return compare.mColumn == mColumn && compare.mRow == mRow && compare.mDetail.getZoom() == mDetail.getZoom();
+      return compare.mColumn == mColumn && compare.mRow == mRow && compare.mImageSample == mImageSample && compare.mDetail.getZoom() == mDetail.getZoom();
+      //return compare.mColumn == mColumn && compare.mRow == mRow && compare.mDetail.getZoom() == mDetail.getZoom();
     }
     return false;
   }
