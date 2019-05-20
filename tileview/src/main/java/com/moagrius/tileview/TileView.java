@@ -239,6 +239,14 @@ public class TileView extends ScalingScrollView implements
     return mContainer;
   }
 
+  @Override
+  protected void onRestoreInstanceState(Parcelable state) {
+    ScrollScaleState sss = (ScrollScaleState) state;
+    super.onRestoreInstanceState(sss.getSuperState());
+    requestLayout();
+  }
+
+
   @SuppressWarnings("unchecked")
   public <T extends Plugin> T getPlugin(Class<T> clazz) {
     return (T) mPlugins.get(clazz);
