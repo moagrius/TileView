@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.jakewharton.disklrucache.DiskLruCache;
 
@@ -87,6 +88,25 @@ public class DiskCache implements TileView.BitmapCache {
     return null;
   }
 
+  /**
+   * Note this is different from MemoryCache.clear, which simply emptie the in-memory map.
+   *
+   * Since, presumably, disk-level caching is meant to be persistent, only call this when you're done with the
+   * DiskCache, as it will nt only delete all the file content, but also close (and therefore make inaccessible)
+   * the cache itself.  This might be appriate for a `finish` event (altough most likely not), or perhaps a
+   * "delete cache" or "delete app contents" setting or preference UI.
+   */
+  @Override
+  public synchronized void clear() {
+    new Thread(() -> {
+      try {
+        mDiskCache.delete();
+      } catch (IOException e) {
+        Log.d("TileView", "failed to delete disk cache: " + e.getMessage());
+      }
+    }).start();
+  }
+
   private boolean writeBitmapToCache(Bitmap bitmap, DiskLruCache.Editor editor) {
     OutputStream outputStream = null;
     try {
@@ -121,14 +141,6 @@ public class DiskCache implements TileView.BitmapCache {
       }
     }
     return contained;
-  }
-
-  public void clear() {
-    try {
-      mDiskCache.delete();
-    } catch (IOException e) {
-      // no op
-    }
   }
 
 }

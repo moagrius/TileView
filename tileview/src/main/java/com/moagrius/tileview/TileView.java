@@ -57,6 +57,7 @@ public class TileView extends ScalingScrollView implements
   private Set<ReadyListener> mReadyListeners = new LinkedHashSet<>();
   private Set<TouchListener> mTouchListeners = new LinkedHashSet<>();
   private Set<CanvasDecorator> mCanvasDecorators = new LinkedHashSet<>();
+  private TileDecodeErrorListener mTileDecodeErrorListener;
 
   // variables (from build or attach)
   private FixedSizeViewGroup mContainer;
@@ -90,7 +91,7 @@ public class TileView extends ScalingScrollView implements
 
   private final TilePool mTilePool = new TilePool(this::createTile);
   private final TileRenderExecutor mExecutor = new TileRenderExecutor();
-  private final ThreadPoolExecutor mDiskCacheExecutor = new ThreadPoolExecutor(1, 1, 0L,TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+  private final ThreadPoolExecutor mDiskCacheExecutor = new ThreadPoolExecutor(0, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
   private final Handler mRenderThrottle = new Handler(this);
   private final Handler mReadyHandler = new Handler();
 
@@ -182,6 +183,10 @@ public class TileView extends ScalingScrollView implements
 
   public int getUnscaledContentHeight() {
     return mContainer.getFixedHeight();
+  }
+
+  public void setTileDecodeErrorListener(TileDecodeErrorListener listener) {
+    mTileDecodeErrorListener = listener;
   }
 
   @Override
@@ -515,17 +520,35 @@ public class TileView extends ScalingScrollView implements
 
   @Override
   public void onTileDecodeError(Tile tile, Exception e) {
-    // no op for now, probably expose this to the user
-    Log.d("TV", "tile decode error: " + e.getClass() + ", " + e.getMessage());
+    if (mTileDecodeErrorListener != null) {
+      mTileDecodeErrorListener.onTileDecodeError(tile, e);
+    }
+    Log.d("TileView", "tile decode error: " + e.getClass() + ", " + e.getMessage());
   }
 
-  public void destroy() {
+  /**
+   * Call this method when you're done with the TileView, perhaps in an `OnPause` event with an addiitonal check
+   * for `isFinishing`.
+   *
+   * Note that the TileView will be unusable after this method is called.
+   *
+   * @param alsoCloseDiskCache Pass TRUE if you want to delete all tiles in the disk cache.  Depending on your
+   *                           specific use case, this is probably not something you want to do.  If you're using
+   *                           the same set of tiles, may as well keep them available on disk, especially when
+   *                           pulling from a remote server.  However, if you tile source changes between launches,
+   *                           then passing TRUE here might make sense.
+   */
+  public void destroy(boolean alsoCloseDiskCache) {
     mExecutor.shutdownNow();
-    // TODO:
-    // mMemoryCache.clear();
-    // mDiskCache.clear();
+    mDiskCacheExecutor.shutdownNow();
+    mMemoryCache.clear();
+    // note we are NOT clearing the diskcache by default this point, see the javadoc for that method for rational
+    if (mDiskCache != null && alsoCloseDiskCache) {
+      mDiskCache.clear();
+    }
     mTilePool.clear();
     mRenderThrottle.removeMessages(RENDER_THROTTLE_ID);
+    mReadyHandler.removeCallbacksAndMessages(null);
   }
 
   private boolean isReady() {
@@ -584,6 +607,7 @@ public class TileView extends ScalingScrollView implements
     Bitmap get(String key);
     Bitmap put(String key, Bitmap value);
     Bitmap remove(String key);
+    void clear();
   }
 
   public interface BitmapPool {
@@ -783,6 +807,10 @@ public class TileView extends ScalingScrollView implements
       return null;
     }
 
+  }
+
+  public interface TileDecodeErrorListener {
+    void onTileDecodeError(Tile tile, Exception e);
   }
 
   public enum DiskCachePolicy {

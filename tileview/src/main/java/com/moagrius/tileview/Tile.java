@@ -4,9 +4,12 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Looper;
 import android.os.Process;
+import android.util.Log;
 
 import com.moagrius.tileview.io.StreamProvider;
 
@@ -30,6 +33,7 @@ public class Tile implements Runnable {
   // variable (computed)
   private volatile State mState = State.IDLE;
   private Bitmap mBitmap;
+  private boolean mHasRetried;
 
   // lazy
   private String mCacheKey;
@@ -51,17 +55,7 @@ public class Tile implements Runnable {
   private final ThreadPoolExecutor mThreadPoolExecutor;
   private final ThreadPoolExecutor mDiskCacheExecutor;
 
-  public Tile(int size,
-              Bitmap.Config bitmapConfig,
-              DrawingView drawingView,
-              Listener listener,
-              ThreadPoolExecutor threadPoolExecutor,
-              ThreadPoolExecutor diskCacheExecutor,
-              StreamProvider streamProvider,
-              TileView.BitmapCache memoryCache,
-              TileView.BitmapCache diskCache,
-              TileView.BitmapPool bitmapPool,
-              TileView.DiskCachePolicy diskCachePolicy) {
+  public Tile(int size, Bitmap.Config bitmapConfig, DrawingView drawingView, Listener listener, ThreadPoolExecutor threadPoolExecutor, ThreadPoolExecutor diskCacheExecutor, StreamProvider streamProvider, TileView.BitmapCache memoryCache, TileView.BitmapCache diskCache, TileView.BitmapPool bitmapPool, TileView.DiskCachePolicy diskCachePolicy) {
     mSize = size;
     mDrawingOptions.inPreferredConfig = bitmapConfig;
     mDrawingView = drawingView;
@@ -154,7 +148,13 @@ public class Tile implements Runnable {
     mDrawingView.setDirty();
   }
 
-  protected synchronized void decode() throws Exception {
+  // TODO: TEMP DEBUG
+  private Paint mTextPaint = new Paint();
+  {
+    mTextPaint.setColor(Color.BLACK);
+  }
+
+  protected void decode() throws Exception {
     if (mState != State.IDLE) {
       return;
     }
@@ -177,6 +177,7 @@ public class Tile implements Runnable {
     Context context = mDrawingView.getContext();
     // garden path - image sample size is 1, we have a detail level defined for this zoom
     if (mImageSample == UNSCALED_SAMPLE_SIZE) {
+      //Log.d("TileView", "garden path decode, should be drawing text on each tile");
       // if we cache everything to disk (usually because we're fetching from remote sources)
       // check the disk cache now and return out if we can
       if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL && mDiskCache != null) {
@@ -193,9 +194,19 @@ public class Tile implements Runnable {
         mDrawingOptions.inBitmap = mBitmapPool.getBitmapForReuse(this);
         Bitmap bitmap = BitmapFactory.decodeStream(stream, null, mDrawingOptions);
         stream.close();
+        if (bitmap == null) {
+          if (mListener != null) {
+            mListener.onTileDecodeError(this, new RuntimeException("Unable to decode bitmap"));
+          }
+          return;
+        }
+
+//        Log.d("TileView", "bitmap is mutable? " + bitmap.isMutable());
+//        Canvas canvas = new Canvas(bitmap);
+//        canvas.drawText(mColumn + ":" + mRow, 0, 0, mTextPaint);
         setDecodedBitmap(bitmap);
         if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL && mDiskCache != null) {
-          addMutableBitmapToCacheAsync(key, bitmap);
+          mDiskCache.put(key, bitmap);
         }
       }
       // we don't have a defined zoom level, so we need to use image sub-sampling and disk cache even if reading files locally
@@ -209,6 +220,7 @@ public class Tile implements Runnable {
       }
       // if we're patching, we need a base bitmap to draw on
       Bitmap bitmap = Bitmap.createBitmap(mSize, mSize, mDrawingOptions.inPreferredConfig);
+      bitmap = bitmap.copy(mDrawingOptions.inPreferredConfig, true);
       Canvas canvas = new Canvas(bitmap);
       int size = mSize / mImageSample;
       InputStream stream;
@@ -231,18 +243,9 @@ public class Tile implements Runnable {
       setDecodedBitmap(bitmap);
       // we need to cache patches to disk even if local
       if (mDiskCachePolicy != TileView.DiskCachePolicy.CACHE_NONE && mDiskCache != null) {
-        addMutableBitmapToCacheAsync(key, bitmap);
+        mDiskCache.put(key, bitmap);
       }
     }
-  }
-
-  private void addMutableBitmapToCacheAsync(String key, Bitmap bitmap) {
-    mDiskCacheExecutor.submit(() -> addMutableBitmapToCache(key, bitmap));
-  }
-
-  private void addMutableBitmapToCache(String key, Bitmap bitmap) {
-    bitmap = bitmap.copy(mDrawingOptions.inPreferredConfig, true);
-    mDiskCache.put(key, bitmap);
   }
 
   // we use this signature to call from the Executor, so it can remove tiles via iterator
@@ -257,7 +260,7 @@ public class Tile implements Runnable {
       mMemoryCache.put(getCacheKey(), mBitmap);
     }
     mBitmap = null;
-    mDrawingOptions.inBitmap = null;
+    //mDrawingOptions.inBitmap = null;
     // since tiles are pooled and reused, make sure to reset the cache key or you'll render the wrong tile from cache
     mCacheKey = null;
     mState = State.IDLE;
@@ -267,6 +270,14 @@ public class Tile implements Runnable {
 
   public void destroy() {
     destroy(true);
+  }
+
+  public void retry() {
+    if (!mHasRetried) {
+      Log.d("TileView", "retrying tile");
+      mHasRetried = true;
+      mThreadPoolExecutor.submit(this);
+    }
   }
 
   public void run() {
@@ -290,7 +301,8 @@ public class Tile implements Runnable {
     }
     if (obj instanceof Tile) {
       Tile compare = (Tile) obj;
-      return compare.mColumn == mColumn && compare.mRow == mRow && compare.mImageSample == mImageSample && compare.mDetail.getZoom() == mDetail.getZoom();
+      //return compare.mColumn == mColumn && compare.mRow == mRow && compare.mImageSample == mImageSample && compare.mDetail.getZoom() == mDetail.getZoom();
+      return compare.mColumn == mColumn && compare.mRow == mRow && compare.mDetail.getZoom() == mDetail.getZoom();
     }
     return false;
   }

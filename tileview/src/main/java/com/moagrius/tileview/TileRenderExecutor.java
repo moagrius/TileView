@@ -8,14 +8,12 @@ import java.util.concurrent.TimeUnit;
 
 public class TileRenderExecutor extends ThreadPoolExecutor {
 
-  private static final int MAXIMUM_NUMBER_OF_THREADS = 4;
-
   public TileRenderExecutor(int size) {
     super(size, size, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
   }
 
   public TileRenderExecutor() {
-    this(Math.min(MAXIMUM_NUMBER_OF_THREADS, Runtime.getRuntime().availableProcessors()));
+    this(Runtime.getRuntime().availableProcessors());
   }
 
   public void queue(Set<Tile> renderSet) {
