@@ -9,7 +9,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Looper;
 import android.os.Process;
-import android.util.Log;
 
 import com.moagrius.tileview.io.StreamProvider;
 
@@ -260,7 +259,7 @@ public class Tile implements Runnable {
       mMemoryCache.put(getCacheKey(), mBitmap);
     }
     mBitmap = null;
-    //mDrawingOptions.inBitmap = null;
+    mDrawingOptions.inBitmap = null;
     // since tiles are pooled and reused, make sure to reset the cache key or you'll render the wrong tile from cache
     mCacheKey = null;
     mState = State.IDLE;
@@ -273,11 +272,11 @@ public class Tile implements Runnable {
   }
 
   public void retry() {
-    if (!mHasRetried) {
-      Log.d("TileView", "retrying tile");
-      mHasRetried = true;
-      mThreadPoolExecutor.submit(this);
-    }
+//    if (!mHasRetried) {
+//      Log.d("TileView", "retrying tile");
+//      mHasRetried = true;
+//      mThreadPoolExecutor.submit(this);
+//    }
   }
 
   public void run() {
