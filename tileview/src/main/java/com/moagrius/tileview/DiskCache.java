@@ -98,13 +98,11 @@ public class DiskCache implements TileView.BitmapCache {
    */
   @Override
   public synchronized void clear() {
-    new Thread(() -> {
-      try {
-        mDiskCache.delete();
-      } catch (IOException e) {
-        Log.d("TileView", "failed to delete disk cache: " + e.getMessage());
-      }
-    }).start();
+    try {
+      mDiskCache.delete();
+    } catch (IOException e) {
+      Log.d("TileView", "failed to delete disk cache: " + e.getMessage());
+    }
   }
 
   private boolean writeBitmapToCache(Bitmap bitmap, DiskLruCache.Editor editor) {

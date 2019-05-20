@@ -4,11 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Looper;
 import android.os.Process;
+import android.util.Log;
 
 import com.moagrius.tileview.io.StreamProvider;
 
@@ -147,12 +146,6 @@ public class Tile implements Runnable {
     mDrawingView.setDirty();
   }
 
-  // TODO: TEMP DEBUG
-  private Paint mTextPaint = new Paint();
-  {
-    mTextPaint.setColor(Color.BLACK);
-  }
-
   protected void decode() throws Exception {
     if (mState != State.IDLE) {
       return;
@@ -199,10 +192,6 @@ public class Tile implements Runnable {
           }
           return;
         }
-
-//        Log.d("TileView", "bitmap is mutable? " + bitmap.isMutable());
-//        Canvas canvas = new Canvas(bitmap);
-//        canvas.drawText(mColumn + ":" + mRow, 0, 0, mTextPaint);
         setDecodedBitmap(bitmap);
         if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL && mDiskCache != null) {
           mDiskCache.put(key, bitmap);
@@ -252,6 +241,7 @@ public class Tile implements Runnable {
     if (mState == State.IDLE) {
       return;
     }
+    mState = State.IDLE;
     if (removeFromQueue) {
       mThreadPoolExecutor.remove(this);
     }
@@ -262,7 +252,6 @@ public class Tile implements Runnable {
     mDrawingOptions.inBitmap = null;
     // since tiles are pooled and reused, make sure to reset the cache key or you'll render the wrong tile from cache
     mCacheKey = null;
-    mState = State.IDLE;
     mListener.onTileDestroyed(this);
 
   }
@@ -272,11 +261,11 @@ public class Tile implements Runnable {
   }
 
   public void retry() {
-//    if (!mHasRetried) {
-//      Log.d("TileView", "retrying tile");
-//      mHasRetried = true;
-//      mThreadPoolExecutor.submit(this);
-//    }
+    if (!mHasRetried) {
+      Log.d("TileView", "retrying tile");
+      mHasRetried = true;
+      mThreadPoolExecutor.submit(this);
+    }
   }
 
   public void run() {

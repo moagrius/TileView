@@ -544,7 +544,7 @@ public class TileView extends ScalingScrollView implements
     mMemoryCache.clear();
     // note we are NOT clearing the diskcache by default this point, see the javadoc for that method for rational
     if (mDiskCache != null && alsoCloseDiskCache) {
-      mDiskCache.clear();
+      mDiskCacheExecutor.execute(mDiskCache::clear);
     }
     mTilePool.clear();
     mRenderThrottle.removeMessages(RENDER_THROTTLE_ID);
