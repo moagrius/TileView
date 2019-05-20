@@ -26,8 +26,8 @@ public class TileViewDemoHttp extends TileViewDemoActivity implements TileView.T
         .setDiskCachePolicy(TileView.DiskCachePolicy.CACHE_ALL)
         .installPlugin(new LowFidelityBackgroundPlugin(getBackgroundBitmap()))
         .defineZoomLevel("https://storage.googleapis.com/tileview_tiles/tiles/phi-1000000-%1$d_%2$d.jpg")
-        //.defineZoomLevel(1, "http://moagrius.com/public/tiles/phi-500000-%1$d_%2$d.jpg")
-        //.defineZoomLevel(2, "http://moagrius.com/public/tiles/phi-250000-%1$d_%2$d.jpg")
+        //.defineZoomLevel(1, "https://storage.googleapis.com/tileview_tiles/tiles/phi-500000-%1$d_%2$d.jpg")
+        //.defineZoomLevel(2, "https://storage.googleapis.com/tileview_tiles/tiles/phi-250000-%1$d_%2$d.jpg")
         .build();
   }
 

@@ -58,7 +58,7 @@ public class TileViewDemoAdvanced extends Activity {
     TileView tileView = findViewById(R.id.tileview);
     tileView.setScaleLimits(0, 2f);
     new TileView.Builder(tileView)
-        .setSize(16384, 13312)
+        .setSize(16384, 13056)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
         .defineZoomLevel(1, "tiles/phi-500000-%1$d_%2$d.jpg")
         .defineZoomLevel(2, "tiles/phi-250000-%1$d_%2$d.jpg")
