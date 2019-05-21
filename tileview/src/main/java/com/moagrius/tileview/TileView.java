@@ -8,8 +8,6 @@ import android.graphics.Rect;
 import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -126,25 +124,6 @@ public class TileView extends ScalingScrollView implements
     // e.g., ViewGroup.addView(child) will call ViewGroup.addView(child, -1, ...)
     // which will end up placing the child in the TileView rather than the container
     super.addView(mContainer, -1, generateDefaultLayoutParams());
-  }
-
-  @Override
-  protected void onRestoreInstanceState(Parcelable state) {
-    TileViewState tvs = (TileViewState) state;
-    mUuid = tvs.uuid;
-    Builder builder = sPersistentBuilderMap.get(mUuid);
-    builder.build();
-    sPersistentBuilderMap.remove(mUuid);
-    super.onRestoreInstanceState(tvs.getSuperState());
-  }
-
-  @Override
-  protected Parcelable onSaveInstanceState() {
-    Parcelable superState = super.onSaveInstanceState();
-    TileViewState tvs = new TileViewState(superState);
-    tvs.uuid = mUuid;
-    sPersistentBuilderMap.put(mUuid, getBuilder());
-    return tvs;
   }
 
   @Override
@@ -838,41 +817,6 @@ public class TileView extends ScalingScrollView implements
       return null;
     }
 
-  }
-
-  protected static class TileViewState extends ScrollScaleState {
-
-    private String uuid;
-
-    public TileViewState(Parcelable superState) {
-      super(superState);
-    }
-
-    public TileViewState(Parcel source) {
-      super(source);
-      uuid = source.readString();
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-      super.writeToParcel(dest, flags);
-      dest.writeString(uuid);
-    }
-
-    @Override
-    public String toString() {
-      return "TileViewState{" + Integer.toHexString(System.identityHashCode(this)) + " scrollPositionY=" + scrollPositionY + ", scrollPositionX=" + scrollPositionX + ", scale=" + scale + ", uuid=" + uuid + "}";
-    }
-
-    public static final Creator<TileViewState> CREATOR = new Creator<TileViewState>() {
-      public TileViewState createFromParcel(Parcel in) {
-        return new TileViewState(in);
-      }
-
-      public TileViewState[] newArray(int size) {
-        return new TileViewState[size];
-      }
-    };
   }
 
   public interface TileDecodeErrorListener {
