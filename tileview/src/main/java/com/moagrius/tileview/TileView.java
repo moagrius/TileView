@@ -23,11 +23,9 @@ import com.moagrius.utils.Maths;
 import com.moagrius.widget.ScalingScrollView;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -715,15 +713,6 @@ public class TileView extends ScalingScrollView implements
     private int mMemoryCacheSize = (int) ((Runtime.getRuntime().maxMemory() / 1024) / 4);
     private int mDiskCacheSize = 1024 * 100;
     private DiskCachePolicy mDiskCachePolicy;
-    private int[] mSize = new int[2];
-    private int mTileSize;
-    private Map<Integer, Object> mDetailLevels = new HashMap<>();
-    private List<Listener> mListeners = new ArrayList<>();
-    private List<ReadyListener> mReadyListeners = new ArrayList<>();
-    private List<TouchListener> mTouchListeners = new ArrayList<>();
-    private List<CanvasDecorator> mCanvasDecorators = new ArrayList<>();
-    private List<Plugin> mPlugins = new ArrayList<>();
-    private Bitmap.Config mConfig;
 
     public Builder(TileView tileView) {
       mTileView = tileView;
@@ -736,8 +725,7 @@ public class TileView extends ScalingScrollView implements
     }
 
     public Builder setSize(int width, int height) {
-      mSize[0] = width;
-      mSize[1] = height;
+      mTileView.mContainer.setSize(width, height);
       return this;
     }
 
@@ -746,42 +734,43 @@ public class TileView extends ScalingScrollView implements
     }
 
     public Builder defineZoomLevel(int zoom, Object data) {
-      mDetailLevels.put(zoom, data);
+      mTileView.defineZoomLevel(zoom, data);
       return this;
     }
 
     public Builder addListener(TileView.Listener listener) {
-      mListeners.add(listener);
+      mTileView.addListener(listener);
       return this;
     }
 
     public Builder addReadyListener(TileView.ReadyListener readyListener) {
-      mReadyListeners.add(readyListener);
+      mTileView.addReadyListener(readyListener);
       return this;
     }
 
     public Builder addTouchListener(TileView.TouchListener touchListener) {
-      mTouchListeners.add(touchListener);
+      mTileView.addTouchListener(touchListener);
       return this;
     }
 
     public Builder addCanvasDecorator(TileView.CanvasDecorator decorator) {
-      mCanvasDecorators.add(decorator);
+      mTileView.addCanvasDecorator(decorator);
       return this;
     }
 
     public Builder setBitmapConfig(Bitmap.Config config) {
-      mConfig = config;
+      mTileView.mBitmapConfig = config;
       return this;
     }
 
     public Builder setTileSize(int tileSize) {
-      mTileSize = tileSize;
+      mTileView.mTileSize = tileSize;
       return this;
     }
 
     public Builder setDiskCachePolicy(DiskCachePolicy policy) {
-      mDiskCachePolicy = policy;
+      // save a member variable on the Builder so we can check it without having to hit the main thread for view access
+      mDiskCachePolicy = mTileView.mDiskCachePolicy = policy;
       return this;
     }
 
@@ -801,7 +790,8 @@ public class TileView extends ScalingScrollView implements
     }
 
     public Builder installPlugin(Plugin plugin) {
-      mPlugins.add(plugin);
+      mTileView.mPlugins.put(plugin.getClass(), plugin);
+      plugin.install(mTileView);
       return this;
     }
 
@@ -810,7 +800,8 @@ public class TileView extends ScalingScrollView implements
     }
 
     private void buildAsync() {
-      new Thread(this::buildSync).start();
+      //new Thread(this::buildSync).start();
+      buildSync();
     }
 
     private void buildSync() {
@@ -826,37 +817,12 @@ public class TileView extends ScalingScrollView implements
       MemoryCache memoryCache = new MemoryCache(mMemoryCacheSize);
       DiskCache diskCache = getDiskCacheSafely(activity);
       activity.runOnUiThread(() -> {
-        mTileView.mContainer.setSize(mSize[0], mSize[1]);
-        mTileView.mTileSize = mTileSize;
-        mTileView.mBitmapConfig = mConfig;
-        mTileView.mDiskCachePolicy = mDiskCachePolicy;
         mTileView.mStreamProvider = mStreamProvider;
         // use memory cache instance for both memory cache and bitmap pool.
         // maybe allows these to be set in the future
         mTileView.mMemoryCache = memoryCache;
         mTileView.mBitmapPool = memoryCache;
         mTileView.mDiskCache = diskCache;
-        for (Plugin plugin : mPlugins) {
-          mTileView.mPlugins.put(plugin.getClass(), plugin);
-          plugin.install(mTileView);
-        }
-        for (Listener listener : mListeners) {
-          mTileView.addListener(listener);
-        }
-        for (CanvasDecorator decorator : mCanvasDecorators) {
-          mTileView.addCanvasDecorator(decorator);
-        }
-        for (TouchListener touchListener : mTouchListeners) {
-          mTileView.addTouchListener(touchListener);
-        }
-        for (ReadyListener readyListener : mReadyListeners) {
-          mTileView.addReadyListener(readyListener);
-        }
-        for (Map.Entry<Integer, Object> entry : mDetailLevels.entrySet()) {
-          int zoom = entry.getKey();
-          Object data = entry.getValue();
-          mTileView.defineZoomLevel(zoom, data);
-        }
         mTileView.prepare();
       });
     }
