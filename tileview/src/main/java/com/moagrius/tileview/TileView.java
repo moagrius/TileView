@@ -615,6 +615,7 @@ public class TileView extends ScalingScrollView implements
     Bitmap get(String key);
     Bitmap put(String key, Bitmap value);
     Bitmap remove(String key);
+    boolean has(String key);
     void clear();
   }
 

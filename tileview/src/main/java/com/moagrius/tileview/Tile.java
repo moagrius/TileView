@@ -155,8 +155,8 @@ public class Tile implements Runnable {
     }
     mState = State.DECODING;
     // the second line is critical on some devices - we're doing so much work off thread that anything higher priority causes jank
-    Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-    Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
+    Thread.currentThread().setPriority(Thread.MIN_PRIORITY + 1);
+    Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST + 1);
     // putting a thread.sleep of even 100ms here shows that maybe we're doing work off screen that we should not be doing
     updateDestinationRect();
     String key = getCacheKey();
@@ -193,7 +193,7 @@ public class Tile implements Runnable {
         }
         setDecodedBitmap(bitmap);
         if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL && mDiskCache != null) {
-          mDiskCache.put(key, bitmap);
+          saveToDiskCacheAsync(key, bitmap);
         }
       }
       // we don't have a defined zoom level, so we need to use image sub-sampling and disk cache even if reading files locally
@@ -230,9 +230,21 @@ public class Tile implements Runnable {
       setDecodedBitmap(bitmap);
       // we need to cache patches to disk even if local
       if (mDiskCachePolicy != TileView.DiskCachePolicy.CACHE_NONE && mDiskCache != null) {
-        mDiskCache.put(key, bitmap);
+        saveToDiskCacheAsync(key, bitmap);
       }
     }
+  }
+
+  private void saveToDiskCacheAsync(String key, Bitmap bitmap) {
+    if (Looper.getMainLooper() == Looper.myLooper()) {
+      return;
+    }
+    if (mDiskCache.has(key)) {
+      return;
+    }
+    Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+    Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
+    mDiskCacheExecutor.execute(() -> mDiskCache.put(key, bitmap));
   }
 
   // we use this signature to call from the Executor, so it can remove tiles via iterator

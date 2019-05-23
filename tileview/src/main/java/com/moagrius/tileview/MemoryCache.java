@@ -56,6 +56,11 @@ public class MemoryCache implements TileView.BitmapCache, TileView.BitmapPool {
   }
 
   @Override
+  public boolean has(String key) {
+    return mMap.containsKey(key);
+  }
+
+  @Override
   public synchronized void clear() {
     mMap.clear();
     mSize = 0;

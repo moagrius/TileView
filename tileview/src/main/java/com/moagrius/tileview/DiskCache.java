@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DiskCache implements TileView.BitmapCache {
 
@@ -21,6 +23,7 @@ public class DiskCache implements TileView.BitmapCache {
   private static final int IO_BUFFER_SIZE = 8 * 1024;
 
   private DiskLruCache mDiskCache;
+  private Set<String> mIndex = new HashSet<>();
 
   public DiskCache(Context context, int size) throws IOException {
     File directory = new File(context.getCacheDir(), DIRECTORY_NAME);
@@ -39,6 +42,7 @@ public class DiskCache implements TileView.BitmapCache {
         if (writeBitmapToCache(data, editor)) {
           mDiskCache.flush();
           editor.commit();
+          mIndex.add(key);
         } else {
           editor.abort();
         }
@@ -82,10 +86,16 @@ public class DiskCache implements TileView.BitmapCache {
   public Bitmap remove(String key) {
     try {
       mDiskCache.remove(key);
+      mIndex.remove(key);
     } catch (IOException e) {
       // no op
     }
     return null;
+  }
+
+  @Override
+  public boolean has(String key) {
+    return mIndex.contains(key);
   }
 
   /**
