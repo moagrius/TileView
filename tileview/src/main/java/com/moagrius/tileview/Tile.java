@@ -31,7 +31,7 @@ public class Tile implements Runnable {
   // variable (computed)
   private volatile State mState = State.IDLE;
   private Bitmap mBitmap;
-  private boolean mHasRetried;
+  private int mRetries;
 
   // lazy
   private String mCacheKey;
@@ -169,7 +169,6 @@ public class Tile implements Runnable {
     Context context = mDrawingView.getContext();
     // garden path - image sample size is 1, we have a detail level defined for this zoom
     if (mImageSample == UNSCALED_SAMPLE_SIZE) {
-      //Log.d("TileView", "garden path decode, should be drawing text on each tile");
       // if we cache everything to disk (usually because we're fetching from remote sources)
       // check the disk cache now and return out if we can
       if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL && mDiskCache != null) {
@@ -260,10 +259,10 @@ public class Tile implements Runnable {
     destroy(true);
   }
 
-  public void retry() {
-    if (!mHasRetried) {
+  public void retry(int attempts) {
+    if (mRetries <= attempts) {
       Log.d("TileView", "retrying tile");
-      mHasRetried = true;
+      mRetries++;
       mThreadPoolExecutor.submit(this);
     }
   }
@@ -290,7 +289,6 @@ public class Tile implements Runnable {
     if (obj instanceof Tile) {
       Tile compare = (Tile) obj;
       return compare.mColumn == mColumn && compare.mRow == mRow && compare.mImageSample == mImageSample && compare.mDetail.getZoom() == mDetail.getZoom();
-      //return compare.mColumn == mColumn && compare.mRow == mRow && compare.mDetail.getZoom() == mDetail.getZoom();
     }
     return false;
   }

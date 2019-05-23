@@ -21,7 +21,6 @@ public class TileViewDemoAssets extends TileViewDemoActivity {
         .setSize(16384, 13056)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
         .build();
-    //tileView.setScale(0.5f);
   }
 
 }

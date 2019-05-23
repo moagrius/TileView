@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -37,8 +36,6 @@ public class TileView extends ScalingScrollView implements
     Tile.DrawingView,
     Tile.Listener,
     TilingBitmapView.Provider {
-
-  private static final Map<String, Builder> sPersistentBuilderMap = new HashMap<>();
 
   // constants
   private static final int RENDER_THROTTLE_ID = 0;
@@ -53,7 +50,6 @@ public class TileView extends ScalingScrollView implements
   private boolean mIsPrepared;
   private boolean mIsLaidOut;
   private boolean mHasRunOnReady;
-  private String mUuid = UUID.randomUUID().toString();
   private Detail mCurrentDetail;
 
   private Set<Listener> mListeners = new LinkedHashSet<>();
@@ -162,15 +158,6 @@ public class TileView extends ScalingScrollView implements
   }
 
   // public
-
-
-  public Builder getBuilder() {
-    return mBuilder;
-  }
-
-  public void setBuilder(Builder builder) {
-    mBuilder = builder;
-  }
 
   public int getZoom() {
     return mZoom;
@@ -520,6 +507,20 @@ public class TileView extends ScalingScrollView implements
     }
   }
 
+  private boolean isTileVisible(Tile tile) {
+    return mTilesVisibleInViewport.contains(tile);
+  }
+
+  public void retryTileDecode(Tile tile, int attempts, boolean onlyIfVisible) {
+    if (!onlyIfVisible || isTileVisible(tile)) {
+      tile.retry(attempts);
+    }
+  }
+
+  public void retryTileDecode(Tile tile) {
+    retryTileDecode(tile, 1, true);
+  }
+
   @Override
   public void onTileDestroyed(Tile tile) {
     mTilePool.put(tile);
@@ -695,12 +696,12 @@ public class TileView extends ScalingScrollView implements
 
     public Builder(TileView tileView) {
       mTileView = tileView;
-      mTileView.setBuilder(this);
+      mTileView.mBuilder = this;
     }
 
     public Builder(Context context) {
       mTileView = new TileView(context);
-      mTileView.setBuilder(this);
+      mTileView.mBuilder = this;
     }
 
     public Builder setSize(int width, int height) {
