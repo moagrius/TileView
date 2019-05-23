@@ -1,7 +1,7 @@
 apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'com.android.library'
 
-def version = "4.0.2"
+def version = "4.0.3"
 
 buildscript {
   repositories {
