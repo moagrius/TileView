@@ -55,13 +55,10 @@ public class TileViewDemoAdvanced extends Activity {
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
-    BitmapFactory.Options options = new BitmapFactory.Options();
-    options.inPreferredConfig = Bitmap.Config.RGB_565;
-    Bitmap background = BitmapFactory.decodeResource(getResources(), R.drawable.downsample, options);
     TileView tileView = findViewById(R.id.tileview);
     tileView.setScaleLimits(0, 2f);
     new TileView.Builder(tileView)
-        .setSize(16384, 13312)
+        .setSize(16384, 13056)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
         .defineZoomLevel(1, "tiles/phi-500000-%1$d_%2$d.jpg")
         .defineZoomLevel(2, "tiles/phi-250000-%1$d_%2$d.jpg")
@@ -70,7 +67,7 @@ public class TileViewDemoAdvanced extends Activity {
         .installPlugin(new CoordinatePlugin(WEST, NORTH, EAST, SOUTH))
         .installPlugin(new HotSpotPlugin())
         .installPlugin(new PathPlugin())
-        .installPlugin(new LowFidelityBackgroundPlugin(background))
+        .installPlugin(new LowFidelityBackgroundPlugin(getBackgroundBitmap()))
         .addReadyListener(this::onReady)
         .build();
   }
@@ -86,6 +83,12 @@ public class TileViewDemoAdvanced extends Activity {
     infoView.setTextSize(11);
     ViewCompat.setElevation(infoView, elevation);
     return infoView;
+  }
+
+  public Bitmap getBackgroundBitmap() {
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inPreferredConfig = Bitmap.Config.RGB_565;
+    return BitmapFactory.decodeResource(getResources(), R.drawable.downsample, options);
   }
 
   private void onReady(TileView tileView) {
@@ -109,8 +112,8 @@ public class TileViewDemoAdvanced extends Activity {
     };
 
     for (double[] coordinate : sites) {
-      int x = coordinatePlugin.longitudeToX(coordinate[1]);
-      int y = coordinatePlugin.latitudeToY(coordinate[0]);
+      int x = coordinatePlugin.longitudeToUnscaledX(coordinate[1]);
+      int y = coordinatePlugin.latitudeToUnscaledY(coordinate[0]);
       ImageView marker = new ImageView(this);
       marker.setTag(coordinate);
       marker.setImageResource(R.drawable.marker);

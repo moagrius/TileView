@@ -18,7 +18,7 @@ public class TileViewDemoInternalStorage extends TileViewDemoActivity {
     TileView tileView = findViewById(R.id.tileview);
     File directory = getFilesDir();
     new TileView.Builder(tileView)
-        .setSize(16384, 13312)
+        .setSize(16384, 13056)
         .setStreamProvider(new StreamProviderFiles())
         .defineZoomLevel(directory.getAbsolutePath() + "/phi-1000000-%1$d_%2$d.jpg")
         .build();

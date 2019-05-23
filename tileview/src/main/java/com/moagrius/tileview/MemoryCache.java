@@ -55,6 +55,17 @@ public class MemoryCache implements TileView.BitmapCache, TileView.BitmapPool {
     return null;
   }
 
+  @Override
+  public boolean has(String key) {
+    return mMap.containsKey(key);
+  }
+
+  @Override
+  public synchronized void clear() {
+    mMap.clear();
+    mSize = 0;
+  }
+
   private void trimToSize(int maxSize) {
     while (mSize > maxSize && !mMap.isEmpty()) {
       Map.Entry<String, Bitmap> oldest =  mMap.entrySet().iterator().next();
@@ -93,6 +104,9 @@ public class MemoryCache implements TileView.BitmapCache, TileView.BitmapPool {
   }
 
   private static boolean qualifies(Bitmap candidate, BitmapFactory.Options targetOptions) {
+    if (!candidate.isMutable()) {
+      return false;
+    }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
       int width = targetOptions.outWidth / targetOptions.inSampleSize;
       int height = targetOptions.outHeight / targetOptions.inSampleSize;

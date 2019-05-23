@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.os.Looper;
 import android.os.Process;
+import android.util.Log;
 
 import com.moagrius.tileview.io.StreamProvider;
 
@@ -30,6 +31,7 @@ public class Tile implements Runnable {
   // variable (computed)
   private volatile State mState = State.IDLE;
   private Bitmap mBitmap;
+  private int mRetries;
 
   // lazy
   private String mCacheKey;
@@ -51,17 +53,7 @@ public class Tile implements Runnable {
   private final ThreadPoolExecutor mThreadPoolExecutor;
   private final ThreadPoolExecutor mDiskCacheExecutor;
 
-  public Tile(int size,
-              Bitmap.Config bitmapConfig,
-              DrawingView drawingView,
-              Listener listener,
-              ThreadPoolExecutor threadPoolExecutor,
-              ThreadPoolExecutor diskCacheExecutor,
-              StreamProvider streamProvider,
-              TileView.BitmapCache memoryCache,
-              TileView.BitmapCache diskCache,
-              TileView.BitmapPool bitmapPool,
-              TileView.DiskCachePolicy diskCachePolicy) {
+  public Tile(int size, Bitmap.Config bitmapConfig, DrawingView drawingView, Listener listener, ThreadPoolExecutor threadPoolExecutor, ThreadPoolExecutor diskCacheExecutor, StreamProvider streamProvider, TileView.BitmapCache memoryCache, TileView.BitmapCache diskCache, TileView.BitmapPool bitmapPool, TileView.DiskCachePolicy diskCachePolicy) {
     mSize = size;
     mDrawingOptions.inPreferredConfig = bitmapConfig;
     mDrawingView = drawingView;
@@ -154,7 +146,7 @@ public class Tile implements Runnable {
     mDrawingView.setDirty();
   }
 
-  protected synchronized void decode() throws Exception {
+  protected void decode() throws Exception {
     if (mState != State.IDLE) {
       return;
     }
@@ -163,8 +155,8 @@ public class Tile implements Runnable {
     }
     mState = State.DECODING;
     // the second line is critical on some devices - we're doing so much work off thread that anything higher priority causes jank
-    Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-    Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
+    Thread.currentThread().setPriority(Thread.MIN_PRIORITY + 1);
+    Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST + 1);
     // putting a thread.sleep of even 100ms here shows that maybe we're doing work off screen that we should not be doing
     updateDestinationRect();
     String key = getCacheKey();
@@ -193,9 +185,15 @@ public class Tile implements Runnable {
         mDrawingOptions.inBitmap = mBitmapPool.getBitmapForReuse(this);
         Bitmap bitmap = BitmapFactory.decodeStream(stream, null, mDrawingOptions);
         stream.close();
+        if (bitmap == null) {
+          if (mListener != null) {
+            mListener.onTileDecodeError(this, new RuntimeException("Unable to decode bitmap"));
+          }
+          return;
+        }
         setDecodedBitmap(bitmap);
         if (mDiskCachePolicy == TileView.DiskCachePolicy.CACHE_ALL && mDiskCache != null) {
-          addMutableBitmapToCacheAsync(key, bitmap);
+          saveToDiskCacheAsync(key, bitmap);
         }
       }
       // we don't have a defined zoom level, so we need to use image sub-sampling and disk cache even if reading files locally
@@ -209,6 +207,7 @@ public class Tile implements Runnable {
       }
       // if we're patching, we need a base bitmap to draw on
       Bitmap bitmap = Bitmap.createBitmap(mSize, mSize, mDrawingOptions.inPreferredConfig);
+      bitmap = bitmap.copy(mDrawingOptions.inPreferredConfig, true);
       Canvas canvas = new Canvas(bitmap);
       int size = mSize / mImageSample;
       InputStream stream;
@@ -231,18 +230,21 @@ public class Tile implements Runnable {
       setDecodedBitmap(bitmap);
       // we need to cache patches to disk even if local
       if (mDiskCachePolicy != TileView.DiskCachePolicy.CACHE_NONE && mDiskCache != null) {
-        addMutableBitmapToCacheAsync(key, bitmap);
+        saveToDiskCacheAsync(key, bitmap);
       }
     }
   }
 
-  private void addMutableBitmapToCacheAsync(String key, Bitmap bitmap) {
-    mDiskCacheExecutor.submit(() -> addMutableBitmapToCache(key, bitmap));
-  }
-
-  private void addMutableBitmapToCache(String key, Bitmap bitmap) {
-    bitmap = bitmap.copy(mDrawingOptions.inPreferredConfig, true);
-    mDiskCache.put(key, bitmap);
+  private void saveToDiskCacheAsync(String key, Bitmap bitmap) {
+    if (Looper.getMainLooper() == Looper.myLooper()) {
+      return;
+    }
+    if (mDiskCache.has(key)) {
+      return;
+    }
+    Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+    Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
+    mDiskCacheExecutor.execute(() -> mDiskCache.put(key, bitmap));
   }
 
   // we use this signature to call from the Executor, so it can remove tiles via iterator
@@ -250,6 +252,7 @@ public class Tile implements Runnable {
     if (mState == State.IDLE) {
       return;
     }
+    mState = State.IDLE;
     if (removeFromQueue) {
       mThreadPoolExecutor.remove(this);
     }
@@ -260,13 +263,20 @@ public class Tile implements Runnable {
     mDrawingOptions.inBitmap = null;
     // since tiles are pooled and reused, make sure to reset the cache key or you'll render the wrong tile from cache
     mCacheKey = null;
-    mState = State.IDLE;
     mListener.onTileDestroyed(this);
 
   }
 
   public void destroy() {
     destroy(true);
+  }
+
+  public void retry(int attempts) {
+    if (mRetries <= attempts) {
+      Log.d("TileView", "retrying tile");
+      mRetries++;
+      mThreadPoolExecutor.submit(this);
+    }
   }
 
   public void run() {

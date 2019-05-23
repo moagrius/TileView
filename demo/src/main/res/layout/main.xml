@@ -27,7 +27,6 @@
     <TextView
         android:id="@+id/textview_demos_tileview_remote"
         style="@style/DemoRow"
-        android:visibility="gone"
         android:text="TileView Demo (Remote HTTP)" />
 
     <TextView
