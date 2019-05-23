@@ -14,6 +14,16 @@ Demos for ScrollView are in the ScrollView repo.  Demos for TileView are in this
 
 Feel free to use ScrollView as a standalone widget if you don't need image tiling.
 
+## Change Log
+
+#### 4.0.3 (most recent)
++ You can scale greater than 1f now without flicker, and without clipping.
++ Remote images should decode now with a much higher rate of success, nearing 100%.
++ Marker plugin API has been updated and show now work propertly (see TileViewDemoAdvanced Activity).
++ `LowFidelityBackgroundPlugin` now scaled and positions appropriately with the `TileView` host.
++ The `COVER` and `CONTAIN` `MinimumScaleModes` should work properly now. 
++ Upgraded from `com.moagrius:scrollview:1.0.4` to `1.0.9`
+
 ## TileView
 Very large images in Android will often result in an `OutOfMemoryError`.  Memory is finite, and bitmaps take a great deal of it.  `TileView` solves this by stitching together small pieces of the image (tiles) and displaying them reconstructed in the area of the screen visible to your user.
 
