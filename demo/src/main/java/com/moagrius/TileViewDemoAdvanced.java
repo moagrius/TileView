@@ -112,8 +112,8 @@ public class TileViewDemoAdvanced extends Activity {
     };
 
     for (double[] coordinate : sites) {
-      int x = coordinatePlugin.longitudeToX(coordinate[1]);
-      int y = coordinatePlugin.latitudeToY(coordinate[0]);
+      int x = coordinatePlugin.longitudeToUnscaledX(coordinate[1]);
+      int y = coordinatePlugin.latitudeToUnscaledY(coordinate[0]);
       ImageView marker = new ImageView(this);
       marker.setTag(coordinate);
       marker.setImageResource(R.drawable.marker);

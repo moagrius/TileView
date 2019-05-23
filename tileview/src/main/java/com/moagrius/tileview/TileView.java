@@ -8,7 +8,6 @@ import android.graphics.Rect;
 import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -27,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +37,8 @@ public class TileView extends ScalingScrollView implements
     Tile.DrawingView,
     Tile.Listener,
     TilingBitmapView.Provider {
+
+  private static final Map<String, Builder> sPersistentBuilderMap = new HashMap<>();
 
   // constants
   private static final int RENDER_THROTTLE_ID = 0;
@@ -51,6 +53,7 @@ public class TileView extends ScalingScrollView implements
   private boolean mIsPrepared;
   private boolean mIsLaidOut;
   private boolean mHasRunOnReady;
+  private String mUuid = UUID.randomUUID().toString();
   private Detail mCurrentDetail;
 
   private Set<Listener> mListeners = new LinkedHashSet<>();
@@ -66,6 +69,7 @@ public class TileView extends ScalingScrollView implements
   private BitmapCache mMemoryCache;
   private BitmapPool mBitmapPool;
   private StreamProvider mStreamProvider;
+  private Builder mBuilder;
   private Bitmap.Config mBitmapConfig = Bitmap.Config.RGB_565;
   private DiskCachePolicy mDiskCachePolicy = DiskCachePolicy.CACHE_PATCHES;
 
@@ -157,13 +161,16 @@ public class TileView extends ScalingScrollView implements
     mContainer.removeViews(start, count);
   }
 
-  @Override
-  protected void onRestoreInstanceState(Parcelable state) {
-    super.onRestoreInstanceState(state);
-    // TODO: need to consider the prepare mechanic in addition to recomputing tiles
+  // public
+
+
+  public Builder getBuilder() {
+    return mBuilder;
   }
 
-  // public
+  public void setBuilder(Builder builder) {
+    mBuilder = builder;
+  }
 
   public int getZoom() {
     return mZoom;
@@ -688,10 +695,12 @@ public class TileView extends ScalingScrollView implements
 
     public Builder(TileView tileView) {
       mTileView = tileView;
+      mTileView.setBuilder(this);
     }
 
     public Builder(Context context) {
       mTileView = new TileView(context);
+      mTileView.setBuilder(this);
     }
 
     public Builder setSize(int width, int height) {
@@ -770,7 +779,8 @@ public class TileView extends ScalingScrollView implements
     }
 
     private void buildAsync() {
-      new Thread(this::buildSync).start();
+      //new Thread(this::buildSync).start();
+      buildSync();
     }
 
     private void buildSync() {
