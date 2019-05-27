@@ -41,7 +41,7 @@ No further work will be done on version 2.
 ## Installation
 Add this to your app module's build.gradle.
 ```
-implementation 'com.moagrius:tileview:4.0.3'
+implementation 'com.moagrius:tileview:4.0.4'
 ```
 
 ##### Quick Setup
