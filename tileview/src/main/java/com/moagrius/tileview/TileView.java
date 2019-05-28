@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -157,6 +158,53 @@ public class TileView extends ScalingScrollView implements
     mContainer.removeViews(start, count);
   }
 
+  @Override
+  protected void restoreInstanceState(Parcelable state) {
+    Log.d("TV", "restoreInstanceState");
+    ScrollScaleState scrollScaleState = (ScrollScaleState) state;
+    int x = scrollScaleState.scrollPositionX - getWidth() / 2;
+    int y = scrollScaleState.scrollPositionY - getHeight() / 2;
+    scrollTo(x, y);
+    setScale(scrollScaleState.scale);
+  }
+
+  @Override
+  protected Parcelable onSaveInstanceState() {
+    Parcelable superState = super.onSaveInstanceState();
+    ScrollScaleState scrollScaleState = new ScrollScaleState(superState);
+    scrollScaleState.scale = getScale();
+    scrollScaleState.scrollPositionY = getScrollY() + getWidth() / 2;
+    scrollScaleState.scrollPositionX = getScrollX() + getHeight() / 2;
+    return scrollScaleState;
+  }
+
+  private Float mPendingScale;
+  private Integer mPendingX;
+  private Integer mPendingY;
+
+  @Override
+  public void setScale(float scale) {
+    if (isReady()) {
+      Log.d("TV", "setScale, " + scale + ", isReady, run now");
+      super.setScale(scale);
+    } else {
+      Log.d("TV", "setScale, " + scale + ", NOT ready, set pending");
+      mPendingScale = scale;
+    }
+  }
+
+  @Override
+  public void scrollTo(int x, int y) {
+    if (isReady()) {
+      Log.d("TV", "scrollTo, " + x + ", " + y + ", isReady, run now");
+      super.scrollTo(x, y);
+    } else {
+      Log.d("TV", "scrollTo, " + x + ", " + y + ", isReady, run now");
+      mPendingX = x;
+      mPendingY = y;
+    }
+  }
+
   // public
 
   public int getZoom() {
@@ -256,7 +304,9 @@ public class TileView extends ScalingScrollView implements
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
     super.onLayout(changed, left, top, right, bottom);
     mIsLaidOut = true;
-    if (!attemptOnReady()) {
+    Log.d("TV", "about to call attemptOnReady from onLayout");
+    boolean runningInitialization = attemptOnReady();
+    if (!runningInitialization) {
       updateViewportAndComputeTilesThrottled();
     }
   }
@@ -559,11 +609,20 @@ public class TileView extends ScalingScrollView implements
     mReadyHandler.removeCallbacksAndMessages(null);
   }
 
-  private boolean isReady() {
+  public boolean isReady() {
     return mIsPrepared && mIsLaidOut;
   }
 
+  public boolean hasRunOnReady() {
+    return mHasRunOnReady;
+  }
+
+  public boolean isRunning() {
+    return isReady() && hasRunOnReady();
+  }
+
   private void prepare() {
+    Log.d("TV", "prepare");
     if (mIsPrepared) {
       return;
     }
@@ -574,6 +633,7 @@ public class TileView extends ScalingScrollView implements
       throw new IllegalStateException("TileView requires height and width be provided via Builder.setSize");
     }
     mIsPrepared = true;
+    Log.d("TV", "about to call attemptOnReady from prepare");
     attemptOnReady();
   }
 
@@ -582,20 +642,41 @@ public class TileView extends ScalingScrollView implements
    * @return True if the single ready pass executes, false otherwise (either because not ready, or already run)
    */
   private boolean attemptOnReady() {
+    Log.d("TV", "attemptOnReady");
     if (isReady() && !mHasRunOnReady) {
+      Log.d("TV", "isReady and hasn't yet run onReady");
       mHasRunOnReady = true;
       determineCurrentDetail();
       updateViewportAndComputeTiles();
+      updatePendingValues();
       for (ReadyListener readyListener : mReadyListeners) {
         readyListener.onReady(this);
       }
-      // TODO: this?
-      //mReadyListeners.clear();
       return true;
     }
-    mReadyHandler.removeCallbacksAndMessages(null);
-    mReadyHandler.postDelayed(this::attemptOnReady, READY_RETRY_DELAY);
     return false;
+  }
+
+  private void updatePendingValues() {
+    if (mPendingScale != null) {
+      float scale = mPendingScale;
+      setScale(scale);
+      mPendingScale = null;
+    }
+    if (mPendingX != null || mPendingY != null) {
+      int x = 0;
+      int y = 0;
+      if (mPendingX != null) {
+        x = mPendingX;
+        mPendingX = null;
+      }
+      if (mPendingY != null) {
+        y = mPendingY;
+        mPendingY = null;
+      }
+      Log.d("TV", "scrolling to pending values, " + x + ", " + y);
+      scrollTo(x, y);
+    }
   }
 
   private static class Grid {

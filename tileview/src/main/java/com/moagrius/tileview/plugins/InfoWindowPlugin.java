@@ -41,7 +41,7 @@ public class InfoWindowPlugin extends FrameLayout implements TileView.Plugin, Ti
   }
 
   public void hide() {
-    setPosition(-mView.getMeasuredWidth(), -mView.getMeasuredHeight());
+    setPosition(Integer.MIN_VALUE, Integer.MIN_VALUE);
   }
 
   private void setPosition(int x, int y) {
@@ -52,7 +52,8 @@ public class InfoWindowPlugin extends FrameLayout implements TileView.Plugin, Ti
     }
     lp.leftMargin = x;
     lp.topMargin = y;
-    mView.requestLayout();
+    mView.setLeft(x);
+    mView.setTop(y);
   }
 
   @Override

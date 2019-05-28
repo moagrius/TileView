@@ -51,12 +51,15 @@ public class TileViewDemoAdvanced extends Activity {
     sites.add(new double[]{-75.1479650, 39.9523130});
   }
 
+  private boolean mIsRestoring;
+
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
     TileView tileView = findViewById(R.id.tileview);
     tileView.setScaleLimits(0, 2f);
+    mIsRestoring = savedInstanceState != null;
     new TileView.Builder(tileView)
         .setSize(16384, 13056)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
@@ -153,10 +156,19 @@ public class TileViewDemoAdvanced extends Activity {
     hotSpot.setTag("Any piece of data...");
 
     // frame it
-    double[] coordinate = sites.get(0);
-    int x = coordinatePlugin.longitudeToX(coordinate[1]);
-    int y = coordinatePlugin.latitudeToY(coordinate[0]);
-    tileView.scrollTo(x, y);
+    if (!mIsRestoring) {
+      Log.d("TV", "is not restoring, so frame it");
+      double[] coordinate = sites.get(0);
+      int x = coordinatePlugin.longitudeToX(coordinate[1]);
+      int y = coordinatePlugin.latitudeToY(coordinate[0]);
+      tileView.scrollTo(x, y);
+    } else {
+      Log.d("TV", "is restoring, return to last scroll position");
+      //tileView.setScale(0.55f);
+      //new Handler().postDelayed(() -> tileView.setScale(0.55f), 2000);
+    }
+
+    Log.d("TV", "onReady");
 
   }
 

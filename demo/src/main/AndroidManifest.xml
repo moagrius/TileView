@@ -13,18 +13,18 @@
       android:label="@string/app_name"
       android:supportsRtl="true"
       android:theme="@style/AppTheme">
-    <activity android:name=".MainActivity" android:configChanges="orientation|screenSize">
+    <activity android:name=".MainActivity">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
-    <activity android:name=".TileViewDemoInternalStorage" android:configChanges="orientation|screenSize" />
-    <activity android:name=".TileViewDemoExternalStorage" android:configChanges="orientation|screenSize" />
-    <activity android:name=".TileViewDemoHttp" android:configChanges="orientation|screenSize" />
-    <activity android:name=".TileViewDemoAssets" android:configChanges="orientation|screenSize" />
-    <activity android:name=".TileViewDemoAdvanced" android:configChanges="orientation|screenSize" />
+    <activity android:name=".TileViewDemoInternalStorage" />
+    <activity android:name=".TileViewDemoExternalStorage" />
+    <activity android:name=".TileViewDemoHttp" />
+    <activity android:name=".TileViewDemoAssets" />
+    <activity android:name=".TileViewDemoAdvanced" />
   </application>
 
 </manifest>
