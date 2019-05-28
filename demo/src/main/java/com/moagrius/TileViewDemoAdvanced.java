@@ -156,20 +156,13 @@ public class TileViewDemoAdvanced extends Activity {
     HotSpotPlugin.HotSpot hotSpot = hotSpotPlugin.addHotSpot(points, h -> Log.d("TV", "hot spot touched: " + h.getTag()));
     hotSpot.setTag("Any piece of data...");
 
-    // frame it
+    // frame it if it's a first launch, otherwise restore last position and scale (this is built in to TileView)
     if (!mIsRestoring) {
-      Log.d("TV", "is not restoring, so frame it");
       double[] coordinate = sites.get(0);
       int x = coordinatePlugin.longitudeToX(coordinate[1]);
       int y = coordinatePlugin.latitudeToY(coordinate[0]);
       tileView.scrollTo(x, y);
-    } else {
-      Log.d("TV", "is restoring, return to last scroll position");
-      //tileView.setScale(0.55f);
-      //new Handler().postDelayed(() -> tileView.setScale(0.55f), 2000);
     }
-
-    Log.d("TV", "onReady");
 
   }
 

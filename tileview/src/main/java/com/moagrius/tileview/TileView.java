@@ -167,10 +167,6 @@ public class TileView extends ScalingScrollView implements
     scrollScaleState.scale = getScale();
     scrollScaleState.scrollPositionX = getScrollX() + getWidth() / 2;
     scrollScaleState.scrollPositionY = getScrollY() + getHeight() / 2;
-    Log.d("TV", "saveInstanceState" +
-        ", x=" + scrollScaleState.scrollPositionX +
-        ", y=" + scrollScaleState.scrollPositionY +
-        ", scale=" + scrollScaleState.scale);
     return scrollScaleState;
   }
 
@@ -279,17 +275,13 @@ public class TileView extends ScalingScrollView implements
 
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-    //super.onLayout(changed, left, top, right, bottom);
     if (getChildCount() < 1) {
       return;
     }
-    final View child = getChildAt(0);
-    final int width = child.getMeasuredWidth();
-    final int height = child.getMeasuredHeight();
-    child.layout(0, 0, width, height);
-    Log.d("TV", "about to call attemptOnReady from onLayout");
-    final boolean runningInitialization = attemptOnReady();
-    if (!runningInitialization) {
+    View child = getChildAt(0);
+    child.layout(0, 0, child.getMeasuredWidth(), child.getMeasuredHeight());
+    boolean hasPerformedOnReady = attemptOnReady();
+    if (!hasPerformedOnReady) {
       updateViewportAndComputeTilesThrottled();
     }
   }
@@ -595,7 +587,6 @@ public class TileView extends ScalingScrollView implements
   }
 
   private void prepare() {
-    Log.d("TV", "prepare");
     if (mIsPrepared) {
       return;
     }
@@ -606,7 +597,6 @@ public class TileView extends ScalingScrollView implements
       throw new IllegalStateException("TileView requires height and width be provided via Builder.setSize");
     }
     mIsPrepared = true;
-    Log.d("TV", "about to call attemptOnReady from prepare");
     attemptOnReady();
   }
 
