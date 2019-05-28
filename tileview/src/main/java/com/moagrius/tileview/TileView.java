@@ -22,7 +22,6 @@ import com.moagrius.utils.Maths;
 import com.moagrius.widget.ScalingScrollView;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -39,17 +38,6 @@ public class TileView extends ScalingScrollView implements
     Tile.Listener,
     TilingBitmapView.Provider {
 
-  public static void printStackTrace() {
-    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-    int count = stackTrace.length;
-    String[] messages = new String[count - 2];
-    for (int i = 2; i < count; i++) {
-      StackTraceElement stackTraceElement = stackTrace[i];
-      messages[i - 2] = stackTraceElement.getClassName() + "." + stackTraceElement.getMethodName();
-    }
-    Log.d("TV", "STACKTRACE: " + Arrays.toString(messages));
-  }
-
   // constants
   private static final int RENDER_THROTTLE_ID = 0;
   private static final int RENDER_THROTTLE_INTERVAL = 15;
@@ -61,7 +49,6 @@ public class TileView extends ScalingScrollView implements
   private int mImageSample = 1; // sample will always be one unless we don't have a defined detail level, then its 1 shl for every zoom level from the last defined detail
   private int mTileSize = DEFAULT_TILE_SIZE;
   private boolean mIsPrepared;
-  private boolean mIsLaidOut;
   private boolean mHasRunOnReady;
   private Detail mCurrentDetail;
 
@@ -78,7 +65,6 @@ public class TileView extends ScalingScrollView implements
   private BitmapCache mMemoryCache;
   private BitmapPool mBitmapPool;
   private StreamProvider mStreamProvider;
-  private Builder mBuilder;
   private Bitmap.Config mBitmapConfig = Bitmap.Config.RGB_565;
   private DiskCachePolicy mDiskCachePolicy = DiskCachePolicy.CACHE_PATCHES;
 
@@ -106,7 +92,6 @@ public class TileView extends ScalingScrollView implements
   private final TileRenderExecutor mExecutor = new TileRenderExecutor();
   private final ThreadPoolExecutor mDiskCacheExecutor = new ThreadPoolExecutor(0, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
   private final Handler mRenderThrottle = new Handler(this);
-  private final Handler mReadyHandler = new Handler();
 
   public TileView(Context context) {
     this(context, null);
@@ -175,18 +160,6 @@ public class TileView extends ScalingScrollView implements
     mScrollScaleState = (ScrollScaleState) state;
   }
 
-  private void restorePositionAndScale() {
-    int x = mScrollScaleState.scrollPositionX - getWidth() / 2;
-    int y = mScrollScaleState.scrollPositionY - getHeight() / 2;
-    Log.d("TV", "restoreInstanceState" +
-        ", x=" + mScrollScaleState.scrollPositionX +
-        ", y=" + mScrollScaleState.scrollPositionY +
-        ", scale=" + mScrollScaleState.scale +
-        ", width=" + getWidth());
-    scrollTo(x, y);
-    setScale(mScrollScaleState.scale);
-  }
-
   @Override
   protected Parcelable onSaveInstanceState() {
     Parcelable superState = super.onSaveInstanceState();
@@ -201,43 +174,7 @@ public class TileView extends ScalingScrollView implements
     return scrollScaleState;
   }
 
-  @Override
-  protected void onDetachedFromWindow() {
-    super.onDetachedFromWindow();
-    mIsPrepared = false;
-    mIsLaidOut = false;
-    Log.d("TV", "context=" + getContext() + ", isFinishing? " + ((Activity) getContext()).isFinishing());
-  }
-
   private ScrollScaleState mScrollScaleState;
-  private Float mPendingScale;
-  private Integer mPendingX;
-  private Integer mPendingY;
-  private boolean mNeedsRestoredAfterSizeDetermined;
-
-  @Override
-  public void setScale(float scale) {
-    if (isReady()) {
-      Log.d("TV", "setScale, " + scale + ", isReady, run now");
-      super.setScale(scale);
-    } else {
-      Log.d("TV", "setScale, " + scale + ", NOT ready, set pending");
-      mPendingScale = scale;
-    }
-  }
-
-  @Override
-  public void scrollTo(int x, int y) {
-    if (isReady()) {
-      //Log.d("TV", "scrollTo, " + x + ", " + y + ", isReady, run now");
-      super.scrollTo(x, y);
-    } else {
-      //Log.d("TV", "scrollTo, " + x + ", " + y + ", NOT ready, set pending");
-      mPendingX = x;
-      mPendingY = y;
-    }
-    //printStackTrace();
-  }
 
   // public
 
@@ -344,7 +281,6 @@ public class TileView extends ScalingScrollView implements
     final int width = child.getMeasuredWidth();
     final int height = child.getMeasuredHeight();
     child.layout(0, 0, width, height);
-    mIsLaidOut = true;  // TODO: isLaidOut()?
     Log.d("TV", "about to call attemptOnReady from onLayout");
     final boolean runningInitialization = attemptOnReady();
     if (!runningInitialization) {
@@ -647,19 +583,10 @@ public class TileView extends ScalingScrollView implements
     }
     mTilePool.clear();
     mRenderThrottle.removeMessages(RENDER_THROTTLE_ID);
-    mReadyHandler.removeCallbacksAndMessages(null);
   }
 
   public boolean isReady() {
-    return mIsPrepared && mIsLaidOut;
-  }
-
-  public boolean hasRunOnReady() {
-    return mHasRunOnReady;
-  }
-
-  public boolean isRunning() {
-    return isReady() && hasRunOnReady();
+    return mIsPrepared && isLaidOut();
   }
 
   private void prepare() {
@@ -695,10 +622,10 @@ public class TileView extends ScalingScrollView implements
         int y = mScrollScaleState.scrollPositionY - getHeight() / 2;
         Log.d("TV",
             "attemptOnReady, with state" +
-                ", x=" + mScrollScaleState.scrollPositionX +
-                ", y=" + mScrollScaleState.scrollPositionY +
-                ", scale=" + mScrollScaleState.scale +
-                ", width=" + getWidth());
+            ", x=" + mScrollScaleState.scrollPositionX +
+            ", y=" + mScrollScaleState.scrollPositionY +
+            ", scale=" + mScrollScaleState.scale +
+            ", width=" + getWidth());
         scrollTo(x, y);
         setScale(mScrollScaleState.scale);
       }
@@ -707,28 +634,6 @@ public class TileView extends ScalingScrollView implements
       return true;
     }
     return false;
-  }
-
-  private void updatePendingValues() {
-    if (mPendingX != null || mPendingY != null) {
-      int x = 0;
-      int y = 0;
-      if (mPendingX != null) {
-        x = mPendingX;
-        mPendingX = null;
-      }
-      if (mPendingY != null) {
-        y = mPendingY;
-        mPendingY = null;
-      }
-      Log.d("TV", "scrolling to pending values, " + x + ", " + y);
-      scrollTo(x, y);
-    }
-    if (mPendingScale != null) {
-      float scale = mPendingScale;
-      setScale(scale);
-      mPendingScale = null;
-    }
   }
 
   private static class Grid {
@@ -830,12 +735,10 @@ public class TileView extends ScalingScrollView implements
 
     public Builder(TileView tileView) {
       mTileView = tileView;
-      mTileView.mBuilder = this;
     }
 
     public Builder(Context context) {
       mTileView = new TileView(context);
-      mTileView.mBuilder = this;
     }
 
     public Builder setSize(int width, int height) {
@@ -914,8 +817,7 @@ public class TileView extends ScalingScrollView implements
     }
 
     private void buildAsync() {
-      //new Thread(this::buildSync).start();
-      buildSync();
+      new Thread(this::buildSync).start();
     }
 
     private void buildSync() {
