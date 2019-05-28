@@ -684,21 +684,16 @@ public class TileView extends ScalingScrollView implements
       mHasRunOnReady = true;
       determineCurrentDetail();
       updateViewportAndComputeTiles();
-      updatePendingValues();
       for (ReadyListener readyListener : mReadyListeners) {
         readyListener.onReady(this);
       }
+      updatePendingValues();
       return true;
     }
     return false;
   }
 
   private void updatePendingValues() {
-    if (mPendingScale != null) {
-      float scale = mPendingScale;
-      setScale(scale);
-      mPendingScale = null;
-    }
     if (mPendingX != null || mPendingY != null) {
       int x = 0;
       int y = 0;
@@ -712,6 +707,11 @@ public class TileView extends ScalingScrollView implements
       }
       Log.d("TV", "scrolling to pending values, " + x + ", " + y);
       scrollTo(x, y);
+    }
+    if (mPendingScale != null) {
+      float scale = mPendingScale;
+      setScale(scale);
+      mPendingScale = null;
     }
   }
 
