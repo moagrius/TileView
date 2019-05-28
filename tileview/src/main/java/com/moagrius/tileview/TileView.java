@@ -42,7 +42,6 @@ public class TileView extends ScalingScrollView implements
   private static final int RENDER_THROTTLE_ID = 0;
   private static final int RENDER_THROTTLE_INTERVAL = 15;
   private static final short DEFAULT_TILE_SIZE = 256;
-  private static final int READY_RETRY_DELAY = 250;
 
   // variables (settable)
   private int mZoom = 0;
@@ -51,6 +50,7 @@ public class TileView extends ScalingScrollView implements
   private boolean mIsPrepared;
   private boolean mHasRunOnReady;
   private Detail mCurrentDetail;
+  private ScrollScaleState mScrollScaleState;
 
   private Set<Listener> mListeners = new LinkedHashSet<>();
   private Set<ReadyListener> mReadyListeners = new LinkedHashSet<>();
@@ -174,8 +174,6 @@ public class TileView extends ScalingScrollView implements
     return scrollScaleState;
   }
 
-  private ScrollScaleState mScrollScaleState;
-
   // public
 
   public int getZoom() {
@@ -271,6 +269,14 @@ public class TileView extends ScalingScrollView implements
     mContainer.setTop(offsetY);
   }
 
+  public void scrollToAndCenter(int x, int y) {
+    scrollTo(x - getWidth() / 2, y - getHeight() / 2);
+  }
+
+  public void smoothScrollToAndCenter(int x, int y) {
+    smoothScrollTo(x - getWidth() / 2, y - getHeight() / 2);
+  }
+
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
     //super.onLayout(changed, left, top, right, bottom);
@@ -318,7 +324,6 @@ public class TileView extends ScalingScrollView implements
       listener.onScrollChanged(x, y);
     }
   }
-
 
   @Override
   public void onScaleChanged(ScalingScrollView scalingScrollView, float currentScale, float previousScale) {
@@ -618,15 +623,12 @@ public class TileView extends ScalingScrollView implements
         readyListener.onReady(this);
       }
       if (mScrollScaleState != null) {
-        int x = mScrollScaleState.scrollPositionX - getWidth() / 2;
-        int y = mScrollScaleState.scrollPositionY - getHeight() / 2;
-        Log.d("TV",
-            "attemptOnReady, with state" +
+        Log.d("TV", "attemptOnReady, with state" +
             ", x=" + mScrollScaleState.scrollPositionX +
             ", y=" + mScrollScaleState.scrollPositionY +
             ", scale=" + mScrollScaleState.scale +
             ", width=" + getWidth());
-        scrollTo(x, y);
+        scrollToAndCenter(mScrollScaleState.scrollPositionX, mScrollScaleState.scrollPositionY);
         setScale(mScrollScaleState.scale);
       }
       determineCurrentDetail();

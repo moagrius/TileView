@@ -123,6 +123,7 @@ public class TileViewDemoAdvanced extends Activity {
       marker.setOnClickListener(markerClickListener);
       markerPlugin.addMarker(marker, x, y, -0.5f, -1f, 0, 0);
     }
+    markerPlugin.refreshPositions();
 
     // draw a path
     Paint paint = new Paint();
