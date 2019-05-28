@@ -615,25 +615,17 @@ public class TileView extends ScalingScrollView implements
    * @return True if the single ready pass executes, false otherwise (either because not ready, or already run)
    */
   private boolean attemptOnReady() {
-    Log.d("TV", "attemptOnReady");
     if (isReady() && !mHasRunOnReady) {
-      Log.d("TV", "isReady and hasn't yet run onReady");
       mHasRunOnReady = true;
-      // TODO: have ready listeners fire after we're in the correct state. currently this falls apart.
-      for (ReadyListener readyListener : mReadyListeners) {
-        readyListener.onReady(this);
-      }
       if (mScrollScaleState != null) {
-        Log.d("TV", "attemptOnReady, with state" +
-            ", x=" + mScrollScaleState.scrollPositionX +
-            ", y=" + mScrollScaleState.scrollPositionY +
-            ", scale=" + mScrollScaleState.scale +
-            ", width=" + getWidth());
         scrollToAndCenter(mScrollScaleState.scrollPositionX, mScrollScaleState.scrollPositionY);
         setScale(mScrollScaleState.scale);
       }
       determineCurrentDetail();
       updateViewportAndComputeTiles();
+      for (ReadyListener readyListener : mReadyListeners) {
+        readyListener.onReady(this);
+      }
       return true;
     }
     return false;

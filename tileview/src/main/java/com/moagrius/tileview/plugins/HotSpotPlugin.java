@@ -23,6 +23,7 @@ public class HotSpotPlugin implements TileView.Plugin, TileView.Listener, TileVi
   public void install(TileView tileView) {
     tileView.addTouchListener(this);
     tileView.addListener(this);
+    mScale = tileView.getScale();
   }
 
   @Override
