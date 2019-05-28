@@ -33,6 +33,7 @@ public class CoordinatePlugin implements TileView.Plugin, TileView.Listener, Til
   public void install(TileView tileView) {
     tileView.addReadyListener(this);
     tileView.addListener(this);
+    mScale = tileView.getScale();
   }
 
   @Override

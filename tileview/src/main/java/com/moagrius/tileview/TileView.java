@@ -619,6 +619,7 @@ public class TileView extends ScalingScrollView implements
     if (isReady() && !mHasRunOnReady) {
       Log.d("TV", "isReady and hasn't yet run onReady");
       mHasRunOnReady = true;
+      // TODO: have ready listeners fire after we're in the correct state. currently this falls apart.
       for (ReadyListener readyListener : mReadyListeners) {
         readyListener.onReady(this);
       }
