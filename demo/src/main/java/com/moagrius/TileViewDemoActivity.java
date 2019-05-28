@@ -1,7 +1,6 @@
 package com.moagrius;
 
 import android.app.Activity;
-import android.util.Log;
 
 import com.moagrius.tileview.TileView;
 
@@ -22,10 +21,10 @@ public abstract class TileViewDemoActivity extends Activity {
 
   public void frameToCenter(TileView tileView) {
     if (mShouldFrameToCenterOnReady) {
-      Log.d("TileView", "content width = " + tileView.getContentWidth() + ", content height = " + tileView.getContentHeight());
-      tileView.scrollTo(
+      tileView.post(() -> tileView.scrollTo(
           tileView.getContentWidth() / 2 - tileView.getWidth() / 2,
-          tileView.getContentHeight() / 2 - tileView.getHeight() / 2);
+          tileView.getContentHeight() / 2 - tileView.getHeight() / 2
+      ));
     }
   }
 

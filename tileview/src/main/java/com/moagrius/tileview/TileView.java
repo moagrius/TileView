@@ -275,6 +275,7 @@ public class TileView extends ScalingScrollView implements
 
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    calculateMinimumScaleToFit();
     if (getChildCount() < 1) {
       return;
     }
