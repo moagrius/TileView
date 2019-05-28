@@ -143,8 +143,8 @@ public class TileViewDemoAdvanced extends Activity {
     List<Point> points = new ArrayList<>();
     for (double[] coordinate : sites) {
       Point point = new Point();
-      point.x = coordinatePlugin.longitudeToX(coordinate[1]);
-      point.y = coordinatePlugin.latitudeToY(coordinate[0]);
+      point.x = coordinatePlugin.longitudeToUnscaledX(coordinate[1]);
+      point.y = coordinatePlugin.latitudeToUnscaledY(coordinate[0]);
       points.add(point);
     }
 

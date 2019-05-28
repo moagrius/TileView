@@ -173,12 +173,16 @@ public class TileView extends ScalingScrollView implements
   @Override
   protected void restoreInstanceState(Parcelable state) {
     mScrollScaleState = (ScrollScaleState) state;
+  }
+
+  private void restorePositionAndScale() {
     int x = mScrollScaleState.scrollPositionX - getWidth() / 2;
     int y = mScrollScaleState.scrollPositionY - getHeight() / 2;
     Log.d("TV", "restoreInstanceState" +
         ", x=" + mScrollScaleState.scrollPositionX +
         ", y=" + mScrollScaleState.scrollPositionY +
-        ", scale=" + mScrollScaleState.scale);
+        ", scale=" + mScrollScaleState.scale +
+        ", width=" + getWidth());
     scrollTo(x, y);
     setScale(mScrollScaleState.scale);
   }
@@ -186,15 +190,15 @@ public class TileView extends ScalingScrollView implements
   @Override
   protected Parcelable onSaveInstanceState() {
     Parcelable superState = super.onSaveInstanceState();
-        ScrollScaleState scrollScaleState = new ScrollScaleState(superState);
-        scrollScaleState.scale = getScale();
-        scrollScaleState.scrollPositionY = getScrollY() + getWidth() / 2;
-        scrollScaleState.scrollPositionX = getScrollX() + getHeight() / 2;
-        Log.d("TV", "saveInstanceState" +
-            ", x=" + scrollScaleState.scrollPositionX +
-            ", y=" + scrollScaleState.scrollPositionY +
-            ", scale=" + scrollScaleState.scale);
-        return scrollScaleState;
+    ScrollScaleState scrollScaleState = new ScrollScaleState(superState);
+    scrollScaleState.scale = getScale();
+    scrollScaleState.scrollPositionX = getScrollX() + getWidth() / 2;
+    scrollScaleState.scrollPositionY = getScrollY() + getHeight() / 2;
+    Log.d("TV", "saveInstanceState" +
+        ", x=" + scrollScaleState.scrollPositionX +
+        ", y=" + scrollScaleState.scrollPositionY +
+        ", scale=" + scrollScaleState.scale);
+    return scrollScaleState;
   }
 
   @Override
@@ -209,6 +213,7 @@ public class TileView extends ScalingScrollView implements
   private Float mPendingScale;
   private Integer mPendingX;
   private Integer mPendingY;
+  private boolean mNeedsRestoredAfterSizeDetermined;
 
   @Override
   public void setScale(float scale) {
@@ -224,14 +229,14 @@ public class TileView extends ScalingScrollView implements
   @Override
   public void scrollTo(int x, int y) {
     if (isReady()) {
-      Log.d("TV", "scrollTo, " + x + ", " + y + ", isReady, run now");
+      //Log.d("TV", "scrollTo, " + x + ", " + y + ", isReady, run now");
       super.scrollTo(x, y);
     } else {
-      Log.d("TV", "scrollTo, " + x + ", " + y + ", NOT ready, set pending");
+      //Log.d("TV", "scrollTo, " + x + ", " + y + ", NOT ready, set pending");
       mPendingX = x;
       mPendingY = y;
     }
-    printStackTrace();
+    //printStackTrace();
   }
 
   // public
@@ -339,7 +344,7 @@ public class TileView extends ScalingScrollView implements
     final int width = child.getMeasuredWidth();
     final int height = child.getMeasuredHeight();
     child.layout(0, 0, width, height);
-    mIsLaidOut = true;
+    mIsLaidOut = true;  // TODO: isLaidOut()?
     Log.d("TV", "about to call attemptOnReady from onLayout");
     final boolean runningInitialization = attemptOnReady();
     if (!runningInitialization) {
@@ -682,12 +687,23 @@ public class TileView extends ScalingScrollView implements
     if (isReady() && !mHasRunOnReady) {
       Log.d("TV", "isReady and hasn't yet run onReady");
       mHasRunOnReady = true;
-      determineCurrentDetail();
-      updateViewportAndComputeTiles();
       for (ReadyListener readyListener : mReadyListeners) {
         readyListener.onReady(this);
       }
-      updatePendingValues();
+      if (mScrollScaleState != null) {
+        int x = mScrollScaleState.scrollPositionX - getWidth() / 2;
+        int y = mScrollScaleState.scrollPositionY - getHeight() / 2;
+        Log.d("TV",
+            "attemptOnReady, with state" +
+                ", x=" + mScrollScaleState.scrollPositionX +
+                ", y=" + mScrollScaleState.scrollPositionY +
+                ", scale=" + mScrollScaleState.scale +
+                ", width=" + getWidth());
+        scrollTo(x, y);
+        setScale(mScrollScaleState.scale);
+      }
+      determineCurrentDetail();
+      updateViewportAndComputeTiles();
       return true;
     }
     return false;

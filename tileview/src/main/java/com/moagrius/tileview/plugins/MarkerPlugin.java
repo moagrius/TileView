@@ -20,6 +20,7 @@ public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView
   public void install(TileView tileView) {
     tileView.addListener(this);
     tileView.addView(this);
+    onScaleChanged(tileView.getScale(), tileView.getScale());
   }
 
   @Override
