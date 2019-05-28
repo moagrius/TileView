@@ -65,10 +65,10 @@ public class ScalingScrollView extends ScrollView implements
   }
 
   @Override
-  protected void onRestoreInstanceState(Parcelable state) {
-    ScrollScaleState sss = (ScrollScaleState) state;
-    super.onRestoreInstanceState(sss.getSuperState());
-    setScale(sss.scale);
+  protected void restoreInstanceState(Parcelable state) {
+    super.restoreInstanceState(state);
+    ScrollScaleState scrollScaleState = (ScrollScaleState) state;
+    setScale(scrollScaleState.scale);
   }
 
   @Override

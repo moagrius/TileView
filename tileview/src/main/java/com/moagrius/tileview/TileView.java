@@ -22,6 +22,7 @@ import com.moagrius.utils.Maths;
 import com.moagrius.widget.ScalingScrollView;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -37,6 +38,17 @@ public class TileView extends ScalingScrollView implements
     Tile.DrawingView,
     Tile.Listener,
     TilingBitmapView.Provider {
+
+  public static void printStackTrace() {
+    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+    int count = stackTrace.length;
+    String[] messages = new String[count - 2];
+    for (int i = 2; i < count; i++) {
+      StackTraceElement stackTraceElement = stackTrace[i];
+      messages[i - 2] = stackTraceElement.getClassName() + "." + stackTraceElement.getMethodName();
+    }
+    Log.d("TV", "STACKTRACE: " + Arrays.toString(messages));
+  }
 
   // constants
   private static final int RENDER_THROTTLE_ID = 0;
@@ -160,24 +172,40 @@ public class TileView extends ScalingScrollView implements
 
   @Override
   protected void restoreInstanceState(Parcelable state) {
-    Log.d("TV", "restoreInstanceState");
-    ScrollScaleState scrollScaleState = (ScrollScaleState) state;
-    int x = scrollScaleState.scrollPositionX - getWidth() / 2;
-    int y = scrollScaleState.scrollPositionY - getHeight() / 2;
+    mScrollScaleState = (ScrollScaleState) state;
+    int x = mScrollScaleState.scrollPositionX - getWidth() / 2;
+    int y = mScrollScaleState.scrollPositionY - getHeight() / 2;
+    Log.d("TV", "restoreInstanceState" +
+        ", x=" + mScrollScaleState.scrollPositionX +
+        ", y=" + mScrollScaleState.scrollPositionY +
+        ", scale=" + mScrollScaleState.scale);
     scrollTo(x, y);
-    setScale(scrollScaleState.scale);
+    setScale(mScrollScaleState.scale);
   }
 
   @Override
   protected Parcelable onSaveInstanceState() {
     Parcelable superState = super.onSaveInstanceState();
-    ScrollScaleState scrollScaleState = new ScrollScaleState(superState);
-    scrollScaleState.scale = getScale();
-    scrollScaleState.scrollPositionY = getScrollY() + getWidth() / 2;
-    scrollScaleState.scrollPositionX = getScrollX() + getHeight() / 2;
-    return scrollScaleState;
+        ScrollScaleState scrollScaleState = new ScrollScaleState(superState);
+        scrollScaleState.scale = getScale();
+        scrollScaleState.scrollPositionY = getScrollY() + getWidth() / 2;
+        scrollScaleState.scrollPositionX = getScrollX() + getHeight() / 2;
+        Log.d("TV", "saveInstanceState" +
+            ", x=" + scrollScaleState.scrollPositionX +
+            ", y=" + scrollScaleState.scrollPositionY +
+            ", scale=" + scrollScaleState.scale);
+        return scrollScaleState;
   }
 
+  @Override
+  protected void onDetachedFromWindow() {
+    super.onDetachedFromWindow();
+    mIsPrepared = false;
+    mIsLaidOut = false;
+    Log.d("TV", "context=" + getContext() + ", isFinishing? " + ((Activity) getContext()).isFinishing());
+  }
+
+  private ScrollScaleState mScrollScaleState;
   private Float mPendingScale;
   private Integer mPendingX;
   private Integer mPendingY;
@@ -199,10 +227,11 @@ public class TileView extends ScalingScrollView implements
       Log.d("TV", "scrollTo, " + x + ", " + y + ", isReady, run now");
       super.scrollTo(x, y);
     } else {
-      Log.d("TV", "scrollTo, " + x + ", " + y + ", isReady, run now");
+      Log.d("TV", "scrollTo, " + x + ", " + y + ", NOT ready, set pending");
       mPendingX = x;
       mPendingY = y;
     }
+    printStackTrace();
   }
 
   // public
@@ -302,10 +331,17 @@ public class TileView extends ScalingScrollView implements
 
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-    super.onLayout(changed, left, top, right, bottom);
+    //super.onLayout(changed, left, top, right, bottom);
+    if (getChildCount() < 1) {
+      return;
+    }
+    final View child = getChildAt(0);
+    final int width = child.getMeasuredWidth();
+    final int height = child.getMeasuredHeight();
+    child.layout(0, 0, width, height);
     mIsLaidOut = true;
     Log.d("TV", "about to call attemptOnReady from onLayout");
-    boolean runningInitialization = attemptOnReady();
+    final boolean runningInitialization = attemptOnReady();
     if (!runningInitialization) {
       updateViewportAndComputeTilesThrottled();
     }
