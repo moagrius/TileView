@@ -4,6 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
+import android.view.View;
 
 import com.moagrius.tileview.TileView;
 
@@ -16,6 +17,7 @@ public class PathPlugin implements TileView.Plugin, TileView.CanvasDecorator {
   private static final int DEFAULT_STROKE_COLOR = 0xFF000000;
   private static final int DEFAULT_STROKE_WIDTH = 10;
 
+  private View mInvalidater;
   private Path mRecyclerPath = new Path();
   private Paint mDefaultPaint = new Paint();
   private Set<DrawablePath> mDrawablePaths = new LinkedHashSet<>();
@@ -30,6 +32,7 @@ public class PathPlugin implements TileView.Plugin, TileView.CanvasDecorator {
   @Override
   public void install(TileView tileView) {
     tileView.addCanvasDecorator(this);
+    mInvalidater = tileView;
   }
 
   @Override
@@ -48,7 +51,9 @@ public class PathPlugin implements TileView.Plugin, TileView.CanvasDecorator {
       Point position = positions.get(i);
       path.lineTo(position.x, position.y);
     }
-    return addPath(path, paint);
+    DrawablePath drawablePath = addPath(path, paint);
+    mInvalidater.invalidate();
+    return drawablePath;
   }
 
   public DrawablePath addPath(Path path, Paint paint) {
@@ -58,9 +63,9 @@ public class PathPlugin implements TileView.Plugin, TileView.CanvasDecorator {
     return addPath(new DrawablePath(path, paint));
   }
 
-  public DrawablePath addPath(DrawablePath DrawablePath) {
-    mDrawablePaths.add(DrawablePath);
-    return DrawablePath;
+  public DrawablePath addPath(DrawablePath drawablePath) {
+    mDrawablePaths.add(drawablePath);
+    return drawablePath;
   }
 
   public void removePath(DrawablePath path) {

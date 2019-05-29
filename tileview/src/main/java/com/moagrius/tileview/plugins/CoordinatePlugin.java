@@ -33,12 +33,14 @@ public class CoordinatePlugin implements TileView.Plugin, TileView.Listener, Til
   public void install(TileView tileView) {
     tileView.addReadyListener(this);
     tileView.addListener(this);
+    mScale = tileView.getScale();
   }
 
   @Override
   public void onReady(TileView tileView) {
-    mPixelWidth = tileView.getContentWidth();
-    mPixelHeight = tileView.getContentHeight();
+    mPixelWidth = tileView.getUnscaledContentWidth();
+    mPixelHeight = tileView.getUnscaledContentHeight();
+    mScale = tileView.getScale();
   }
 
   // coordinate to pixel is multiplied by scale, pixel to coordinate is divided by scale

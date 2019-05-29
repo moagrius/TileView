@@ -12,6 +12,7 @@ import android.util.Log;
 import com.moagrius.tileview.io.StreamProvider;
 
 import java.io.InputStream;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class Tile implements Runnable {
@@ -252,19 +253,18 @@ public class Tile implements Runnable {
     if (mState == State.IDLE) {
       return;
     }
+    if (mState == State.DECODED) {
+      mMemoryCache.put(getCacheKey(), mBitmap);
+    }
     mState = State.IDLE;
     if (removeFromQueue) {
       mThreadPoolExecutor.remove(this);
-    }
-    if (mState == State.DECODED) {
-      mMemoryCache.put(getCacheKey(), mBitmap);
     }
     mBitmap = null;
     mDrawingOptions.inBitmap = null;
     // since tiles are pooled and reused, make sure to reset the cache key or you'll render the wrong tile from cache
     mCacheKey = null;
     mListener.onTileDestroyed(this);
-
   }
 
   public void destroy() {
@@ -272,10 +272,14 @@ public class Tile implements Runnable {
   }
 
   public void retry(int attempts) {
-    if (mRetries <= attempts) {
+    if (mRetries <= attempts && mState == State.IDLE) {
       Log.d("TileView", "retrying tile");
       mRetries++;
-      mThreadPoolExecutor.submit(this);
+      try {
+        mThreadPoolExecutor.execute(this);
+      } catch (RejectedExecutionException e) {
+        // no op
+      }
     }
   }
 

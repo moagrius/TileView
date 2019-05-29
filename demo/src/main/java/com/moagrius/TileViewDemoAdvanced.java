@@ -1,6 +1,5 @@
 package com.moagrius;
 
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -10,6 +9,7 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -34,7 +34,7 @@ import java.util.Locale;
  * @author Mike Dunn, 2/4/18.
  */
 
-public class TileViewDemoAdvanced extends Activity {
+public class TileViewDemoAdvanced extends AppCompatActivity {
 
   public static final double NORTH = -75.17261900652977;
   public static final double WEST = 39.9639998777094;
@@ -51,12 +51,14 @@ public class TileViewDemoAdvanced extends Activity {
     sites.add(new double[]{-75.1479650, 39.9523130});
   }
 
+  private boolean mIsRestoring;
+
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_demos_tileview);
     TileView tileView = findViewById(R.id.tileview);
-    tileView.setScaleLimits(0, 2f);
+    mIsRestoring = savedInstanceState != null;
     new TileView.Builder(tileView)
         .setSize(16384, 13056)
         .defineZoomLevel("tiles/phi-1000000-%1$d_%2$d.jpg")
@@ -120,6 +122,7 @@ public class TileViewDemoAdvanced extends Activity {
       marker.setOnClickListener(markerClickListener);
       markerPlugin.addMarker(marker, x, y, -0.5f, -1f, 0, 0);
     }
+    markerPlugin.refreshPositions();
 
     // draw a path
     Paint paint = new Paint();
@@ -140,8 +143,8 @@ public class TileViewDemoAdvanced extends Activity {
     List<Point> points = new ArrayList<>();
     for (double[] coordinate : sites) {
       Point point = new Point();
-      point.x = coordinatePlugin.longitudeToX(coordinate[1]);
-      point.y = coordinatePlugin.latitudeToY(coordinate[0]);
+      point.x = coordinatePlugin.longitudeToUnscaledX(coordinate[1]);
+      point.y = coordinatePlugin.latitudeToUnscaledY(coordinate[0]);
       points.add(point);
     }
 
@@ -152,11 +155,13 @@ public class TileViewDemoAdvanced extends Activity {
     HotSpotPlugin.HotSpot hotSpot = hotSpotPlugin.addHotSpot(points, h -> Log.d("TV", "hot spot touched: " + h.getTag()));
     hotSpot.setTag("Any piece of data...");
 
-    // frame it
-    double[] coordinate = sites.get(0);
-    int x = coordinatePlugin.longitudeToX(coordinate[1]);
-    int y = coordinatePlugin.latitudeToY(coordinate[0]);
-    tileView.scrollTo(x, y);
+    // frame it if it's a first launch, otherwise restore last position and scale (this is built in to TileView)
+    if (!mIsRestoring) {
+      double[] coordinate = sites.get(0);
+      int x = coordinatePlugin.longitudeToX(coordinate[1]);
+      int y = coordinatePlugin.latitudeToY(coordinate[0]);
+      tileView.scrollTo(x, y);
+    }
 
   }
 

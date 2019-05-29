@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.graphics.Region;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -41,16 +42,15 @@ public class TileView extends ScalingScrollView implements
   private static final int RENDER_THROTTLE_ID = 0;
   private static final int RENDER_THROTTLE_INTERVAL = 15;
   private static final short DEFAULT_TILE_SIZE = 256;
-  private static final int READY_RETRY_DELAY = 250;
 
   // variables (settable)
   private int mZoom = 0;
   private int mImageSample = 1; // sample will always be one unless we don't have a defined detail level, then its 1 shl for every zoom level from the last defined detail
   private int mTileSize = DEFAULT_TILE_SIZE;
   private boolean mIsPrepared;
-  private boolean mIsLaidOut;
   private boolean mHasRunOnReady;
   private Detail mCurrentDetail;
+  private ScrollScaleState mScrollScaleState;
 
   private Set<Listener> mListeners = new LinkedHashSet<>();
   private Set<ReadyListener> mReadyListeners = new LinkedHashSet<>();
@@ -65,7 +65,6 @@ public class TileView extends ScalingScrollView implements
   private BitmapCache mMemoryCache;
   private BitmapPool mBitmapPool;
   private StreamProvider mStreamProvider;
-  private Builder mBuilder;
   private Bitmap.Config mBitmapConfig = Bitmap.Config.RGB_565;
   private DiskCachePolicy mDiskCachePolicy = DiskCachePolicy.CACHE_PATCHES;
 
@@ -93,7 +92,6 @@ public class TileView extends ScalingScrollView implements
   private final TileRenderExecutor mExecutor = new TileRenderExecutor();
   private final ThreadPoolExecutor mDiskCacheExecutor = new ThreadPoolExecutor(0, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
   private final Handler mRenderThrottle = new Handler(this);
-  private final Handler mReadyHandler = new Handler();
 
   public TileView(Context context) {
     this(context, null);
@@ -155,6 +153,21 @@ public class TileView extends ScalingScrollView implements
   @Override
   public void removeViews(int start, int count) {
     mContainer.removeViews(start, count);
+  }
+
+  @Override
+  protected void restoreInstanceState(Parcelable state) {
+    mScrollScaleState = (ScrollScaleState) state;
+  }
+
+  @Override
+  protected Parcelable onSaveInstanceState() {
+    Parcelable superState = super.onSaveInstanceState();
+    ScrollScaleState scrollScaleState = new ScrollScaleState(superState);
+    scrollScaleState.scale = getScale();
+    scrollScaleState.scrollPositionX = getScrollX() + getWidth() / 2;
+    scrollScaleState.scrollPositionY = getScrollY() + getHeight() / 2;
+    return scrollScaleState;
   }
 
   // public
@@ -252,11 +265,24 @@ public class TileView extends ScalingScrollView implements
     mContainer.setTop(offsetY);
   }
 
+  public void scrollToAndCenter(int x, int y) {
+    scrollTo(x - getWidth() / 2, y - getHeight() / 2);
+  }
+
+  public void smoothScrollToAndCenter(int x, int y) {
+    smoothScrollTo(x - getWidth() / 2, y - getHeight() / 2);
+  }
+
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-    super.onLayout(changed, left, top, right, bottom);
-    mIsLaidOut = true;
-    if (!attemptOnReady()) {
+    calculateMinimumScaleToFit();
+    if (getChildCount() < 1) {
+      return;
+    }
+    View child = getChildAt(0);
+    child.layout(0, 0, child.getMeasuredWidth(), child.getMeasuredHeight());
+    boolean hasPerformedOnReady = attemptOnReady();
+    if (!hasPerformedOnReady) {
       updateViewportAndComputeTilesThrottled();
     }
   }
@@ -291,7 +317,6 @@ public class TileView extends ScalingScrollView implements
       listener.onScrollChanged(x, y);
     }
   }
-
 
   @Override
   public void onScaleChanged(ScalingScrollView scalingScrollView, float currentScale, float previousScale) {
@@ -556,11 +581,14 @@ public class TileView extends ScalingScrollView implements
     }
     mTilePool.clear();
     mRenderThrottle.removeMessages(RENDER_THROTTLE_ID);
-    mReadyHandler.removeCallbacksAndMessages(null);
   }
 
-  private boolean isReady() {
-    return mIsPrepared && mIsLaidOut;
+  public void destroy() {
+    destroy(false);
+  }
+
+  public boolean isReady() {
+    return mIsPrepared && isLaidOut();
   }
 
   private void prepare() {
@@ -584,17 +612,17 @@ public class TileView extends ScalingScrollView implements
   private boolean attemptOnReady() {
     if (isReady() && !mHasRunOnReady) {
       mHasRunOnReady = true;
+      if (mScrollScaleState != null) {
+        scrollToAndCenter(mScrollScaleState.scrollPositionX, mScrollScaleState.scrollPositionY);
+        setScale(mScrollScaleState.scale);
+      }
       determineCurrentDetail();
       updateViewportAndComputeTiles();
       for (ReadyListener readyListener : mReadyListeners) {
         readyListener.onReady(this);
       }
-      // TODO: this?
-      //mReadyListeners.clear();
       return true;
     }
-    mReadyHandler.removeCallbacksAndMessages(null);
-    mReadyHandler.postDelayed(this::attemptOnReady, READY_RETRY_DELAY);
     return false;
   }
 
@@ -697,12 +725,10 @@ public class TileView extends ScalingScrollView implements
 
     public Builder(TileView tileView) {
       mTileView = tileView;
-      mTileView.mBuilder = this;
     }
 
     public Builder(Context context) {
       mTileView = new TileView(context);
-      mTileView.mBuilder = this;
     }
 
     public Builder setSize(int width, int height) {
@@ -781,8 +807,7 @@ public class TileView extends ScalingScrollView implements
     }
 
     private void buildAsync() {
-      //new Thread(this::buildSync).start();
-      buildSync();
+      new Thread(this::buildSync).start();
     }
 
     private void buildSync() {

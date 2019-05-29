@@ -20,6 +20,7 @@ public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView
   public void install(TileView tileView) {
     tileView.addListener(this);
     tileView.addView(this);
+    mScale = tileView.getScale();
   }
 
   @Override
@@ -66,7 +67,7 @@ public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView
     return layoutParams;
   }
 
-  private void reposition() {
+  public void refreshPositions() {
     for (int i = 0; i < getChildCount(); i++) {
       View child = getChildAt(i);
       if (child.getVisibility() != GONE) {
@@ -82,7 +83,7 @@ public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView
   @Override
   public void onScaleChanged(float scale, float previous) {
     mScale = scale;
-    reposition();
+    refreshPositions();
   }
 
   public void addMarker(View view, int left, int top, float relativeAnchorLeft, float relativeAnchorTop, float absoluteAnchorLeft, float absoluteAnchorTop) {

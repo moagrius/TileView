@@ -14,8 +14,7 @@ public class TileViewDemoAssets extends TileViewDemoActivity {
     setContentView(R.layout.activity_demos_tileview);
     TileView tileView = findViewById(R.id.tileview);
     frameToCenterOnReady();
-
-    tileView.setScaleLimits(0f, 10f);
+    tileView.setMaximumScale(10f);
     tileView.setMinimumScaleMode(ScalingScrollView.MinimumScaleMode.CONTAIN);
     new TileView.Builder(tileView)
         .setSize(16384, 13056)
