@@ -583,6 +583,10 @@ public class TileView extends ScalingScrollView implements
     mRenderThrottle.removeMessages(RENDER_THROTTLE_ID);
   }
 
+  public void destroy() {
+    destroy(false);
+  }
+
   public boolean isReady() {
     return mIsPrepared && isLaidOut();
   }

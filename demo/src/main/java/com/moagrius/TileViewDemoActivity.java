@@ -1,10 +1,10 @@
 package com.moagrius;
 
-import android.app.Activity;
+import android.support.v7.app.AppCompatActivity;
 
 import com.moagrius.tileview.TileView;
 
-public abstract class TileViewDemoActivity extends Activity {
+public abstract class TileViewDemoActivity extends AppCompatActivity {
 
   private boolean mShouldFrameToCenterOnReady;
 
@@ -17,6 +17,15 @@ public abstract class TileViewDemoActivity extends Activity {
     super.setContentView(layoutResID);
     TileView tileView = findViewById(R.id.tileview);
     tileView.addReadyListener(this::frameToCenter);
+  }
+
+  @Override
+  protected void onPause() {
+    super.onPause();
+    if (isFinishing()) {
+      TileView tileView = findViewById(R.id.tileview);
+      tileView.destroy();
+    }
   }
 
   public void frameToCenter(TileView tileView) {
