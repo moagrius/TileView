@@ -16,7 +16,14 @@ Feel free to use ScrollView as a standalone widget if you don't need image tilin
 
 ## Change Log
 
-#### 4.0.3 (most recent)
+#### 4.0.5 (most recent)
++ Save and restore instance state properly implemented.
++ Removed a bug that produced an increasing number of delayed callbacks from a `Handler`.  This is a serious memory leak and all users on versions 4.0.3 and 4.0.4 should immediately upgrade to 4.0.5.
+
+#### 4.0.4
++ Update `ScalingScrollView` to version 1.0.10, which provides additional methods and method exposure (many `private` access methods became `protected`)
+
+#### 4.0.3 
 + You can scale greater than 1f now without flicker, and without clipping.
 + Remote images should decode now with a much higher rate of success, nearing 100%.
 + Marker plugin API has been updated and show now work propertly (see TileViewDemoAdvanced Activity).
@@ -41,7 +48,7 @@ No further work will be done on version 2.
 ## Installation
 Add this to your app module's build.gradle.
 ```
-implementation 'com.moagrius:tileview:4.0.4'
+implementation 'com.moagrius:tileview:4.0.5'
 ```
 
 ##### Quick Setup
