@@ -64,7 +64,7 @@ protected void onCreate(Bundle savedInstanceState) {
   super.onCreate(savedInstanceState);
   TileView tileView = new TileView.Builder(this)
   	.setSize(3000, 3000)
-  	.defineDetail("tile-%d-%d.png")
+  	.defineZoomLevel("tile-%d-%d.png")
   	.build();
   setContentView(tileView);
 }
