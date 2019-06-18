@@ -16,6 +16,9 @@ Feel free to use ScrollView as a standalone widget if you don't need image tilin
 
 ## Change Log
 
+#### 4.0.7 (most recent)
++ Fixed bug with MarkerPlugin where markers clipped when scaled beyond 100%.
+
 #### 4.0.5 (most recent)
 + Save and restore instance state properly implemented.
 + Removed a bug that produced an increasing number of delayed callbacks from a `Handler`.  This is a serious memory leak and all users on versions 4.0.3 and 4.0.4 should immediately upgrade to 4.0.5.
@@ -48,7 +51,7 @@ No further work will be done on version 2.
 ## Installation
 Add this to your app module's build.gradle.
 ```
-implementation 'com.moagrius:tileview:4.0.5'
+implementation 'com.moagrius:tileview:4.0.7'
 ```
 
 ##### Quick Setup

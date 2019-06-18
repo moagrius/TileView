@@ -14,6 +14,7 @@ public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView
 
   public MarkerPlugin(@NonNull Context context) {
     super(context);
+    setClipChildren(false);
   }
 
   @Override
