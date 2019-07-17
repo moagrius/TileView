@@ -1,5 +1,7 @@
 ![Release Badge](https://img.shields.io/github/release/moagrius/TileView.svg)
 
+For the Kotlin fans out there, one of our main contributors Peter has created a highly optimized Kotlin version with a few specialties (e.g., no remote tiles) that's very cool and quite possibly faster than the original.  I'm not sure it's 100% ready to open source on it's own, but if you're interested you can check it out in https://github.com/peterLaurence/TrekMe/tree/master/app/src/main/java/com/peterlaurence/mapview.  Peter uses this widget in his app at https://github.com/peterLaurence/TrekMe/.
+
 # TileView: Version 4
 The TileView widget is a subclass of ViewGroup renders and positions bitmap tiles to compose a larger, original image, often one too large to display normally.
 
