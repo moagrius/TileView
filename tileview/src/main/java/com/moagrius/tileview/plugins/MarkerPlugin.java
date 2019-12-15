@@ -10,7 +10,7 @@ import com.moagrius.tileview.TileView;
 // TODO: recycling
 public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView.Listener {
 
-  private float mScale = 1;
+  protected float mScale = 1;
 
   public MarkerPlugin(@NonNull Context context) {
     super(context);
@@ -47,7 +47,7 @@ public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView
     }
   }
 
-  private LayoutParams populateLayoutParams(View child) {
+  protected LayoutParams populateLayoutParams(View child) {
     MarkerPlugin.LayoutParams layoutParams = (MarkerPlugin.LayoutParams) child.getLayoutParams();
     if (child.getVisibility() != View.GONE) {
       // actual sizes of children
@@ -124,10 +124,10 @@ public class MarkerPlugin extends ViewGroup implements TileView.Plugin, TileView
     public float absoluteAnchorX;
     public float absoluteAnchorY;
 
-    private int mTop;
-    private int mLeft;
-    private int mBottom;
-    private int mRight;
+    protected int mTop;
+    protected int mLeft;
+    protected int mBottom;
+    protected int mRight;
 
     public LayoutParams(int width, int height, int left, int top, float relativeAnchorLeft, float relativeAnchorTop, float absoluteAnchorLeft, float absoluteAnchorTop) {
       super(width, height);

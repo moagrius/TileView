@@ -25,6 +25,7 @@ import com.moagrius.tileview.plugins.InfoWindowPlugin;
 import com.moagrius.tileview.plugins.LowFidelityBackgroundPlugin;
 import com.moagrius.tileview.plugins.MarkerPlugin;
 import com.moagrius.tileview.plugins.PathPlugin;
+import com.moagrius.tileview.plugins.ScalingMarkerPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +66,7 @@ public class TileViewDemoAdvanced extends AppCompatActivity {
         .defineZoomLevel(1, "tiles/phi-500000-%1$d_%2$d.jpg")
         .defineZoomLevel(2, "tiles/phi-250000-%1$d_%2$d.jpg")
         .installPlugin(new MarkerPlugin(this))
+        .installPlugin(new ScalingMarkerPlugin(this))
         .installPlugin(new InfoWindowPlugin(getInfoView()))
         .installPlugin(new CoordinatePlugin(WEST, NORTH, EAST, SOUTH))
         .installPlugin(new HotSpotPlugin())
@@ -99,6 +101,7 @@ public class TileViewDemoAdvanced extends AppCompatActivity {
     InfoWindowPlugin infoWindowPlugin = tileView.getPlugin(InfoWindowPlugin.class);
     HotSpotPlugin hotSpotPlugin = tileView.getPlugin(HotSpotPlugin.class);
     MarkerPlugin markerPlugin = tileView.getPlugin(MarkerPlugin.class);
+    ScalingMarkerPlugin scalingMarkerPlugin = tileView.getPlugin(ScalingMarkerPlugin.class);
 
     // drop some markers, with info window expansions
     String template = "Clicked marker at:\n%1$f\n%2$f";
@@ -113,6 +116,7 @@ public class TileViewDemoAdvanced extends AppCompatActivity {
       infoWindowPlugin.show(x, y, -0.5f, -1f);
     };
 
+    int count = 0;
     for (double[] coordinate : sites) {
       int x = coordinatePlugin.longitudeToUnscaledX(coordinate[1]);
       int y = coordinatePlugin.latitudeToUnscaledY(coordinate[0]);
@@ -120,7 +124,11 @@ public class TileViewDemoAdvanced extends AppCompatActivity {
       marker.setTag(coordinate);
       marker.setImageResource(R.drawable.marker);
       marker.setOnClickListener(markerClickListener);
-      markerPlugin.addMarker(marker, x, y, -0.5f, -1f, 0, 0);
+      if(count%2==0)
+      	markerPlugin.addMarker(marker, x, y, -0.5f, -1f, 0, 0);
+      else
+      	scalingMarkerPlugin.addMarker(marker, x, y, -0.5f, -1f, 0, 0);
+      count++;
     }
     markerPlugin.refreshPositions();
 
